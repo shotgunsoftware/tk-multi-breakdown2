@@ -1,5 +1,9 @@
 <RCC>
-  <qresource prefix="res">
-    <file>sg_logo.png</file>
-  </qresource>
+    <qresource prefix="/tk-multi-breakdown2">
+        <file>tree_arrow_expanded.png</file>
+        <file>tree_arrow_collapsed.png</file>
+        <file>green_bullet.png</file>
+        <file>red_bullet.png</file>
+        <file>lock_bullet.png</file>
+    </qresource>
 </RCC>

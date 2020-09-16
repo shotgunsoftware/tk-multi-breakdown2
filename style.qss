@@ -1,20 +1,35 @@
-/********************************************************************************************
+/*
+Copyright (c) 2020 Shotgun Software Inc
 
-QT Stylesheet for the app. This file will be read every time an app dialog is created via
-the show_dialog, show_modal or show_panel methods.
+CONFIDENTIAL AND PROPRIETARY
 
-Certain keywords will be resolved, for example {{SG_HIGHLIGHT_COLOR}}.
-For a full list of keywords, call the app.style_constants property at runtime.
+This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
+Source Code License included in this distribution package. See LICENSE.
+By accessing, using, copying or modifying this work you indicate your
+agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
+not expressly granted therein are reserved by Shotgun Software Inc.
+*/
 
-For more info about QT stylesheets, please see http://doc.qt.io/qt-4.8/stylesheet.html
+/* Styling for FileGroupWidget in the files view */
 
-********************************************************************************************/
-
-
-/* Example:
-
-QListView, QTableView, QScrollArea {
-    border: 2px solid {{SG_HIGHLIGHT_COLOR}};
+FileGroupWidget #header {
+    font-size: 14px;
+}
+FileGroupWidget #expand_check_box::indicator {
+    width: 12;
+    height: 12;
+}
+FileGroupWidget #expand_check_box {
+    font: 14px;
+}
+FileGroupWidget #expand_check_box::indicator:unchecked {
+    image: url(:/tk-multi-breakdown2/tree_arrow_collapsed.png);
+}
+FileGroupWidget #expand_check_box::indicator:unchecked:hover {
+    image: url(:/tk-multi-breakdown2/tree_arrow_collapsed.png);
+}
+FileGroupWidget #expand_check_box::indicator:checked {
+    image: url(:/tk-multi-breakdown2/tree_arrow_expanded.png);
 }
 
-*/
+/* Styling for FileWidget in the files view */

@@ -1,4 +1,4 @@
-# Copyright (c) 2013 Shotgun Software Inc.
+# Copyright (c) 2020 Shotgun Software Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -8,14 +8,13 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+import sgtk
 
-from sgtk.platform import Application
 
-
-class StgkStarterApp(Application):
+class SceneBreakdown2(sgtk.platform.Application):
     """
-    The app entry point. This class is responsible for initializing and tearing down
-    the application, handle menu registration etc.
+    This is the :class:`sgtk.platform.Application` subclass that defines the
+    top-level scenebreakdown2 interface.
     """
 
     def init_app(self):
@@ -23,19 +22,20 @@ class StgkStarterApp(Application):
         Called as the application is being initialized
         """
 
-        # first, we use the special import_module command to access the app module
-        # that resides inside the python folder in the app. This is where the actual UI
-        # and business logic of the app is kept. By using the import_module command,
-        # toolkit's code reload mechanism will work properly.
-        app_payload = self.import_module("app")
+        tk_multi_breakdown2 = self.import_module("tk_multi_breakdown2")
 
-        # now register a *command*, which is normally a menu entry of some kind on a Shotgun
-        # menu (but it depends on the engine). The engine will manage this command and
-        # whenever the user requests the command, it will call out to the callback.
+        # the manager class provides the interface for publishing. We store a
+        # reference to it to enable the create_publish_manager method exposed on
+        # the application itself
+        self._manager_class = tk_multi_breakdown2.BreakdownManager
 
-        # first, set up our callback, calling out to a method inside the app module contained
-        # in the python folder of the app
-        menu_callback = lambda: app_payload.dialog.show_dialog(self)
+        cb = lambda: tk_multi_breakdown2.show_dialog(self)
+        self.engine.register_command("Scene Breakdown2...", cb, {"short_name": "breakdown2"})
 
-        # now register the command with the engine
-        self.engine.register_command("Show Starter Template App...", menu_callback)
+    def create_breakdown_manager(self):
+        """
+        Create and return a :class:`tk_multi_breakdown2.BreakdownManager` instance.
+
+        :returns: A :class:`tk_multi_breakdown2.BreakdownManager` instance
+        """
+        return self._manager_class()
