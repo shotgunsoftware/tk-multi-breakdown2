@@ -86,5 +86,3 @@ class BreakdownManager(object):
         item.path = latest_published_file["path"]["local_path"]
 
         # self._bundle.execute_hook_method("hook_scene_operations", "update", item=item.to_dict())
-
-
