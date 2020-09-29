@@ -27,4 +27,4 @@ ShotgunListWidget = shotgun_widget.ShotgunListWidget
 
 # Overlay widget
 overlay_widget = sgtk.platform.import_framework("tk-framework-qtwidgets", "overlay_widget")
-ShotgunSpinningWidget = overlay_widget.ShotgunSpinningWidget
+ShotgunOverlayWidget = overlay_widget.ShotgunOverlayWidget

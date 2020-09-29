@@ -15,7 +15,7 @@ from .ui.dialog import Ui_Dialog
 from .file_model import FileModel
 from .delegate_file_group import FileGroupDelegate
 from .actions import UpdateVersionAction
-from .framework_qtwidgets import ShotgunSpinningWidget
+from .framework_qtwidgets import ShotgunOverlayWidget
 
 task_manager = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "task_manager"
@@ -60,7 +60,7 @@ class AppDialog(QtGui.QWidget):
         self._delegate = FileGroupDelegate(self._ui.file_view)
         self._ui.file_view.setItemDelegate(self._delegate)
 
-        self._file_model_overlay = ShotgunSpinningWidget(self._ui.file_view)
+        self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
         self._file_model_overlay.start_spin()
         self._file_model.files_processed.connect(self._file_model_overlay.hide)
 
