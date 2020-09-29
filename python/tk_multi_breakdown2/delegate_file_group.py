@@ -170,7 +170,7 @@ class FileGroupWidget(GroupWidgetBase):
 
     def _on_expand_checkbox_state_changed(self, state):
         """
-        Slot triggered when the group’s expansion state is toggled.
+        Slot triggered when the groups expansion state is toggled.
 
         :param state: True if the group is expanded, False if it is collapsed
         """
