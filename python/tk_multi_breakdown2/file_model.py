@@ -28,6 +28,7 @@ class FileModel(QtGui.QStandardItemModel):
     # additional data roles defined for the model:
     FILE_ITEM_ROLE = QtCore.Qt.UserRole + 32
 
+    # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
 
     class GroupModelItem(QtGui.QStandardItem):
