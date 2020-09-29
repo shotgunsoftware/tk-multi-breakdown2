@@ -13,18 +13,17 @@ import sgtk
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
-class GetVersionNumber(HookBaseClass):
+class GetPublishedFiles(HookBaseClass):
     """
     """
 
-    def execute(self, item, **kwargs):
+    def get_latest_published_file(self, item, **kwargs):
         """
-        :param item:
-        :param kwargs:
-        :return:
-        """
+        Query Shotgun to get the latest published file for the given item.
 
-        max_history = self.parent.get_setting("version_history")
+        :param item: :class`FileItem` object we want to get the latest published file for
+        :return: The published file as a Shotgun dictionary
+        """
 
         filters = [
             ["entity", "is", item.sg_data["entity"]],
@@ -37,12 +36,11 @@ class GetVersionNumber(HookBaseClass):
 
         # todo: check if this work with url published files
         # todo: need to check for path comparison?
-        published_files = self.sgtk.shotgun.find(
+        published_file = self.sgtk.shotgun.find_one(
             "PublishedFile",
             filters=filters,
             fields=fields,
             order=order,
-            limit=max_history
         )
 
-        return published_files
+        return published_file

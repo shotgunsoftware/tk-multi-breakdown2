@@ -15,6 +15,7 @@ from .ui.dialog import Ui_Dialog
 from .file_model import FileModel
 from .delegate_file_group import FileGroupDelegate
 from .actions import UpdateVersionAction
+from .framework_qtwidgets import ShotgunSpinningWidget
 
 task_manager = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "task_manager"
@@ -36,7 +37,7 @@ class AppDialog(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         # create a single instance of the task manager that manages all
-        # asynchrounous work/tasks.
+        # asynchronous work/tasks
         self._bg_task_manager = BackgroundTaskManager(self, max_threads=8)
         self._bg_task_manager.start_processing()
 
@@ -46,17 +47,25 @@ class AppDialog(QtGui.QWidget):
         self._ui = Ui_Dialog()
         self._ui.setupUi(self)
 
-        self._ui.browser.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-        self._ui.browser.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._ui.browser.customContextMenuRequested.connect(self._on_context_menu_requested)
+        # -----------------------------------------------------
+        # main file view
+
+        self._ui.file_view.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self._ui.file_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self._ui.file_view.customContextMenuRequested.connect(self._on_context_menu_requested)
 
         self._file_model = FileModel(self._bg_task_manager, self)
-        self._ui.browser.setModel(self._file_model)
+        self._ui.file_view.setModel(self._file_model)
 
+        self._delegate = FileGroupDelegate(self._ui.file_view)
+        self._ui.file_view.setItemDelegate(self._delegate)
+
+        self._file_model_overlay = ShotgunSpinningWidget(self._ui.file_view)
+        self._file_model_overlay.start_spin()
+        self._file_model.files_processed.connect(self._file_model_overlay.hide)
+
+        # finally, update the UI by processing the files of the current scene
         self._file_model.process_files()
-
-        self._delegate = FileGroupDelegate(self._ui.browser)
-        self._ui.browser.setItemDelegate(self._delegate)
 
     def closeEvent(self, event):
         """
@@ -66,7 +75,7 @@ class AppDialog(QtGui.QWidget):
         :param event:   Close event
         """
 
-        # clear up the various data models:
+        # clear up the various data models
         if self._file_model:
             self._file_model.destroy()
 
@@ -89,7 +98,7 @@ class AppDialog(QtGui.QWidget):
         """
 
         # get all the selected items
-        selection_model = self._ui.browser.selectionModel()
+        selection_model = self._ui.file_view.selectionModel()
         if not selection_model:
             return
 

@@ -10,10 +10,19 @@
 
 class FileItem(object):
     """
+    Encapsulate details about a single version of a file. Each instance represents a single "version" but will contain
+    details about the latest available version of the file.
     """
 
     def __init__(self, node_name, node_type, path, sg_data=None, extra_data=None):
         """
+        Class constructor.
+
+        :param node_name:  Name of the file node
+        :param node_type:  Type of the file node
+        :param path:       Path on disk of this file
+        :param sg_data:    Dictionary of Shotgun data representing this file in the database
+        :param extra_data: Dictionary containing additional information about this file
         """
 
         self.node_name = node_name
@@ -21,31 +30,21 @@ class FileItem(object):
         self.path = path
         self.sg_data = sg_data
         self.extra_data = extra_data
-        self._highest_version = None
-        self.file_history = None
+        self.latest_published_file = None
 
     @property
-    def highest_version(self):
+    def highest_version_number(self):
         """
+        :return: The highest version number available in the Shotgun database for this file
         """
-        if self._highest_version:
-            return self._highest_version
-        elif self.file_history:
-            self._highest_version = self.file_history[0].get("version_number")
+        if self.latest_published_file:
+            return self.latest_published_file.get("version_number")
         else:
             return None
 
-    @highest_version.setter
-    def highest_version(self, version):
-        """
-        :param version:
-        :return:
-        """
-        self._highest_version = version
-
     def to_dict(self):
         """
-        :return:
+        :return: The item properties as a dictionary
         """
         return {
             "node_name": self.node_name,

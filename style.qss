@@ -33,3 +33,6 @@ FileGroupWidget #expand_check_box::indicator:checked {
 }
 
 /* Styling for FileWidget in the files view */
+FileWidget #box {
+    border: none;
+}

@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="GroupedListView" name="browser" native="true"/>
+    <widget class="GroupedListView" name="file_view" native="true"/>
    </item>
   </layout>
  </widget>

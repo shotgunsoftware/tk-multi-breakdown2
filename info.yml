@@ -20,10 +20,10 @@ configuration:
         description:
         default_value: "{self}/ui_configurations.py"
 
-    hook_get_file_history:
+    hook_get_published_files:
         type: hook
         description:
-        default_value: "{self}/get_file_history.py"
+        default_value: "{self}/get_published_files.py"
 
     version_history:
         type: int

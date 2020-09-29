@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'dialog.ui'
+# Form implementation generated from reading ui file 'Y:\SGTK\devs\tk-multi-breakdown2\resources\dialog.ui'
 #
-# Created: Thu Sep 03 12:42:44 2020
+# Created: Tue Sep 29 12:07:10 2020
 #      by: pyside-uic 0.2.15 running on PySide 1.2.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -15,9 +15,9 @@ class Ui_Dialog(object):
         Dialog.resize(400, 300)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.browser = GroupedListView(Dialog)
-        self.browser.setObjectName("browser")
-        self.verticalLayout.addWidget(self.browser)
+        self.file_view = GroupedListView(Dialog)
+        self.file_view.setObjectName("file_view")
+        self.verticalLayout.addWidget(self.file_view)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)

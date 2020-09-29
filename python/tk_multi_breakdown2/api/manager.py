@@ -19,6 +19,7 @@ class BreakdownManager(object):
     This class is used for managing and executing file updates.
     """
 
+    # list of Shotgun fields we absolutely need to return when doing the queries
     SG_FIELDS = ["id", "project", "entity", "name", "task", "published_file_type"]
 
     def __init__(self):
@@ -30,6 +31,9 @@ class BreakdownManager(object):
 
     def scan_scene(self):
         """
+        Scan the current scene to return a list of object we could perform actions on.
+
+        :return: A list of :class`FileItem` objects containing the file data.
         """
 
         fields = list(BreakdownManager.SG_FIELDS)
@@ -38,6 +42,7 @@ class BreakdownManager(object):
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
         scene_objects = self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
 
+        # in order to be able to return all the needed Shotgun fields, we need to look for the way the UI is configured
         file_item_config = self._bundle.execute_hook_method("hook_ui_configurations", "file_item_details")
 
         fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("top_left"))
@@ -65,16 +70,22 @@ class BreakdownManager(object):
 
         return file_items
 
-    def get_file_history(self, item):
+    def get_latest_published_file(self, item):
         """
-        :param item:
-        :return:
+        Get the latest available published file according to the current item context.
+
+        :param item: :class`FileItem` object we want to get the latest published file
+        :return:  The latest published file as a Shotgun entity dictionary
         """
 
-        file_history = self._bundle.execute_hook("hook_get_file_history", item=item)
-        item.file_history = file_history
+        latest_published_file = self._bundle.execute_hook_method(
+            "hook_get_published_files",
+            "get_latest_published_file",
+            item=item
+        )
+        item.latest_published_file = latest_published_file
 
-        return item.file_history
+        return latest_published_file
 
     def update_to_latest_version(self, item):
         """
