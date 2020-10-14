@@ -54,7 +54,7 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self._ui.file_view.customContextMenuRequested.connect(self._on_context_menu_requested)
 
-        self._file_model = FileModel(self._bg_task_manager, self)
+        self._file_model = FileModel(self, self._bg_task_manager)
         self._ui.file_view.setModel(self._file_model)
 
         self._delegate = FileGroupDelegate(self._ui.file_view)

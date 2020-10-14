@@ -54,11 +54,13 @@ class FileModel(QtGui.QStandardItemModel):
 
             QtGui.QStandardItem.__init__(self, text)
 
-    def __init__(self, bg_task_manager, parent):
+    def __init__(self, parent, bg_task_manager):
         """
+        Class constructor
+
+        :param parent:          The parent QObject for this instance
         :param bg_task_manager: A BackgroundTaskManager instance that will be used for all background/threaded
                                 work that needs undertaking
-        :param parent:          The parent QObject for this instance
         """
 
         QtGui.QStandardItemModel.__init__(self, parent)
