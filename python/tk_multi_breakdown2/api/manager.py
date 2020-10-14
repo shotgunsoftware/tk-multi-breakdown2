@@ -11,6 +11,7 @@
 import sgtk
 
 from .item import FileItem
+from .. import constants
 from ..framework_qtwidgets import ShotgunListWidget
 
 
@@ -18,9 +19,6 @@ class BreakdownManager(object):
     """
     This class is used for managing and executing file updates.
     """
-
-    # list of Shotgun fields we absolutely need to return when doing the queries
-    SG_FIELDS = ["id", "project", "entity", "name", "task", "published_file_type"]
 
     def __init__(self):
         """
@@ -36,7 +34,7 @@ class BreakdownManager(object):
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
-        fields = list(BreakdownManager.SG_FIELDS)
+        fields = [] + constants.PUBLISHED_FILES_FIELDS
         file_items = []
 
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
