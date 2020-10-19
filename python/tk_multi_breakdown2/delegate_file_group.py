@@ -12,7 +12,7 @@ import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
 from .file_model import FileModel
-from .framework_qtwidgets import GroupedListViewItemDelegate, GroupWidgetBase, ShotgunListWidget
+from .framework_qtwidgets import GroupedListViewItemDelegate, GroupWidgetBase
 from .ui.file_group_widget import Ui_FileGroupWidget
 from .ui.file_widget import Ui_FileWidget
 

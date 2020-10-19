@@ -20,10 +20,12 @@ views = sgtk.platform.import_framework("tk-framework-qtwidgets", "views")
 GroupedListView = views.GroupedListView
 GroupedListViewItemDelegate = views.GroupedListViewItemDelegate
 GroupWidgetBase = views.GroupWidgetBase
+EditSelectedWidgetDelegate = views.EditSelectedWidgetDelegate
 
 # Shotgun formatted widget
 shotgun_widget = sgtk.platform.import_framework("tk-framework-qtwidgets", "shotgun_widget")
 ShotgunListWidget = shotgun_widget.ShotgunListWidget
+ShotgunFolderWidget = shotgun_widget.ShotgunFolderWidget
 
 # Overlay widget
 overlay_widget = sgtk.platform.import_framework("tk-framework-qtwidgets", "overlay_widget")

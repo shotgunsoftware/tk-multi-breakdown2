@@ -12,7 +12,7 @@ import sgtk
 
 from .item import FileItem
 from .. import constants
-from ..framework_qtwidgets import ShotgunListWidget
+from ..framework_qtwidgets import ShotgunListWidget, ShotgunFolderWidget
 
 
 class BreakdownManager(object):
@@ -48,6 +48,17 @@ class BreakdownManager(object):
         fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("body"))
         if file_item_config["thumbnail"]:
             fields.append("image")
+
+        # we also need to add more additional fields
+        file_history_config = self._bundle.execute_hook_method("hook_ui_configurations", "main_file_history_details")
+
+        fields += ShotgunFolderWidget.resolve_sg_fields(file_history_config.get("header"))
+        fields += ShotgunFolderWidget.resolve_sg_fields(file_history_config.get("body"))
+        if file_history_config["thumbnail"] and "image" not in fields:
+            fields.append("image")
+
+        # remove any duplicates
+        fields = list(set(fields))
 
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
         # cannot rely on templates so we have to query SG instead
