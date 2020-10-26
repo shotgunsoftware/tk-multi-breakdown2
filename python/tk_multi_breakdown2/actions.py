@@ -9,12 +9,55 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import sgtk
+from sgtk.platform.qt import QtGui
 
-from .file_model import FileModel
+
+class ActionManager(object):
+    """
+    Class to gather all the possible actions we can run inside the Scene Breakdown 2.
+    """
+
+    @staticmethod
+    def add_update_to_latest_action(items, parent=None):
+        """
+        Build a QAction for the "Update to latest" menu item.
+
+        :param items: List of items to update to their latest versions
+        :param parent: Parent widget
+        :returns: The QAction representing the menu item
+        """
+
+        action = UpdateToLatestVersionAction("Update to latest", items)
+
+        q_action = QtGui.QAction(action.label, parent)
+        q_action.triggered[()].connect(lambda checked=False: action.execute())
+
+        return q_action
+
+    @staticmethod
+    def add_update_to_specific_version_action(item, sg_data, parent=None):
+        """
+        Build a QAction for the "Update to vxx" menu item.
+
+        :param item: Item to update to a specific version
+        :param sg_data: Dictionary of Shotgun data representing the published file we want to update the item to
+        :param parent: Parent widget
+        :returns: The QAction representing the menu item
+        """
+        if not sg_data.get("version_number"):
+            return
+
+        action = UpdateToSpecificVersionAction("Update to v%03d" % sg_data["version_number"], item, sg_data)
+
+        q_action = QtGui.QAction(action.label, parent)
+        q_action.triggered[()].connect(lambda checked=False: action.execute())
+
+        return q_action
 
 
 class Action(object):
     """
+    Base class for Actions.
     """
 
     def __init__(self, label, items):
@@ -22,6 +65,7 @@ class Action(object):
         Constructor.
 
         :param label: Name of the action.
+        :param items: Items to perform the actions on
         """
         self._app = sgtk.platform.current_bundle()
         self._manager = self._app.create_breakdown_manager()
@@ -35,30 +79,54 @@ class Action(object):
         :raises NotImplementedError: Thrown if a derived class doesn't implement this method and the client invokes it.
         """
         raise NotImplementedError(
-            "Implementation of _execute() method missing for action '%s'" % self.label
+            "Implementation of execute() method missing for action '%s'" % self.label
         )
 
 
-class UpdateVersionAction(Action):
+class UpdateToLatestVersionAction(Action):
     """
+    Update items to their latest version
     """
 
     def __init__(self, label, items):
         """
+        Class constructor
+
+        :param label: Name of the action.
+        :param items: Items to perform the action on
         """
         Action.__init__(self, label, items)
 
     def execute(self):
         """
-        :return:
+        Update a list of items to their latest version.
         """
-
-        for i in self._items:
-
-            file_item_model = i[0]
-            file_item = i[1]
-
+        for file_item, file_model_item in self._items:
             self._manager.update_to_latest_version(file_item)
+            file_model_item.emitDataChanged()
 
-            # update the UI
-            file_item.sg_data = file_item.file_history[0]
+
+class UpdateToSpecificVersionAction(Action):
+    """
+    Update an item to a specific version.
+    """
+
+    def __init__(self, label, item, sg_data):
+        """
+        Class constructor
+
+        :param label: Name of the action.
+        :param item: Item to perform the action on
+        :param sg_data: Dictionary of Shotgun data representing the Published File we want to update the item to
+        """
+        Action.__init__(self, label, item)
+        self._sg_data = sg_data
+
+    def execute(self):
+        """
+        Update an item to a specific version.
+        """
+        file_item = self._items[0]
+        file_model_item = self._items[1]
+        self._manager.update_to_specific_version(file_item, self._sg_data)
+        file_model_item.emitDataChanged()

@@ -11,8 +11,7 @@
 import sgtk
 
 from .item import FileItem
-from .. import constants
-from ..framework_qtwidgets import ShotgunListWidget, ShotgunFolderWidget
+from ..utils import get_published_file_fields
 
 
 class BreakdownManager(object):
@@ -34,35 +33,15 @@ class BreakdownManager(object):
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
-        fields = [] + constants.PUBLISHED_FILES_FIELDS
         file_items = []
 
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
         scene_objects = self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
 
-        # in order to be able to return all the needed Shotgun fields, we need to look for the way the UI is configured
-        file_item_config = self._bundle.execute_hook_method("hook_ui_configurations", "file_item_details")
-
-        fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("top_left"))
-        fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("top_right"))
-        fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("body"))
-        if file_item_config["thumbnail"]:
-            fields.append("image")
-
-        # we also need to add more additional fields
-        file_history_config = self._bundle.execute_hook_method("hook_ui_configurations", "main_file_history_details")
-
-        fields += ShotgunFolderWidget.resolve_sg_fields(file_history_config.get("header"))
-        fields += ShotgunFolderWidget.resolve_sg_fields(file_history_config.get("body"))
-        if file_history_config["thumbnail"] and "image" not in fields:
-            fields.append("image")
-
-        # remove any duplicates
-        fields = list(set(fields))
-
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
+        fields = get_published_file_fields(self._bundle)
         published_files = sgtk.util.find_publish(
             self._bundle.sgtk,
             file_paths,
@@ -87,6 +66,9 @@ class BreakdownManager(object):
         :return:  The latest published file as a Shotgun entity dictionary
         """
 
+        if not item.sg_data:
+            return
+
         latest_published_file = self._bundle.execute_hook_method(
             "hook_get_published_files",
             "get_latest_published_file",
@@ -96,13 +78,61 @@ class BreakdownManager(object):
 
         return latest_published_file
 
+    def get_published_file_history(self, item):
+        """
+        Get the published history for the selected item. It will gather all the published files with the same context
+        than the current item (project, name, task, ...)
+
+        :param item: :class`FileItem` object we want to get the published file history
+        :returns: A list of Shotgun published file dictionary
+        """
+
+        if not item.sg_data:
+            return
+
+        fields = get_published_file_fields(self._bundle)
+        filters = [
+            ["project", "is", item.sg_data["project"]],
+            ["name", "is", item.sg_data["name"]],
+            ["task", "is", item.sg_data["task"]],
+            ["entity", "is", item.sg_data["entity"]],
+            ["published_file_type", "is", item.sg_data["published_file_type"]],
+        ]
+
+        pfs = self._bundle.shotgun.find(
+            "PublishedFile",
+            filters=filters,
+            fields=fields,
+            order=[{"direction": "desc", "field_name": "version_number"}]
+        )
+
+        item.latest_published_file = pfs[0]
+
+        return pfs
+
     def update_to_latest_version(self, item):
         """
-        :param item:
-        :return:
+        Update the item to its latest version.
+
+        :param item: Item to update
         """
 
-        latest_published_file = item.file_history[0]
-        item.path = latest_published_file["path"]["local_path"]
+        if not item.latest_published_file:
+            return
 
-        # self._bundle.execute_hook_method("hook_scene_operations", "update", item=item.to_dict())
+        self.update_to_specific_version(item, item.latest_published_file)
+
+    def update_to_specific_version(self, item, sg_data):
+        """
+        Update the item to a specific version.
+
+        :param item: Item to update
+        :param sg_data: Dictionary of Shotgun data representing the published file we want to update the item to
+        """
+
+        if not sg_data["path"]["local_path"]:
+            return
+
+        item.path = sg_data["path"]["local_path"]
+        self._bundle.execute_hook_method("hook_scene_operations", "update", item=item.to_dict())
+        item.sg_data = sg_data

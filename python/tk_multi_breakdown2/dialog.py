@@ -16,7 +16,7 @@ from .file_model import FileModel
 from .delegate_file_group import FileGroupDelegate
 from .file_history_model import FileHistoryModel
 from .delegate_file_history import FileHistoryDelegate
-from .actions import UpdateVersionAction
+from .actions import ActionManager
 from .framework_qtwidgets import ShotgunOverlayWidget
 
 task_manager = sgtk.platform.import_framework(
@@ -112,7 +112,11 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_history_view.setModel(self._file_history_proxy_model)
 
         # setup a delegate
-        self._file_history_delegate = FileHistoryDelegate(self._ui.file_history_view)
+        self._file_history_delegate = FileHistoryDelegate(
+            self._ui.file_history_view,
+            self._ui.file_view,
+            self._file_model
+        )
         file_details_history_config = self._bundle.execute_hook_method(
             "hook_ui_configurations",
             "file_history_details"
@@ -145,12 +149,25 @@ class AppDialog(QtGui.QWidget):
         Overriden method triggered when the widget is closed.  Cleans up as much as possible
         to help the GC.
 
-        :param event:   Close event
+        :param event: Close event
         """
+
+        # clear the selection in the main views.
+        # this is to avoid re-triggering selection
+        # as items are being removed in the models
+        #
+        # note that we pull out a fresh handle to the selection model
+        # as these objects sometimes are deleted internally in the view
+        # and therefore persisting python handles may not be valid
+        self._ui.file_view.selectionModel().clear()
+        self._ui.file_history_view.selectionModel().clear()
 
         # clear up the various data models
         if self._file_model:
             self._file_model.destroy()
+
+        if self._file_history_model:
+            self._file_history_model.clear()
 
         # and shut down the task manager
         if self._bg_task_manager:
@@ -175,8 +192,7 @@ class AppDialog(QtGui.QWidget):
         will collect information about the item under the cursor and emit a file_context_menu_requested
         signal.
 
-        :param pnt:
-        :return:
+        :param pnt: The position for the context menu relative to the source widget
         """
 
         # get all the selected items
@@ -190,9 +206,9 @@ class AppDialog(QtGui.QWidget):
 
         items = []
         for i in indexes:
-            file_item_model = self._file_model.itemFromIndex(i)
+            file_model_item = self._file_model.itemFromIndex(i)
             file_item = i.data(FileModel.FILE_ITEM_ROLE)
-            items.append((file_item_model, file_item))
+            items.append((file_item, file_model_item))
 
         # map the point to a global position:
         pnt = self.sender().mapToGlobal(pnt)
@@ -201,16 +217,15 @@ class AppDialog(QtGui.QWidget):
         context_menu = QtGui.QMenu(self)
 
         # build the actions
-        action = UpdateVersionAction("Update to latest", items)
-
-        q_action = QtGui.QAction(action.label, context_menu)
-        q_action.triggered[()].connect(lambda checked=False: action.execute())
+        q_action = ActionManager.add_update_to_latest_action(items, context_menu)
         context_menu.addAction(q_action)
 
         context_menu.exec_(pnt)
 
     def _on_file_selection(self):
         """
+        Slot triggered when a file is selected in the main view. This will collect details about the selected file in
+        order to display them in the details panel.
         """
 
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
@@ -245,6 +260,9 @@ class AppDialog(QtGui.QWidget):
 
     def _setup_details_panel(self, selected_items):
         """
+        Set up the details panel according to the selected items.
+
+        :param selected_items:  Model indexes of the selected items.
         """
 
         def __clear_publish_history():

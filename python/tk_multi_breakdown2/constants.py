@@ -15,5 +15,7 @@ PUBLISHED_FILES_FIELDS = [
     "entity",
     "name",
     "task",
-    "published_file_type"
+    "published_file_type",
+    "path",
+    "version_number"
 ]

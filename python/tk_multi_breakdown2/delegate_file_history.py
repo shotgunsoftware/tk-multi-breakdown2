@@ -8,8 +8,10 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 import sgtk
-from sgtk.platform.qt import QtCore
+from sgtk.platform.qt import QtCore, QtGui
 
+from .actions import ActionManager
+from .file_model import FileModel
 from .framework_qtwidgets import EditSelectedWidgetDelegate, ShotgunListWidget
 
 # import the shotgun_model module from shotgunutils framework
@@ -20,16 +22,23 @@ shotgun_model = sgtk.platform.import_framework(
 
 class FileHistoryDelegate(EditSelectedWidgetDelegate):
     """
+    Delegate which 'glues up' the Details Widget with a QT View.
     """
 
-    def __init__(self, view):
+    def __init__(self, view, file_view, file_model):
         """
         Class constructor.
+
+        :param view:       The view where this delegate is being used
+        :param file_view:  Main file view
+        :param file_model: Model used by the main file view
         """
         self._left_corner = None
         self._right_corner = None
         self._body = None
         self._thumbnail = None
+        self._file_view = file_view
+        self._file_model = file_model
 
         EditSelectedWidgetDelegate.__init__(self, view)
 
@@ -100,6 +109,16 @@ class FileHistoryDelegate(EditSelectedWidgetDelegate):
         # fill the content of the widget with the data of the loaded Shotgun
         # item
         widget.set_text(sg_item)
+
+        # add an action to update the file to this version
+        selected_indexes = self._file_view.selectionModel().selectedIndexes()
+        if not selected_indexes:
+            return
+        model_index = selected_indexes[0]
+        file_item_model = self._file_model.itemFromIndex(model_index)
+        file_item = model_index.data(FileModel.FILE_ITEM_ROLE)
+        q_action = ActionManager.add_update_to_specific_version_action((file_item, file_item_model), sg_item, None)
+        widget.set_actions([q_action])
 
     def sizeHint(self, style_options, model_index):
         """

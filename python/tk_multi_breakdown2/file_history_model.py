@@ -10,8 +10,8 @@
 
 import sgtk
 
-from . import constants
-from .framework_qtwidgets import ShotgunListWidget
+from .utils import get_published_file_fields
+
 
 shotgun_model = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_model"
@@ -21,14 +21,16 @@ ShotgunModel = shotgun_model.ShotgunModel
 
 class FileHistoryModel(ShotgunModel):
     """
+    This model represents the version history for a file.
     """
 
     def __init__(self, parent, bg_task_manager):
         """
         Class constructor
 
-        :param parent:
-        :param bg_task_manager:
+        :param parent:          The parent QObject for this instance
+        :param bg_task_manager: A BackgroundTaskManager instance that will be used for all background/threaded
+                                work that needs undertaking
         """
 
         ShotgunModel.__init__(
@@ -39,23 +41,15 @@ class FileHistoryModel(ShotgunModel):
 
     def load_data(self, sg_data):
         """
+        Load the details for the shotgun publish entity described by sg_data.
+
+        :param sg_data: Dictionary describing a publish in shotgun, including all the common
+                        publish fields.
         """
 
-        fields = [] + constants.PUBLISHED_FILES_FIELDS
-
-        # query the configuration hook to add some additional shotgun fields
         app = sgtk.platform.current_bundle()
-        file_history_config = app.execute_hook_method("hook_ui_configurations", "file_history_details")
 
-        fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("top_left"))
-        fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("top_right"))
-        fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("body"))
-        if file_history_config["thumbnail"] and "image" not in fields:
-            fields.append("image")
-
-        # remove all duplicates
-        fields = list(set(fields))
-
+        fields = get_published_file_fields(app)
         filters = [
             ["project", "is", sg_data["project"]],
             ["name", "is", sg_data["name"]],
