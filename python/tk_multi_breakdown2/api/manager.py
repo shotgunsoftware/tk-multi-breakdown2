@@ -27,10 +27,12 @@ class BreakdownManager(object):
 
         self._bundle = bundle
 
-    def scan_scene(self):
+    def scan_scene(self, extra_fields=None):
         """
         Scan the current scene to return a list of object we could perform actions on.
 
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+                             for published files.
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
@@ -43,7 +45,11 @@ class BreakdownManager(object):
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
+
         fields = get_published_file_fields(self._bundle)
+        if extra_fields:
+            fields.extend(extra_fields)
+
         published_files = sgtk.util.find_publish(
             self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
         )
@@ -75,12 +81,15 @@ class BreakdownManager(object):
 
         return latest_published_file
 
-    def get_published_file_history(self, item):
+    def get_published_file_history(self, item, extra_fields=None):
         """
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
 
         :param item: :class`FileItem` object we want to get the published file history
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+                             for published files.
+
         :returns: A list of Shotgun published file dictionary
         """
 
@@ -88,6 +97,9 @@ class BreakdownManager(object):
             return []
 
         fields = get_published_file_fields(self._bundle)
+        if extra_fields:
+            fields.extend(extra_fields)
+
         filters = [
             ["project", "is", item.sg_data["project"]],
             ["name", "is", item.sg_data["name"]],
