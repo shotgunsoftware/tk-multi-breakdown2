@@ -35,7 +35,6 @@ class BreakdownManager(object):
         """
 
         file_items = []
-
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
         scene_objects = self._bundle.execute_hook_method(
             "hook_scene_operations", "scan_scene"
@@ -67,7 +66,7 @@ class BreakdownManager(object):
         """
 
         if not item.sg_data:
-            return
+            return {}
 
         latest_published_file = self._bundle.execute_hook_method(
             "hook_get_published_files", "get_latest_published_file", item=item
@@ -86,7 +85,7 @@ class BreakdownManager(object):
         """
 
         if not item.sg_data:
-            return
+            return []
 
         fields = get_published_file_fields(self._bundle)
         filters = [
