@@ -10,6 +10,7 @@
 
 import sgtk
 
+
 from .item import FileItem
 from ..utils import get_published_file_fields
 
@@ -34,19 +35,17 @@ class BreakdownManager(object):
         """
 
         file_items = []
-
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
-        scene_objects = self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
+        scene_objects = self._bundle.execute_hook_method(
+            "hook_scene_operations", "scan_scene"
+        )
 
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
         fields = get_published_file_fields(self._bundle)
         published_files = sgtk.util.find_publish(
-            self._bundle.sgtk,
-            file_paths,
-            fields=fields,
-            only_current_project=False
+            self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
         )
 
         for obj in scene_objects:
@@ -70,9 +69,7 @@ class BreakdownManager(object):
             return
 
         latest_published_file = self._bundle.execute_hook_method(
-            "hook_get_published_files",
-            "get_latest_published_file",
-            item=item
+            "hook_get_published_files", "get_latest_published_file", item=item
         )
         item.latest_published_file = latest_published_file
 
@@ -103,7 +100,7 @@ class BreakdownManager(object):
             "PublishedFile",
             filters=filters,
             fields=fields,
-            order=[{"direction": "desc", "field_name": "version_number"}]
+            order=[{"direction": "desc", "field_name": "version_number"}],
         )
 
         item.latest_published_file = pfs[0]
@@ -134,5 +131,7 @@ class BreakdownManager(object):
             return
 
         item.path = sg_data["path"]["local_path"]
-        self._bundle.execute_hook_method("hook_scene_operations", "update", item=item.to_dict())
+        self._bundle.execute_hook_method(
+            "hook_scene_operations", "update", item=item.to_dict()
+        )
         item.sg_data = sg_data
