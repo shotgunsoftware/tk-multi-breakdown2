@@ -20,12 +20,12 @@ class BreakdownManager(object):
     This class is used for managing and executing file updates.
     """
 
-    def __init__(self):
+    def __init__(self, bundle):
         """
         Initialize the manager.
         """
 
-        self._bundle = sgtk.platform.current_bundle()
+        self._bundle = bundle
 
     def scan_scene(self):
         """

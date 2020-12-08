@@ -40,4 +40,5 @@ class SceneBreakdown2(sgtk.platform.Application):
 
         :returns: A :class:`tk_multi_breakdown2.BreakdownManager` instance
         """
-        return self._manager_class()
+
+        return self._manager_class(self)
