@@ -30,6 +30,13 @@ configuration:
         description:
         default_value: 5
 
+    published_file_fields:
+        type: list
+        values: {type: str}
+        allows_empty: True
+        description: List of Published File fields returned when querying Shotgun for published file history.
+                     These fields will also be used when scanning the scene to get the current scene elements.
+
 # the Shotgun fields that this app needs in order to operate correctly
 requires_shotgun_fields:
 
