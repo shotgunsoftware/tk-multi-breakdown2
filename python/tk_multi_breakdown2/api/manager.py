@@ -12,7 +12,7 @@ import sgtk
 
 
 from .item import FileItem
-from ..utils import get_published_file_fields
+from .. import constants
 
 
 class BreakdownManager(object):
@@ -27,10 +27,11 @@ class BreakdownManager(object):
 
         self._bundle = sgtk.platform.current_bundle()
 
-    def scan_scene(self):
+    def scan_scene(self, extra_fields=[]):
         """
         Scan the current scene to return a list of object we could perform actions on.
 
+        :param extra_fields: List of PublishedFile fields we want to return when scanning the scene
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
@@ -43,7 +44,11 @@ class BreakdownManager(object):
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
-        fields = get_published_file_fields(self._bundle)
+        fields = (
+            constants.PUBLISHED_FILES_FIELDS
+            + self._bundle.get_setting("published_file_fields", [])
+            + extra_fields
+        )
         published_files = sgtk.util.find_publish(
             self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
         )
@@ -75,19 +80,24 @@ class BreakdownManager(object):
 
         return latest_published_file
 
-    def get_published_file_history(self, item):
+    def get_published_file_history(self, item, extra_fields=[]):
         """
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
 
         :param item: :class`FileItem` object we want to get the published file history
+        :param extra_fields: List of PublishedFile fields we want to return when getting published file history
         :returns: A list of Shotgun published file dictionary
         """
 
         if not item.sg_data:
             return
 
-        fields = get_published_file_fields(self._bundle)
+        fields = (
+            constants.PUBLISHED_FILES_FIELDS
+            + self._bundle.get_setting("published_file_fields", [])
+            + extra_fields
+        )
         filters = [
             ["project", "is", item.sg_data["project"]],
             ["name", "is", item.sg_data["name"]],

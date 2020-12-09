@@ -11,6 +11,7 @@
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 
+from .utils import get_ui_published_file_fields
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
@@ -118,7 +119,8 @@ class FileModel(QtGui.QStandardItemModel):
         """
 
         # scan the current scene
-        file_items = self._manager.scan_scene()
+        extra_fields = get_ui_published_file_fields(self._app)
+        file_items = self._manager.scan_scene(extra_fields=extra_fields)
 
         for file_item in file_items:
 

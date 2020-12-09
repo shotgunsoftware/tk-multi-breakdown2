@@ -12,7 +12,7 @@ from . import constants
 from .framework_qtwidgets import ShotgunListWidget, ShotgunFolderWidget
 
 
-def get_published_file_fields(app):
+def get_ui_published_file_fields(app):
     """
     Returns a list of Shotgun fields we want to retrieve when querying Shotgun. We're going through each widget
     configuration in order to be sure to have all the necessary data to fill the fields.
@@ -21,7 +21,7 @@ def get_published_file_fields(app):
     :returns: A list of Shotgun Published File fields
     """
 
-    fields = [] + constants.PUBLISHED_FILES_FIELDS
+    fields = []
 
     # in order to be able to return all the needed Shotgun fields, we need to look for the way the UI is configured
     file_item_config = app.execute_hook_method("hook_ui_configurations", "file_item_details")
