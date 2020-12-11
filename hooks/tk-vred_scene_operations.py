@@ -11,10 +11,16 @@
 import os
 import sgtk
 
+try:
+    import builtins
+except ImportError:
+    import __builtins__ as builtins
+
 import vrScenegraph
 import vrFieldAccess
 import vrFileIO
-import vrMaterialPtr
+import vrNodePtr
+builtins.vrNodeService = vrNodeService
 
 
 HookBaseClass = sgtk.get_hook_baseclass()
@@ -62,6 +68,8 @@ class BreakdownSceneOperations(HookBaseClass):
                     {"node_name": node.getName(), "node_type": node.getType(), "path": path}
                 )
 
+        refs = [dict(r) for r in {tuple(d.items()) for d in refs}]
+
         return refs
 
     def update(self, item):
@@ -80,7 +88,7 @@ class BreakdownSceneOperations(HookBaseClass):
         path = item["path"]
 
         # find all the nodes in the current scene regarding to their name
-        nodes = vrScenegraph.findNodes(item["node"])
+        nodes = vrScenegraph.findNodes(node_name)
         if len(nodes) <= 0:
             self.logger.debug("Couldn't find any nodes in the scene graph where name is {}.".format(node_name))
             return
@@ -89,27 +97,43 @@ class BreakdownSceneOperations(HookBaseClass):
             # load the geometry only for the first node, but after that, try to clone this node to avoid importing
             # the file many times
             new_node = vrFileIO.loadGeometry(path)
-            self._apply_transforms_and_materials(nodes[0], new_node)
+            # we need to convert the root node to a vrNodeService in order to be able to use the Python API V2
+            old_node = vrNodeService.getNodeFromId(nodes[0].getID())
+            self._apply_transforms_and_materials(old_node, new_node)
+            # once the new node is fully created, linked it to old node parent
+            nodes[0].getParent().addChild(new_node)
 
-    def _apply_transforms_and_materials(self, old_node, new_node):
+            # deal with all the other references to the node
+            for n in nodes[1:]:
+                old_n = vrNodeService.getNodeFromId(n.getID())
+                clone_node = new_node.clone()
+                self._apply_transforms_and_materials(old_n, clone_node)
+                n.getParent().addChild(clone_node)
+
+            # finally, delete all the old nodes
+            vrScenegraph.deleteNodes(nodes, True)
+
+    def _apply_transforms_and_materials(self, old_root_node, new_node):
         """
         Get the transforms from the old node and apply them to the new node and its children
 
-        :param old_node: Node we want to get transforms from
-        :param new_node: Node we want to apply transforms to
+        :param old_node: Root of the node we want to get transforms and materials from
+        :param new_node: Node we want to apply transforms and materials to
         """
 
-        # skip surface nodes
-        if old_node.getName() == "Surface":
-            return
+        node_name = new_node.getName()
 
-        # apply transforms
-        vrScenegraph.copyTransformation(old_node, new_node)
+        # look in the old reference tree if we can find a node with the same name
+        old_node = vrNodeService.findNode(node_name, wildcard=False, includeComponents=False, root=old_root_node)
+        if old_node:
+            # apply the transforms and the materials
+            old_node_ptr = vrNodePtr.toNode(old_node.getObjectId())
+            vrScenegraph.copyTransformation(old_node_ptr, new_node)
+            node_material = old_node_ptr.getMaterial()
+            if node_material.isValid():
+                new_node.setMaterial(node_material)
 
-        # apply materials
-        material = old_node.getMaterial()
-        if material:
-            new_node.setMaterial(material)
-
-        # finally, do the same actions for each child of the current node
-
+        # recursively apply the transforms and materials to the node children too
+        for i in range(0, new_node.getNChildren()):
+            child_node = new_node.getChild(i)
+            self._apply_transforms_and_materials(old_root_node, child_node)
