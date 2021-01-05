@@ -74,10 +74,10 @@ class UIConfiguration(HookBaseClass):
             "top_left": "<b>{name}</b>",
             "top_right": "",
             "body": "<b style='color:#18A7E3;'>Node</b> {<NODE_NAME>}<br/>"
-                    "<b style='color:#18A7E3;'>Version</b> {version_number}<br/>"
-                    "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}<br/>"
-                    "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}",
-            "thumbnail": True
+            "<b style='color:#18A7E3;'>Version</b> {version_number}<br/>"
+            "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}<br/>"
+            "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}",
+            "thumbnail": True,
         }
 
     def main_file_history_details(self):
@@ -95,10 +95,10 @@ class UIConfiguration(HookBaseClass):
         return {
             "header": "",
             "body": "<b style='color:#18A7E3;'>Name</b> {name}<br/>"
-                    "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}<br/>"
-                    "<b style='color:#18A7E3;'>Version</b> {version_number}<br/>"
-                    "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}<br/>",
-            "thumbnail": True
+            "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}<br/>"
+            "<b style='color:#18A7E3;'>Version</b> {version_number}<br/>"
+            "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}<br/>",
+            "thumbnail": True,
         }
 
     def file_history_details(self):
@@ -118,5 +118,5 @@ class UIConfiguration(HookBaseClass):
             "top_left": "<b style='color:#18A7E3;'>Version {version_number}</b> <small>{created_at}</small>",
             "top_right": "",
             "body": "<small style='font-style: italic;'>{created_by.HumanUser.name}: </small>{description}<br/>",
-            "thumbnail": True
+            "thumbnail": True,
         }

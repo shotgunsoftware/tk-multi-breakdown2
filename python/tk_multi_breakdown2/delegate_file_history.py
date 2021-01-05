@@ -117,7 +117,9 @@ class FileHistoryDelegate(EditSelectedWidgetDelegate):
         model_index = selected_indexes[0]
         file_item_model = self._file_model.itemFromIndex(model_index)
         file_item = model_index.data(FileModel.FILE_ITEM_ROLE)
-        q_action = ActionManager.add_update_to_specific_version_action((file_item, file_item_model), sg_item, None)
+        q_action = ActionManager.add_update_to_specific_version_action(
+            (file_item, file_item_model), sg_item, None
+        )
         widget.set_actions([q_action])
 
     def sizeHint(self, style_options, model_index):

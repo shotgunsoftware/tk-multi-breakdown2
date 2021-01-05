@@ -28,13 +28,10 @@ shotgun_globals = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_globals"
 )
 
-settings = sgtk.platform.import_framework(
-    "tk-framework-shotgunutils", "settings"
-)
+settings = sgtk.platform.import_framework("tk-framework-shotgunutils", "settings")
 
 
 class AppDialog(QtGui.QWidget):
-
     def __init__(self, parent=None):
         """
         :param parent: The parent QWidget for this control
@@ -65,7 +62,9 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 
         self._ui.file_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._ui.file_view.customContextMenuRequested.connect(self._on_context_menu_requested)
+        self._ui.file_view.customContextMenuRequested.connect(
+            self._on_context_menu_requested
+        )
 
         self._file_model = FileModel(self, self._bg_task_manager)
         self._ui.file_view.setModel(self._file_model)
@@ -84,13 +83,12 @@ class AppDialog(QtGui.QWidget):
 
         # format the details main widget
         main_file_details_history_config = self._bundle.execute_hook_method(
-            "hook_ui_configurations",
-            "main_file_history_details"
+            "hook_ui_configurations", "main_file_history_details"
         )
         self._ui.file_details.set_formatting(
             main_file_details_history_config.get("header"),
             main_file_details_history_config.get("body"),
-            main_file_details_history_config.get("thumbnail")
+            main_file_details_history_config.get("thumbnail"),
         )
 
         self._file_history_model = FileHistoryModel(self, self._bg_task_manager)
@@ -113,24 +111,23 @@ class AppDialog(QtGui.QWidget):
 
         # setup a delegate
         self._file_history_delegate = FileHistoryDelegate(
-            self._ui.file_history_view,
-            self._ui.file_view,
-            self._file_model
+            self._ui.file_history_view, self._ui.file_view, self._file_model
         )
         file_details_history_config = self._bundle.execute_hook_method(
-            "hook_ui_configurations",
-            "file_history_details"
+            "hook_ui_configurations", "file_history_details"
         )
         self._file_history_delegate.set_formatting(
             file_details_history_config.get("top_left"),
             file_details_history_config.get("top_right"),
             file_details_history_config.get("body"),
-            file_details_history_config.get("thumbnail")
+            file_details_history_config.get("thumbnail"),
         )
         self._ui.file_history_view.setItemDelegate(self._file_history_delegate)
 
         self._ui.details_button.clicked.connect(self._toggle_details_panel)
-        details_panel_visibility = self._settings_manager.retrieve("details_panel_visibility", False)
+        details_panel_visibility = self._settings_manager.retrieve(
+            "details_panel_visibility", False
+        )
         self._set_details_panel_visibility(details_panel_visibility)
 
         # -----------------------------------------------------

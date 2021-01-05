@@ -50,8 +50,12 @@ class BreakdownSceneOperations(HookBaseClass):
 
             # get the path and make it platform dependent
             # (maya uses C:/style/paths)
-            maya_path = cmds.referenceQuery(ref, filename=True, withoutCopyNumber=True).replace("/", os.path.sep)
-            refs.append({"node_name": node_name, "node_type": "reference", "path": maya_path})
+            maya_path = cmds.referenceQuery(
+                ref, filename=True, withoutCopyNumber=True
+            ).replace("/", os.path.sep)
+            refs.append(
+                {"node_name": node_name, "node_type": "reference", "path": maya_path}
+            )
 
         # now look at file texture nodes
         for file_node in cmds.ls(l=True, type="file"):

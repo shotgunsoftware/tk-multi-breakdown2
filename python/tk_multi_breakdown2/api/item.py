@@ -8,6 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
+
 class FileItem(object):
     """
     Encapsulate details about a single version of a file. Each instance represents a single "version" but will contain
