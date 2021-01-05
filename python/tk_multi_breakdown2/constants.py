@@ -17,5 +17,5 @@ PUBLISHED_FILES_FIELDS = [
     "task",
     "published_file_type",
     "path",
-    "version_number"
+    "version_number",
 ]

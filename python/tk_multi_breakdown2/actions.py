@@ -47,7 +47,9 @@ class ActionManager(object):
         if not sg_data.get("version_number"):
             return
 
-        action = UpdateToSpecificVersionAction("Update to v%03d" % sg_data["version_number"], item, sg_data)
+        action = UpdateToSpecificVersionAction(
+            "Update to v%03d" % sg_data["version_number"], item, sg_data
+        )
 
         q_action = QtGui.QAction(action.label, parent)
         q_action.triggered[()].connect(lambda checked=False: action.execute())
