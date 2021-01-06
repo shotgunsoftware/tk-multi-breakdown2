@@ -10,9 +10,8 @@
 
 import sgtk
 
-
 from .item import FileItem
-from ..utils import get_published_file_fields
+from .. import constants
 
 
 class BreakdownManager(object):
@@ -37,6 +36,7 @@ class BreakdownManager(object):
         """
 
         file_items = []
+
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
         scene_objects = self._bundle.execute_hook_method(
             "hook_scene_operations", "scan_scene"
@@ -46,9 +46,11 @@ class BreakdownManager(object):
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
 
-        fields = get_published_file_fields(self._bundle)
-        if extra_fields:
-            fields.extend(extra_fields)
+        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
+            "published_file_fields", []
+        )
+        if extra_fields is not None:
+            fields += extra_fields
 
         published_files = sgtk.util.find_publish(
             self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
@@ -96,9 +98,11 @@ class BreakdownManager(object):
         if not item.sg_data:
             return []
 
-        fields = get_published_file_fields(self._bundle)
-        if extra_fields:
-            fields.extend(extra_fields)
+        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
+            "published_file_fields", []
+        )
+        if extra_fields is not None:
+            fields += extra_fields
 
         filters = [
             ["project", "is", item.sg_data["project"]],

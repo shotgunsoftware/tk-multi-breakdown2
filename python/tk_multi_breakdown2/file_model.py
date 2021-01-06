@@ -11,6 +11,7 @@
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 
+from .utils import get_ui_published_file_fields
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
@@ -111,17 +112,15 @@ class FileModel(QtGui.QStandardItemModel):
                 self._on_background_task_failed
             )
 
-    def process_files(self, extra_fields=None):
+    def process_files(self):
         """
         Scan the current scene to get all the items we could perform actions on and for each item, build a model item
         and a data structure to represent them.
-
-        :param extra_fields: A list of Shotgun fields to append to the query executed in the BreadkdownManager
-                             scan_scene to find published files.
         """
 
         # scan the current scene
-        file_items = self._manager.scan_scene(extra_fields)
+        extra_fields = get_ui_published_file_fields(self._app)
+        file_items = self._manager.scan_scene(extra_fields=extra_fields)
 
         for file_item in file_items:
 
