@@ -46,7 +46,9 @@ class FileHistoryModel(ShotgunModel):
 
         app = sgtk.platform.current_bundle()
 
-        fields = constants.PUBLISHED_FILES_FIELDS + app.get_setting("published_file_fields", [])
+        fields = constants.PUBLISHED_FILES_FIELDS + app.get_setting(
+            "published_file_fields", []
+        )
         fields += get_ui_published_file_fields(app)
         filters = [
             ["project", "is", sg_data["project"]],

@@ -46,7 +46,9 @@ class BreakdownManager(object):
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
 
-        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting("published_file_fields", [])
+        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
+            "published_file_fields", []
+        )
         if extra_fields is not None:
             fields += extra_fields
 
@@ -96,7 +98,9 @@ class BreakdownManager(object):
         if not item.sg_data:
             return []
 
-        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting("published_file_fields", [])
+        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
+            "published_file_fields", []
+        )
         if extra_fields is not None:
             fields += extra_fields
 
