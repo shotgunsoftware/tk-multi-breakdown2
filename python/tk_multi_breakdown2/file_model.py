@@ -81,8 +81,12 @@ class FileModel(QtGui.QStandardItemModel):
 
         # sg data retriever is used to download thumbnails in the background
         self._sg_data_retriever = ShotgunDataRetriever(bg_task_manager=bg_task_manager)
-        self._sg_data_retriever.work_completed.connect(self._on_data_retriever_work_completed)
-        self._sg_data_retriever.work_failure.connect(self._on_data_retriever_work_failed)
+        self._sg_data_retriever.work_completed.connect(
+            self._on_data_retriever_work_completed
+        )
+        self._sg_data_retriever.work_failure.connect(
+            self._on_data_retriever_work_failed
+        )
 
     def destroy(self):
         """
@@ -101,8 +105,12 @@ class FileModel(QtGui.QStandardItemModel):
 
         # shut down the task manager
         if self._bg_task_manager:
-            self._bg_task_manager.task_completed.disconnect(self._on_background_task_completed)
-            self._bg_task_manager.task_failed.disconnect(self._on_background_task_failed)
+            self._bg_task_manager.task_completed.disconnect(
+                self._on_background_task_completed
+            )
+            self._bg_task_manager.task_failed.disconnect(
+                self._on_background_task_failed
+            )
 
     def process_files(self):
         """
@@ -215,5 +223,6 @@ class FileModel(QtGui.QStandardItemModel):
         if uid in self._pending_version_requests:
             del self._pending_version_requests[uid]
         self._app.log_debug(
-            "File Model: Failed to find the latest published file for id %s: %s" % (uid, msg)
+            "File Model: Failed to find the latest published file for id %s: %s"
+            % (uid, msg)
         )

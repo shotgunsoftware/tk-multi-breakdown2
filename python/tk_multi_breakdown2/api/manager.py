@@ -19,37 +19,39 @@ class BreakdownManager(object):
     This class is used for managing and executing file updates.
     """
 
-    def __init__(self):
+    def __init__(self, bundle):
         """
         Initialize the manager.
         """
 
-        self._bundle = sgtk.platform.current_bundle()
+        self._bundle = bundle
 
     def scan_scene(self, extra_fields=None):
         """
         Scan the current scene to return a list of object we could perform actions on.
 
-        :param extra_fields: A list of PublishedFile fields we want to return when scanning the scene
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+                             for published files.
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
         file_items = []
 
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
-        scene_objects = self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
+        scene_objects = self._bundle.execute_hook_method(
+            "hook_scene_operations", "scan_scene"
+        )
 
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
+
         fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting("published_file_fields", [])
         if extra_fields is not None:
             fields += extra_fields
+
         published_files = sgtk.util.find_publish(
-            self._bundle.sgtk,
-            file_paths,
-            fields=fields,
-            only_current_project=False
+            self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
         )
 
         for obj in scene_objects:
@@ -70,12 +72,10 @@ class BreakdownManager(object):
         """
 
         if not item.sg_data:
-            return
+            return {}
 
         latest_published_file = self._bundle.execute_hook_method(
-            "hook_get_published_files",
-            "get_latest_published_file",
-            item=item
+            "hook_get_published_files", "get_latest_published_file", item=item
         )
         item.latest_published_file = latest_published_file
 
@@ -87,16 +87,19 @@ class BreakdownManager(object):
         than the current item (project, name, task, ...)
 
         :param item: :class`FileItem` object we want to get the published file history
-        :param extra_fields: List of PublishedFile fields we want to return when getting published file history
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+                             for published files.
+
         :returns: A list of Shotgun published file dictionary
         """
 
         if not item.sg_data:
-            return
+            return []
 
         fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting("published_file_fields", [])
         if extra_fields is not None:
             fields += extra_fields
+
         filters = [
             ["project", "is", item.sg_data["project"]],
             ["name", "is", item.sg_data["name"]],
@@ -109,7 +112,7 @@ class BreakdownManager(object):
             "PublishedFile",
             filters=filters,
             fields=fields,
-            order=[{"direction": "desc", "field_name": "version_number"}]
+            order=[{"direction": "desc", "field_name": "version_number"}],
         )
 
         item.latest_published_file = pfs[0]
@@ -140,5 +143,7 @@ class BreakdownManager(object):
             return
 
         item.path = sg_data["path"]["local_path"]
-        self._bundle.execute_hook_method("hook_scene_operations", "update", item=item.to_dict())
+        self._bundle.execute_hook_method(
+            "hook_scene_operations", "update", item=item.to_dict()
+        )
         item.sg_data = sg_data

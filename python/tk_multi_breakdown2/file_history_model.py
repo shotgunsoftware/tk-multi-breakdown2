@@ -34,11 +34,7 @@ class FileHistoryModel(ShotgunModel):
                                 work that needs undertaking
         """
 
-        ShotgunModel.__init__(
-            self,
-            parent,
-            bg_task_manager=bg_task_manager
-        )
+        ShotgunModel.__init__(self, parent, bg_task_manager=bg_task_manager)
 
     def load_data(self, sg_data):
         """

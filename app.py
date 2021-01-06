@@ -30,7 +30,9 @@ class SceneBreakdown2(sgtk.platform.Application):
         self._manager_class = tk_multi_breakdown2.BreakdownManager
 
         cb = lambda: tk_multi_breakdown2.show_dialog(self)
-        self.engine.register_command("Scene Breakdown2...", cb, {"short_name": "breakdown2"})
+        self.engine.register_command(
+            "Scene Breakdown2...", cb, {"short_name": "breakdown2"}
+        )
 
     def create_breakdown_manager(self):
         """
@@ -38,4 +40,5 @@ class SceneBreakdown2(sgtk.platform.Application):
 
         :returns: A :class:`tk_multi_breakdown2.BreakdownManager` instance
         """
-        return self._manager_class()
+
+        return self._manager_class(self)
