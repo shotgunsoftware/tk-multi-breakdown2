@@ -12,7 +12,7 @@ from . import constants
 from .framework_qtwidgets import ShotgunListWidget, ShotgunFolderWidget
 
 
-def get_published_file_fields(app):
+def get_ui_published_file_fields(app):
     """
     Returns a list of Shotgun fields we want to retrieve when querying Shotgun. We're going through each widget
     configuration in order to be sure to have all the necessary data to fill the fields.
@@ -21,10 +21,12 @@ def get_published_file_fields(app):
     :returns: A list of Shotgun Published File fields
     """
 
-    fields = [] + constants.PUBLISHED_FILES_FIELDS
+    fields = []
 
     # in order to be able to return all the needed Shotgun fields, we need to look for the way the UI is configured
-    file_item_config = app.execute_hook_method("hook_ui_configurations", "file_item_details")
+    file_item_config = app.execute_hook_method(
+        "hook_ui_configurations", "file_item_details"
+    )
 
     fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("top_left"))
     fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("top_right"))
@@ -32,14 +34,22 @@ def get_published_file_fields(app):
     if file_item_config["thumbnail"]:
         fields.append("image")
 
-    main_file_history_config = app.execute_hook_method("hook_ui_configurations", "main_file_history_details")
+    main_file_history_config = app.execute_hook_method(
+        "hook_ui_configurations", "main_file_history_details"
+    )
 
-    fields += ShotgunFolderWidget.resolve_sg_fields(main_file_history_config.get("header"))
-    fields += ShotgunFolderWidget.resolve_sg_fields(main_file_history_config.get("body"))
+    fields += ShotgunFolderWidget.resolve_sg_fields(
+        main_file_history_config.get("header")
+    )
+    fields += ShotgunFolderWidget.resolve_sg_fields(
+        main_file_history_config.get("body")
+    )
     if main_file_history_config["thumbnail"] and "image" not in fields:
         fields.append("image")
 
-    file_history_config = app.execute_hook_method("hook_ui_configurations", "file_history_details")
+    file_history_config = app.execute_hook_method(
+        "hook_ui_configurations", "file_history_details"
+    )
 
     fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("top_left"))
     fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("top_right"))

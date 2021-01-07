@@ -37,10 +37,7 @@ class GetPublishedFiles(HookBaseClass):
         # todo: check if this work with url published files
         # todo: need to check for path comparison?
         published_file = self.sgtk.shotgun.find_one(
-            "PublishedFile",
-            filters=filters,
-            fields=fields,
-            order=order,
+            "PublishedFile", filters=filters, fields=fields, order=order,
         )
 
         return published_file

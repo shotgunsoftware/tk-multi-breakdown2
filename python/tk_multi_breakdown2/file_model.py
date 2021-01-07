@@ -11,6 +11,8 @@
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 
+from .utils import get_ui_published_file_fields
+
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
 )
@@ -79,8 +81,12 @@ class FileModel(QtGui.QStandardItemModel):
 
         # sg data retriever is used to download thumbnails in the background
         self._sg_data_retriever = ShotgunDataRetriever(bg_task_manager=bg_task_manager)
-        self._sg_data_retriever.work_completed.connect(self._on_data_retriever_work_completed)
-        self._sg_data_retriever.work_failure.connect(self._on_data_retriever_work_failed)
+        self._sg_data_retriever.work_completed.connect(
+            self._on_data_retriever_work_completed
+        )
+        self._sg_data_retriever.work_failure.connect(
+            self._on_data_retriever_work_failed
+        )
 
     def destroy(self):
         """
@@ -99,8 +105,12 @@ class FileModel(QtGui.QStandardItemModel):
 
         # shut down the task manager
         if self._bg_task_manager:
-            self._bg_task_manager.task_completed.disconnect(self._on_background_task_completed)
-            self._bg_task_manager.task_failed.disconnect(self._on_background_task_failed)
+            self._bg_task_manager.task_completed.disconnect(
+                self._on_background_task_completed
+            )
+            self._bg_task_manager.task_failed.disconnect(
+                self._on_background_task_failed
+            )
 
     def process_files(self):
         """
@@ -109,7 +119,8 @@ class FileModel(QtGui.QStandardItemModel):
         """
 
         # scan the current scene
-        file_items = self._manager.scan_scene()
+        extra_fields = get_ui_published_file_fields(self._app)
+        file_items = self._manager.scan_scene(extra_fields=extra_fields)
 
         for file_item in file_items:
 

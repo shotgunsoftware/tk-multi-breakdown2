@@ -16,7 +16,9 @@ from .framework_qtwidgets import GroupedListViewItemDelegate, GroupWidgetBase
 from .ui.file_group_widget import Ui_FileGroupWidget
 from .ui.file_widget import Ui_FileWidget
 
-shotgun_model = sgtk.platform.import_framework("tk-framework-shotgunutils", "shotgun_model")
+shotgun_model = sgtk.platform.import_framework(
+    "tk-framework-shotgunutils", "shotgun_model"
+)
 
 
 class FileWidget(QtGui.QWidget):
@@ -56,12 +58,14 @@ class FileWidget(QtGui.QWidget):
         """
         Format the ShotgunWidget to be sure to have the right information displayed at the right place.
         """
-        file_item_config = self._bundle.execute_hook_method("hook_ui_configurations", "file_item_details")
+        file_item_config = self._bundle.execute_hook_method(
+            "hook_ui_configurations", "file_item_details"
+        )
         self._ui.shotgun_widget.set_formatting(
             file_item_config.get("top_left"),
             file_item_config.get("top_right"),
             file_item_config.get("body"),
-            file_item_config.get("thumbnail")
+            file_item_config.get("thumbnail"),
         )
 
     def set_thumbnail(self, thumbnail):
@@ -113,9 +117,13 @@ class FileWidget(QtGui.QWidget):
         :param up_to_date: True if the item is up-to-date, False otherwise
         """
         if up_to_date:
-            self._ui.icon.setPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/green_bullet.png"))
+            self._ui.icon.setPixmap(
+                QtGui.QPixmap(":/tk-multi-breakdown2/green_bullet.png")
+            )
         else:
-            self._ui.icon.setPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/red_bullet.png"))
+            self._ui.icon.setPixmap(
+                QtGui.QPixmap(":/tk-multi-breakdown2/red_bullet.png")
+            )
 
     def set_spinning_wheel(self):
         """
@@ -241,14 +249,15 @@ class FileGroupDelegate(GroupedListViewItemDelegate):
 
         # apply widget selection style
         widget.set_selected(
-            (
-                style_options.state & QtGui.QStyle.State_Selected
-            ) == QtGui.QStyle.State_Selected
+            (style_options.state & QtGui.QStyle.State_Selected)
+            == QtGui.QStyle.State_Selected
         )
 
         # update icon
         if item_data.highest_version_number:
-            widget.set_state(item_data.sg_data["version_number"] >= item_data.highest_version_number)
+            widget.set_state(
+                item_data.sg_data["version_number"] >= item_data.highest_version_number
+            )
         else:
             widget.set_spinning_wheel()
 

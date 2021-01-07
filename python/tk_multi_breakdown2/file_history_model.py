@@ -10,7 +10,8 @@
 
 import sgtk
 
-from .utils import get_published_file_fields
+from .utils import get_ui_published_file_fields
+from . import constants
 
 
 shotgun_model = sgtk.platform.import_framework(
@@ -33,11 +34,7 @@ class FileHistoryModel(ShotgunModel):
                                 work that needs undertaking
         """
 
-        ShotgunModel.__init__(
-            self,
-            parent,
-            bg_task_manager=bg_task_manager
-        )
+        ShotgunModel.__init__(self, parent, bg_task_manager=bg_task_manager)
 
     def load_data(self, sg_data):
         """
@@ -49,7 +46,10 @@ class FileHistoryModel(ShotgunModel):
 
         app = sgtk.platform.current_bundle()
 
-        fields = get_published_file_fields(app)
+        fields = constants.PUBLISHED_FILES_FIELDS + app.get_setting(
+            "published_file_fields", []
+        )
+        fields += get_ui_published_file_fields(app)
         filters = [
             ["project", "is", sg_data["project"]],
             ["name", "is", sg_data["name"]],
