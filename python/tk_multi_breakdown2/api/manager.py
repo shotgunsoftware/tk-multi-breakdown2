@@ -55,11 +55,11 @@ class BreakdownManager(object):
         )
 
         for obj in scene_objects:
-            file_item = FileItem(obj["node_name"], obj["node_type"], obj["path"])
-            file_item.extra_data = obj.get("extra_data")
             if obj["path"] in published_files.keys():
+                file_item = FileItem(obj["node_name"], obj["node_type"], obj["path"])
+                file_item.extra_data = obj.get("extra_data")
                 file_item.sg_data = published_files[obj["path"]]
-            file_items.append(file_item)
+                file_items.append(file_item)
 
         return file_items
 
@@ -101,6 +101,7 @@ class BreakdownManager(object):
             + self._bundle.get_setting("published_file_fields", [])
             + extra_fields
         )
+
         filters = [
             ["project", "is", item.sg_data["project"]],
             ["name", "is", item.sg_data["name"]],
