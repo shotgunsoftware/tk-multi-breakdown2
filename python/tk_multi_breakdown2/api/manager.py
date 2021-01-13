@@ -116,9 +116,12 @@ class BreakdownManager(object):
             order=[{"direction": "desc", "field_name": "version_number"}],
         )
 
-        item.latest_published_file = pfs[0]
+        if pfs:
+            item.latest_published_file = pfs[0]
+            return pfs
 
-        return pfs
+        # Return empty list indicating no publish file history was found.
+        return []
 
     def update_to_latest_version(self, item):
         """
