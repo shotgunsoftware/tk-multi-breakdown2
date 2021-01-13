@@ -143,7 +143,7 @@ class BreakdownManager(object):
         :param sg_data: Dictionary of Shotgun data representing the published file we want to update the item to
         """
 
-        if not sg_data["path"]["local_path"]:
+        if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return
 
         item.path = sg_data["path"]["local_path"]
