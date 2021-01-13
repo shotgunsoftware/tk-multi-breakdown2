@@ -18,7 +18,6 @@ from .file_history_model import FileHistoryModel
 from .delegate_file_history import FileHistoryDelegate
 from .actions import ActionManager
 from .framework_qtwidgets import ShotgunOverlayWidget
-from .utils import get_published_file_fields
 
 task_manager = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "task_manager"
@@ -134,8 +133,7 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
 
         # finally, update the UI by processing the files of the current scene
-        extra_fields = get_published_file_fields()
-        self._file_model.process_files(extra_fields)
+        self._file_model.process_files()
 
         # make this slot connection once the model has started processing files otherwise the selection model doesn't
         # exist
