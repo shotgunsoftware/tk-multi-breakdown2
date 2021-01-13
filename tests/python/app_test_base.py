@@ -26,14 +26,6 @@ class AppTestBase(TankTestBase):
         Set up before any tests are executed.
         """
 
-        import sys
-
-        sys.path.append("/Users/oues/python_libs")
-        import ptvsd
-
-        ptvsd.enable_attach()
-        ptvsd.wait_for_attach()
-
         # First call the parent TankTestBase constructor to set up the tests base
         super(AppTestBase, self).setUp()
         self.setup_fixtures()

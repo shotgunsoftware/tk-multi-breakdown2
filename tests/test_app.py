@@ -17,15 +17,6 @@ from app_test_base import AppTestBase
 from tank.errors import TankHookMethodDoesNotExistError
 from tank_test.tank_test_base import setUpModule  # noqa
 
-#
-# NOTE
-# most tests are set up for api only and then with the app/engine set up
-# clean up and find edge cases
-# few api only tests that break because we need to mock the sgtk/shotgun find/query methods
-# TODO set up multiple projects to test find_publish across multiple
-# TODO add test to tk-core for testing the new param
-# TODO test_shotgun.py fix tests calling `find_publish`
-
 
 class TestApplication(AppTestBase):
     """
@@ -156,15 +147,10 @@ class TestApplication(AppTestBase):
         # FIXME
         assert latest.get("version_number", None) == 2
 
-    # Use fixture for param?
-    # def test_get_published_file_history(self, item):
     def test_get_published_file_history(self):
         """
         Test getting the published history for the selected item.
         """
-
-        # FIXME reset the scene each time these tests are run?
-        # TODO create another project to be able to query from and get publshed file versions
 
         scene_items = self.manager.scan_scene()
         assert isinstance(scene_items, list)
@@ -192,54 +178,6 @@ class TestApplication(AppTestBase):
 
         assert item.latest_published_file is not None
         assert item.latest_published_file["version_number"] == latest
-
-    # @pytest.mark.skip(reason="Not implemented!")
-    # def test_update_to_latest_version(self):
-    #     """
-    #     Update the item to its latest version.
-
-    #     :param item: Item to update
-    #     """
-
-    #     #TODO
-
-    # @pytest.mark.parametrize("sg_data", [
-    #    None,
-    #    {},
-    #    {"version_number": 6, "id": 1, "name": "beep", "code": "boop"},
-    #    {"version_number": 6, "id": 1, "name": "beep", "code": "boop", "path": "invalid path"},
-    #    {"version_number": 6, "id": 1, "name": "beep", "code": "boop", "path": {"missing_local_path": "no path"}},
-    #    {"version_number": 6, "id": 1, "name": "beep", "code": "boop", "path": {"local_path": "/this/is/a/valid/data/object"}}
-    # ])
-    # def test_update_to_specific_version(self, sg_data):
-    #     """
-    #     Test updating the item to a specific version.
-    #     """
-
-    #     # Scan the scene to get an item to update.
-    #     item = self.manager.scan_scene()[0]
-
-    #     # Determine if the item should be updated, based on the validity of the sg_data. Save the original
-    #     # item's data, if the item should not be updated to assert nothing has changed after calling update.
-    #     if not sg_data or not sg_data.get("path", {}).get("local_path", None):
-    #         item_path = item.path
-    #         item_sg_data = item.sg_data
-    #         should_update = True
-
-    #     else:
-    #         should_update = False
-
-    #     # Call the breakdown manager to perform the update.
-    #     self.manager.update_to_specific_version(item, sg_data)
-
-    #     if should_update:
-    #         assert item.path == sg_data["path"]["local_path"]
-    #         for key, value in item.sg_data.items():
-    #             assert value == sg_data[key]
-
-    #     else:
-    #         assert item.path == item_path
-    #         assert item.sg_data == item_sg_data
 
     def test_breakdown_manager_workflow(self):
         """
