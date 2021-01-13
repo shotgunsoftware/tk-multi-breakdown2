@@ -10,7 +10,6 @@
 
 import sgtk
 
-
 from .item import FileItem
 from .. import constants
 
@@ -20,14 +19,14 @@ class BreakdownManager(object):
     This class is used for managing and executing file updates.
     """
 
-    def __init__(self):
+    def __init__(self, bundle):
         """
         Initialize the manager.
         """
 
-        self._bundle = sgtk.platform.current_bundle()
+        self._bundle = bundle
 
-    def scan_scene(self, extra_fields=[]):
+    def scan_scene(self, extra_fields=None):
         """
         Scan the current scene to return a list of object we could perform actions on.
 
@@ -35,7 +34,9 @@ class BreakdownManager(object):
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
+        extra_fields = extra_fields or []
         file_items = []
+
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
         scene_objects = self._bundle.execute_hook_method(
             "hook_scene_operations", "scan_scene"
@@ -80,11 +81,12 @@ class BreakdownManager(object):
 
         return latest_published_file
 
-    def get_published_file_history(self, item, extra_fields=[]):
+    def get_published_file_history(self, item, extra_fields=None):
         """
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
 
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query fields.
         :param item: :class`FileItem` object we want to get the published file history
         :param extra_fields: List of PublishedFile fields we want to return when getting published file history
         :returns: A list of Shotgun published file dictionary
@@ -93,6 +95,7 @@ class BreakdownManager(object):
         if not item.sg_data:
             return
 
+        extra_fields = extra_fields or []
         fields = (
             constants.PUBLISHED_FILES_FIELDS
             + self._bundle.get_setting("published_file_fields", [])
