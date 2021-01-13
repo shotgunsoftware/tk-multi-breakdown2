@@ -72,7 +72,7 @@ class BreakdownManager(object):
         """
 
         if not item.sg_data:
-            return
+            return {}
 
         latest_published_file = self._bundle.execute_hook_method(
             "hook_get_published_files", "get_latest_published_file", item=item
@@ -93,7 +93,7 @@ class BreakdownManager(object):
         """
 
         if not item.sg_data:
-            return
+            return []
 
         extra_fields = extra_fields or []
         fields = (
