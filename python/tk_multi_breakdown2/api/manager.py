@@ -30,7 +30,8 @@ class BreakdownManager(object):
         """
         Scan the current scene to return a list of object we could perform actions on.
 
-        :param extra_fields: List of PublishedFile fields we want to return when scanning the scene
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+                             for published files.
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
@@ -45,11 +46,13 @@ class BreakdownManager(object):
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
-        fields = (
-            constants.PUBLISHED_FILES_FIELDS
-            + self._bundle.get_setting("published_file_fields", [])
-            + extra_fields
+
+        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
+            "published_file_fields", []
         )
+        if extra_fields is not None:
+            fields += extra_fields
+
         published_files = sgtk.util.find_publish(
             self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
         )
@@ -88,19 +91,20 @@ class BreakdownManager(object):
 
         :param extra_fields: A list of Shotgun fields to append to the Shotgun query fields.
         :param item: :class`FileItem` object we want to get the published file history
-        :param extra_fields: List of PublishedFile fields we want to return when getting published file history
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+                             for published files.
+
         :returns: A list of Shotgun published file dictionary
         """
 
         if not item.sg_data:
             return []
 
-        extra_fields = extra_fields or []
-        fields = (
-            constants.PUBLISHED_FILES_FIELDS
-            + self._bundle.get_setting("published_file_fields", [])
-            + extra_fields
+        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
+            "published_file_fields", []
         )
+        if extra_fields is not None:
+            fields += extra_fields
 
         filters = [
             ["project", "is", item.sg_data["project"]],
