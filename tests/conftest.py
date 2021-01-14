@@ -8,25 +8,58 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 import os
-import pytest
 import random
 import string
+import pytest
 
 
-@pytest.fixture
-def publish_file_path_root():
+@pytest.fixture(scope="session")
+def storage_root_path():
+    """
+    The storage root path for test modules that do not create an actual stoage
+    root object. This path could be anything, this is just to ensure that the
+    same path is used for testing.
+    """
+
     return os.path.join(os.path.dirname(__file__), "fixtures")
+
+
+@pytest.fixture(scope="session")
+def file_item_required_fields():
+    """
+    Return the list of FileItem attributes that are initialized on create.
+    """
+
+    return ["node_name", "node_type", "path"]
+
+
+@pytest.fixture(scope="session")
+def file_item_optional_fields():
+    """
+    Return the list of FileItem attribuets that may or may not be initialized on create.
+    """
+
+    return ["sg_data", "extra_data"]
 
 
 @pytest.fixture
 def file_item_data(request):
     """
-    Create a FileItem object.
+    Return a FileItem data that can be used to create a new FileItem object. The
+    data is mostly randomly generated, since the this fixture is mainly used for
+    convenience to strictly test the API functionality (does not need to validate
+    the actual data).
+
+    The request param may include 'sg_data' to provide more realistic data for
+    testing:
+
+    :param request: pytest fixture that provides information for the test function
+    that requested this fixture. The request will have a 'param' attribute that
+    contains a list of parmas passed by the test function. In this case, param may
+    have up to two items, (1) sg_data and (2) extra_data.
     """
 
-    # Generate random data for FileItem. The exact data does not necessarily
-    # depict data as expected in production, this is meant to just be used
-    # to test the basics of the FileItem class methods.
+    # Random character sets to generate random data from
     any_char = string.ascii_letters + string.digits + string.punctuation
     letters_and_digits = string.ascii_letters + string.digits
 
@@ -36,6 +69,7 @@ def file_item_data(request):
         "".join(random.choice(letters_and_digits) for i in range(8)) for j in range(5)
     )
 
+    # Use the sg_data and extra_data params, if passed in, else generate random data.
     param = request.param if hasattr(request, "param") else (False, False)
     sg_data = param[0]
     extra_data = param[1]

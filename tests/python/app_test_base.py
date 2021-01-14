@@ -59,57 +59,6 @@ class AppTestBase(TankTestBase):
             self._app.sgtk
         )
 
-        # Set up the mock entity data
-        self.version = self.create_version(code="version_code")
-        self.task = self.create_task(
-            content="Test Breakdown2 Concept", entity=self.version
-        )
-        self.first_publish = self.create_published_file(
-            code="hello",
-            name="hello",
-            path_cache="{}/foo/bar/hello".format(self.project_name),
-            path_cache_storage=self.primary_storage,
-            path={
-                "local_path": os.path.normpath(
-                    os.path.expandvars("${TK_TEST_FIXTURES}/files/images/svenFace.jpg")
-                )
-            },
-            created_at=datetime.datetime(2021, 1, 4, 12, 1),
-            task=self.task,
-            entity=self.version,
-            version_number=1,
-        )
-        self.second_publish = self.create_published_file(
-            code="world",
-            name="world",
-            path_cache="{}/foo/bar/world".format(self.project_name),
-            path_cache_storage=self.primary_storage,
-            path={
-                "local_path": os.path.normpath(
-                    os.path.expandvars("${TK_TEST_FIXTURES}/files/images/svenThumb.png")
-                )
-            },
-            created_at=datetime.datetime(2021, 1, 4, 12, 1),
-            task=self.task,
-            entity=self.version,
-            version_number=2,
-        )
-        self.third_publish = self.create_published_file(
-            code="hello2",
-            name="hello",
-            path_cache="{}/foo/bar/hello".format(self.project_name),
-            path_cache_storage=self.primary_storage,
-            path={
-                "local_path": os.path.normpath(
-                    os.path.expandvars("${TK_TEST_FIXTURES}/files/images/svenFace.jpg")
-                )
-            },
-            created_at=datetime.datetime(2021, 1, 4, 12, 1),
-            task=self.task,
-            entity=self.version,
-            version_number=2,
-        )
-
     def tearDown(self):
         """
         Clean up after all tests have been executed.
@@ -135,14 +84,6 @@ class AppTestBase(TankTestBase):
         """
 
         return self._app
-
-    # @property
-    # def file_item_class(self):
-    # """
-    # The FileItem class.
-    # """
-    #
-    # return self._file_item_class
 
     @property
     def manager(self):

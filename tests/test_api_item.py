@@ -30,17 +30,17 @@ class TestApiItem:
         [(False, False), (True, False), (False, True), (True, True)],
         indirect=["file_item_data"],
     )
-    def test_file_item_constructor(self, file_item_data):
+    def test_file_item_constructor(
+        self, file_item_required_fields, file_item_optional_fields, file_item_data
+    ):
         """
         Test the FileItem constructor.
         """
 
-        required_fields = ["node_name", "node_type", "path"]
-        optional_fields = ["sg_data", "extra_data"]
         kwargs = {}
-        for field in required_fields:
+        for field in file_item_required_fields:
             kwargs[field] = file_item_data[field]
-        for field in optional_fields:
+        for field in file_item_optional_fields:
             if file_item_data[field] is not None:
                 kwargs[field] = file_item_data[field]
 

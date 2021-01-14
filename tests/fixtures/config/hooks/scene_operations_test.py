@@ -8,6 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+import copy
 import os
 
 import sgtk
@@ -41,29 +42,34 @@ class TestBreakdownSceneOperations(HookBaseClass):
             {
                 "node_name": "A reference node",
                 "node_type": "reference",
-                # "path": os.path.expandvars("${TK_TEST_FIXTURES}/files/images/svenFace.jpg")
-                "path": os.path.join(
-                    self.parent.context.filesystem_locations[0], "foo", "bar", "hello"
-                ),
+                "path": os.path.join("foo", "bar", "hello"),
             },
             {
                 "node_name": "A file node",
                 "node_type": "file",
-                # "path": os.path.expandvars("${TK_TEST_FIXTURES}/files/images/svenThumb.jpg")
-                "path": os.path.join(
-                    self.parent.context.filesystem_locations[0], "foo", "bar", "world"
-                ),
+                "path": os.path.join("foo", "bar", "world"),
             },
             {
                 "node_name": "An updated reference node",
                 "node_type": "reference",
-                # "path": os.path.expandvars("${TK_TEST_FIXTURES}/files/images/svenFace.jpg")
-                "path": os.path.join(
-                    self.parent.context.filesystem_locations[0], "foo", "bar", "hello"
-                ),
+                "path": os.path.join("foo", "bar", "again"),
             },
         ]
-        return refs
+
+        result = []
+        project_root_paths = os.environ.get("TK_TEST_PROJECT_ROOT_PATHS", "")
+        if not project_root_paths:
+            project_root_paths = [self.parent.context.filesystem_locations[0]]
+        else:
+            project_root_paths = project_root_paths.split(",")
+
+        for ref in refs:
+            for project_root in project_root_paths:
+                result_item = copy.deepcopy(ref)
+                result_item["path"] = os.path.join(project_root, ref["path"])
+                result.append(result_item)
+
+        return result
 
     def update(self, item):
         """
