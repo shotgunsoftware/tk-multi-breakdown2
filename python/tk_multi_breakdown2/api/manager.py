@@ -35,7 +35,6 @@ class BreakdownManager(object):
         :return: A list of :class`FileItem` objects containing the file data.
         """
 
-        extra_fields = extra_fields or []
         file_items = []
 
         # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
