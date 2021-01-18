@@ -40,4 +40,9 @@ variables:
 jobs:
 - template: build-pipeline.yml@templates
   parameters:
-    skip_tests: true
+    has_ui_tests: false
+    additional_repositories:
+    - name: tk-framework-qtwidgets
+    - name: tk-framework-shotgunutils
+    # Temporary until tk-core branch is merged
+    tk_core_ref: SHOT-3621-find-publish-cross-projects
