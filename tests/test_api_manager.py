@@ -28,13 +28,6 @@ from tk_multi_breakdown2 import constants
 from tk_multi_breakdown2.api import BreakdownManager
 from tk_multi_breakdown2.api.item import FileItem
 
-import sys
-
-sys.path.append("/Users/oues/python_libs")
-import ptvsd
-
-ptvsd.enable_attach()
-ptvsd.wait_for_attach()
 
 """
 The purpose of set of tests below are to validate the BreakdownManager class functionality.
