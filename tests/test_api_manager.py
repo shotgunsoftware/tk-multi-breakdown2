@@ -10,12 +10,13 @@
 
 import datetime
 import os
-import pytest
 import sys
-
-from unittest.mock import patch, MagicMock
+import pytest
+from mock import patch, MagicMock
 
 from app_test_base import AppTestBase
+
+from test_exceptions import InvalidTestData
 
 from tank_test.tank_test_base import setUpModule  # noqa
 
@@ -485,11 +486,11 @@ class TestBreakdownManager(AppTestBase):
         self.first_publish = self.create_published_file(
             code="hello",
             name="hello",
-            path_cache=os.path.join(self.project_name, self.first_publish_path_cache),
+            path_cache="%s/%s" % (self.project_name, self.first_publish_path_cache),
             path_cache_storage=self.primary_storage,
             path={
                 "local_path": os.path.normpath(
-                    "%s/files/images/svenFace.jpg" % self.project_root
+                    os.path.join(self.project_root, "files", "images", "svenFace.jpg")
                 )
             },
             created_at=datetime.datetime(2021, 1, 4, 12, 1),
@@ -501,11 +502,11 @@ class TestBreakdownManager(AppTestBase):
         self.second_publish = self.create_published_file(
             code="world",
             name="world",
-            path_cache=os.path.join(self.project_name, self.second_publish_path_cache),
+            path_cache="%s/%s" % (self.project_name, self.second_publish_path_cache),
             path_cache_storage=self.primary_storage,
             path={
                 "local_path": os.path.normpath(
-                    "%s/files/images/svenThumb.png" % self.project_root
+                    os.path.join(self.project_root, "files", "images", ".svenThumb.png")
                 )
             },
             created_at=datetime.datetime(2021, 1, 4, 12, 1),
@@ -517,11 +518,11 @@ class TestBreakdownManager(AppTestBase):
         self.first_publish_latest = self.create_published_file(
             code="hello2",
             name="hello",
-            path_cache=os.path.join(self.project_name, self.third_publish_path_cache),
+            path_cache="%s/%s" % (self.project_name, self.third_publish_path_cache),
             path_cache_storage=self.primary_storage,
             path={
                 "local_path": os.path.normpath(
-                    "%s/files/images/svenFace.jpg" % self.project_root
+                    os.path.join(self.project_root, "files", "images", "svenFace.jpg")
                 )
             },
             created_at=datetime.datetime(2021, 1, 4, 12, 1),
@@ -533,13 +534,16 @@ class TestBreakdownManager(AppTestBase):
         # A mapping of published file path caches to the entity
         self.published_files = {
             os.path.join(
-                self.project_root, self.first_publish_path_cache
+                self.project_root,
+                self.first_publish_path_cache.replace("/", os.path.sep),
             ): self.first_publish,
             os.path.join(
-                self.project_root, self.second_publish_path_cache
+                self.project_root,
+                self.second_publish_path_cache.replace("/", os.path.sep),
             ): self.second_publish,
             os.path.join(
-                self.project_root, self.third_publish_path_cache
+                self.project_root,
+                self.third_publish_path_cache.replace("/", os.path.sep),
             ): self.first_publish_latest,
         }
 
@@ -666,12 +670,18 @@ class TestBreakdownManager(AppTestBase):
         scene_items = self.manager.scan_scene()
         assert isinstance(scene_items, list)
 
-        item = next(
-            i
-            for i in scene_items
-            if i.sg_data["path"]["local_path"]
-            == self.first_publish["path"]["local_path"]
-        )
+        try:
+            item = next(
+                i
+                for i in scene_items
+                if i.sg_data["path"]["local_path"]
+                == self.first_publish["path"]["local_path"]
+            )
+
+        except StopIteration:
+            # self.first_publish should be in the scan scene result.
+            raise InvalidTestData("Expected test data to be found in result.")
+
         latest = self.manager.get_latest_published_file(item)
         assert item.latest_published_file == latest
         assert (
@@ -688,7 +698,12 @@ class TestBreakdownManager(AppTestBase):
         assert isinstance(scene_items, list)
 
         # Use any item from the scene
-        item = scene_items[0]
+        try:
+            item = scene_items[0]
+        except IndexError:
+            # Test data is invalid, expected that scan scene would return at least one item.
+            raise InvalidTestData("Expected result to have at least one item.")
+
         latest_published_file_before_update = item.latest_published_file
         result = self.manager.get_published_file_history(item)
 
@@ -723,7 +738,12 @@ class TestBreakdownManager(AppTestBase):
         assert isinstance(scene_items, list)
 
         # Use any item from the scene
-        item = scene_items[0]
+        try:
+            item = scene_items[0]
+        except IndexError:
+            # Test data is invalid, expected that scan scene would return at least one item.
+            raise InvalidTestData("Expected result to have at least one item.")
+
         latest_published_file_before_update = item.latest_published_file
         possible_extra_fields = [
             [],
@@ -765,7 +785,12 @@ class TestBreakdownManager(AppTestBase):
         assert isinstance(scene_items, list)
 
         # Use any item from the scene
-        item = scene_items[0]
+        try:
+            item = scene_items[0]
+        except IndexError:
+            # Test data is invalid, expected that scan scene would return at least one item.
+            raise InvalidTestData("Expected result to have at least one item.")
+
         if item.sg_data is None:
             expected_latest_data = {"version_number": 1}
         else:
@@ -799,6 +824,8 @@ class TestBreakdownManager(AppTestBase):
 
         scene_items = self.manager.scan_scene()
         assert isinstance(scene_items, list)
+        # Make sure there is data to be tested
+        assert len(scene_items) > 0
 
         # Use any scene item that has a history
         item = None
@@ -858,7 +885,7 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
         super(TestBreakdownManagerMultipleProjects, self).setUp()
 
         # Create a second project for the test module
-        project2, project2_root = self.create_project({"name": "project 2"})
+        _, project2_root = self.create_project({"name": "project 2"})
 
         # Add the new project path to the environment variable
         os.environ["TK_TEST_PROJECT_ROOT_PATHS"] += "," + project2_root
@@ -868,7 +895,7 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
         project2_publish1 = self.create_published_file(
             code="abc",
             name="some name",
-            path_cache=os.path.join(project2_name, self.first_publish_path_cache),
+            path_cache="%s/%s" % (project2_name, self.first_publish_path_cache),
             path_cache_storage=self.primary_storage,
             path={
                 "local_path": os.path.normpath(
@@ -881,7 +908,7 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
         project2_publish2 = self.create_published_file(
             code="abc2",
             name="some name",
-            path_cache=os.path.join(project2_name, self.second_publish_path_cache),
+            path_cache="%s/%s" % (project2_name, self.second_publish_path_cache),
             path_cache_storage=self.primary_storage,
             path={
                 "local_path": os.path.normpath(
@@ -894,10 +921,14 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
 
         # Add to the list of published files
         self.published_files[
-            os.path.join(project2_root, self.first_publish_path_cache)
+            os.path.join(
+                project2_root, self.first_publish_path_cache.replace("/", os.path.sep)
+            )
         ] = project2_publish1
         self.published_files[
-            os.path.join(project2_root, self.second_publish_path_cache)
+            os.path.join(
+                project2_root, self.second_publish_path_cache.replace("/", os.path.sep)
+            )
         ] = project2_publish2
 
         # Add to the expected results
