@@ -4,12 +4,19 @@ Breakdown2 API Reference
 Overview
 ********
 
-tk-multi-breakdown2 (Breakdown2) is a customizable Toolkit App that allows studios to manage the behaviour when referencing PublishedFiles within a DCC Engine.
+tk-multi-breakdown2 (Breakdown2) is a customizable Toolkit App that allows studios to manage the behaviour when referencing PublishedFiles within a DCC Engine. It is meant to be a replacement for the original tk-multi-breakdown Application.
+
+Improvements beyond the original Breakdown App
+==============================================
+
+* Ability to manage references in multiple Shotgun Projects
 
 Default configuration behaviour
 ===============================
 
-When the App is included in your configuration it will work with tk-multi-workfiles2 File Opening to check your current scene to see if more recent PublishedFiles are available for you.
+
+Customizations
+==============
 
 ----
 
@@ -21,3 +28,4 @@ When the App is included in your configuration it will work with tk-multi-workfi
     :maxdepth: 2
 
     api
+    engine-specific-notes
