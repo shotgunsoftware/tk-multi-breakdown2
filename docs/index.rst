@@ -14,15 +14,10 @@ Improvements beyond the original Breakdown App
 Default configuration behaviour
 ===============================
 
-
 Customizations
 ==============
 
-----
-
 .. image:: ./images/open_diagram.png
-
-----
 
 .. toctree::
     :maxdepth: 2
