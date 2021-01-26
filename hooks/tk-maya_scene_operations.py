@@ -16,8 +16,7 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 
 class BreakdownSceneOperations(HookBaseClass):
-    """
-    """
+    """"""
 
     def scan_scene(self):
         """
