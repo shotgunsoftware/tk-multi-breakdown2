@@ -17,6 +17,9 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 class BreakdownSceneOperations(HookBaseClass):
     """
+    Breakdown operations for Maya.
+
+    This implementation handles detection of maya references and file texture nodes.
     """
 
     def scan_scene(self):
