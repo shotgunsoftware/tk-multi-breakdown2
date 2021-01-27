@@ -30,7 +30,7 @@ class GetPublishedFiles(HookBaseClass):
             ["task", "is", item.sg_data["task"]],
             ["published_file_type", "is", item.sg_data["published_file_type"]],
         ]
-        fields = item.sg_data.keys() + ["version_number", "path"]
+        fields = list(item.sg_data.keys()) + ["version_number", "path"]
         order = [{"field_name": "version_number", "direction": "desc"}]
 
         # todo: check if this work with url published files
