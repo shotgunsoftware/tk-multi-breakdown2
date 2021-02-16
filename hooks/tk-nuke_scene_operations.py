@@ -62,9 +62,10 @@ class BreakdownSceneOperations(HookBaseClass):
                         path = file.filename().replace("/", os.path.sep)
                         nodes.append(
                             dict(
-                                node_name=clip.activeItem(),
+                                node_name=clip.activeItem().name(),
                                 node_type="Clip",
                                 path=path,
+                                extra_data={"clip": clip.activeItem()},
                             )
                         )
 
@@ -117,6 +118,7 @@ class BreakdownSceneOperations(HookBaseClass):
 
         node_name = item["node_name"]
         node_type = item["node_type"]
+        extra_data = item["extra_data"]
         path = item["path"].replace(os.path.sep, "/")
 
         if node_type in node_type_list:
@@ -126,5 +128,5 @@ class BreakdownSceneOperations(HookBaseClass):
 
         if node_type == "Clip":
             self.logger.debug("Clip %s: Updating to version %s" % (node_name, path))
-            clip = node_name
+            clip = extra_data["clip"]
             clip.reconnectMedia(path)
