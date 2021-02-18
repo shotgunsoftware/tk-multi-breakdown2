@@ -29,8 +29,7 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 
 class BreakdownSceneOperations(HookBaseClass):
-    """
-    """
+    """"""
 
     def scan_scene(self):
         """
@@ -76,7 +75,12 @@ class BreakdownSceneOperations(HookBaseClass):
 
             if path:
                 refs.append(
-                    {"node_name": r.getName(), "node_type": node_type, "path": path}
+                    {
+                        "node_name": r.getName(),
+                        "node_type": node_type,
+                        "path": path,
+                        "extra_data": {"node_id": r.getObjectId()},
+                    }
                 )
 
         return refs
@@ -95,8 +99,9 @@ class BreakdownSceneOperations(HookBaseClass):
         node_name = item["node_name"]
         node_type = item["node_type"]
         path = item["path"]
+        extra_data = item["extra_data"]
 
-        ref_node = get_reference_by_name(node_name)
+        ref_node = get_reference_by_id(extra_data["node_id"])
         if not ref_node:
             self.logger.error("Couldn't get reference node named {}".format(node_name))
             return
@@ -112,7 +117,7 @@ class BreakdownSceneOperations(HookBaseClass):
             vrReferenceService.reimportSmartReferences([ref_node])
 
 
-def get_reference_by_name(ref_name):
+def get_reference_by_id(ref_id):
     """
     Get a reference node from its name.
 
@@ -121,6 +126,6 @@ def get_reference_by_name(ref_name):
     """
     ref_list = vrReferenceService.getSceneReferences()
     for r in ref_list:
-        if r.getName() == ref_name:
+        if r.getObjectId() == ref_id:
             return r
     return None
