@@ -49,12 +49,33 @@ class BreakdownSceneOperations(HookBaseClass):
 
         refs = []
 
-        # only deal with references matching a template
-        for r in alias_api.get_references():
+        alias_refs = alias_api.get_references()
+        sg_data = self._get_sg_publish_data(alias_refs)
 
-            reference_template = self._get_reference_template_from_path(r.source_path)
-            if not reference_template:
-                reference_template = self._get_reference_template_from_path(r.path)
+        # only deal with references matching a template
+        for r in alias_refs:
+
+            if r.source_path in sg_data.keys():
+                node_sg_data = sg_data[r.source_path]
+            elif r.path in sg_data.keys():
+                node_sg_data = sg_data[r.path]
+            else:
+                node_sg_data = None
+
+            if not node_sg_data:
+                self.logger.error(
+                    "Couldn't find a Shotgun Published File entry for {}".format(
+                        r.source_path
+                    )
+                )
+                continue
+
+            tk = self.parent.engine.get_tk_from_project_id(
+                node_sg_data["project"]["id"]
+            )
+            reference_template = self.parent.engine.get_reference_template(
+                tk, node_sg_data
+            )
 
             # here, we've imported a file as reference and we need to use the source path to get the next
             # available version
@@ -64,6 +85,7 @@ class BreakdownSceneOperations(HookBaseClass):
                         "node_name": r.name,
                         "node_type": "reference",
                         "path": r.source_path.replace("/", os.path.sep),
+                        "extra_data": {"sg_data": node_sg_data},
                     }
                 )
             else:
@@ -72,6 +94,7 @@ class BreakdownSceneOperations(HookBaseClass):
                         "node_name": r.name,
                         "node_type": "reference",
                         "path": r.path.replace("/", os.path.sep),
+                        "extra_data": {"sg_data": node_sg_data},
                     }
                 )
 
@@ -96,10 +119,10 @@ class BreakdownSceneOperations(HookBaseClass):
             self.update_reference(path, extra_data)
 
     def update_reference(self, path, extra_data):
-        """
-        """
+        """"""
 
         old_path = extra_data["old_path"]
+        sg_data = extra_data["sg_data"]
 
         _, ext = os.path.splitext(path)
 
@@ -120,8 +143,9 @@ class BreakdownSceneOperations(HookBaseClass):
                 "tk_framework_aliastranslations"
             )
 
-            source_template = self.sgtk.template_from_path(path)
-            reference_template = self._get_reference_template_from_path(path)
+            tk = self.parent.engine.get_tk_from_project_id(sg_data["project"]["id"])
+            source_template = tk.template_from_path(path)
+            reference_template = self.parent.engine.get_reference_template(tk, sg_data)
 
             if source_template and reference_template:
 
@@ -163,30 +187,18 @@ class BreakdownSceneOperations(HookBaseClass):
         # get the reference by its uuid if possible, otherwise use its name to find the right instance
         alias_api.update_reference(old_path, path)
 
-    def _get_reference_template_from_path(self, file_path):
-        """
-        Get the reference template from the reference file path
+    def _get_sg_publish_data(self, alias_refs):
+        """"""
+        path_list = []
+        for r in alias_refs:
+            if r.source_path not in path_list:
+                path_list.append(r.source_path)
+            if r.path not in path_list:
+                path_list.append(r.path)
 
-        :param file_path: Path to the reference file
-        :returns:  Th reference template if we could find it, None otherwise
-        """
-
-        # we need to get the context from the path in order to be able to look for the right configuration section and
-        # find the reference template linked to the right entity type
-        ctx = self.sgtk.context_from_path(file_path)
-        if not ctx:
-            return
-
-        env = sgtk.platform.engine.get_environment_from_context(self.parent.sgtk, ctx)
-        if not env:
-            return
-
-        engine_settings = env.get_engine_settings(self.parent.engine.name)
-        if not engine_settings:
-            return
-
-        reference_template_name = engine_settings.get("reference_template")
-        if not reference_template_name:
-            return
-
-        return self.parent.engine.get_template_by_name(reference_template_name)
+        return sgtk.util.find_publish(
+            self.parent.sgtk,
+            path_list,
+            fields=["project", "task"],
+            only_current_project=False,
+        )
