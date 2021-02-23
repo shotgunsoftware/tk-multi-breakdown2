@@ -96,8 +96,7 @@ class BreakdownSceneOperations(HookBaseClass):
             self.update_reference(path, extra_data)
 
     def update_reference(self, path, extra_data):
-        """
-        """
+        """"""
 
         old_path = extra_data["old_path"]
 
