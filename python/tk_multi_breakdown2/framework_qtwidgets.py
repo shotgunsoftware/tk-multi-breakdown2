@@ -34,3 +34,5 @@ overlay_widget = sgtk.platform.import_framework(
     "tk-framework-qtwidgets", "overlay_widget"
 )
 ShotgunOverlayWidget = overlay_widget.ShotgunOverlayWidget
+
+utils = sgtk.platform.import_framework("tk-framework-qtwidgets", "utils")
