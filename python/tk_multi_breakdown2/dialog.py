@@ -293,6 +293,13 @@ class AppDialog(QtGui.QWidget):
         """
 
         actions = []
+
+        # Clear and set the current selection
+        self._ui.file_history_view.selectionModel().select(
+            index, QtGui.QItemSelectionModel.ClearAndSelect
+        )
+
+        # Get the selected file items from the main view
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
 
         if selected_indexes:
@@ -471,6 +478,7 @@ class AppDialog(QtGui.QWidget):
             [
                 {
                     "icon": ":/tk-multi-breakdown2/tree_arrow_expanded.png",
+                    "padding": 0,
                     "callback": lambda view, index, pos: self._show_context_menu(
                         view, pos
                     ),
@@ -504,10 +512,12 @@ class AppDialog(QtGui.QWidget):
         delegate.subtitle_role = FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE
         delegate.details_role = FileHistoryModel.VIEW_ITEM_DETAILS_ROLE
 
+        delegate.item_padding = 5
+
         # Set the background pen to draw a border around the item
-        delegate.background_pen = QtGui.QPen(
-            QtGui.QApplication.palette().dark().color()
-        )
+        background_pen = QtGui.QPen(QtCore.Qt.black)
+        background_pen.setWidthF(0.5)
+        delegate.background_pen = background_pen
 
         # Set the thumbnail width to ensure text aligns between rows
         delegate.thumbnail_width = 64
@@ -517,6 +527,7 @@ class AppDialog(QtGui.QWidget):
             [
                 {
                     "icon": ":/tk-multi-breakdown2/tree_arrow_expanded.png",
+                    "padding": 0,
                     "callback": self._show_history_item_context_menu,
                 },
             ],

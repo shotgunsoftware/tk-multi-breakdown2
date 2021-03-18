@@ -253,7 +253,8 @@ class ViewItemConfiguration(HookClass):
     def get_item_width(self, item, file_item=None):
         """
         Returns the width for this item. This may be used by the delegate to help
-        draw the item as desired.
+        draw the item as desired. NOTE: if the ViewItemDelegate has a fixed width
+        set up, this method will not affect the row width.
 
         :param item: The model item.
         :type item: :class:`FileModelItem` | :class:`GroupModelItem`
@@ -265,6 +266,8 @@ class ViewItemConfiguration(HookClass):
         :rtype: int
         """
 
+        # Set the width to 375 for File items and set to -1 for Group File items (headers)
+        # to expand to the full available width.
         return 375 if file_item else -1
 
     def get_history_item_title(self, item, sg_data):
