@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Y:\SGTK\devs\tk-multi-breakdown2\resources\dialog.ui'
+# Form implementation generated from reading ui file 'dialog.ui'
 #
-# Created: Wed Oct 14 12:41:41 2020
-#      by: pyside-uic 0.2.15 running on PySide 1.2.4
+#      by: pyside-uic 0.2.15 running on PySide 1.2.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -19,6 +18,17 @@ class Ui_Dialog(object):
         self.header_layout.setObjectName("header_layout")
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.header_layout.addItem(spacerItem)
+        self.file_view_btn = QtGui.QToolButton(Dialog)
+        self.file_view_btn.setText("")
+        self.file_view_btn.setCheckable(True)
+        self.file_view_btn.setChecked(True)
+        self.file_view_btn.setObjectName("file_view_btn")
+        self.header_layout.addWidget(self.file_view_btn)
+        self.list_view_btn = QtGui.QToolButton(Dialog)
+        self.list_view_btn.setText("")
+        self.list_view_btn.setCheckable(True)
+        self.list_view_btn.setObjectName("list_view_btn")
+        self.header_layout.addWidget(self.list_view_btn)
         self.details_button = QtGui.QPushButton(Dialog)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -37,7 +47,7 @@ class Ui_Dialog(object):
         self.details_splitter.setSizePolicy(sizePolicy)
         self.details_splitter.setOrientation(QtCore.Qt.Horizontal)
         self.details_splitter.setObjectName("details_splitter")
-        self.file_view = GroupedListView(self.details_splitter)
+        self.file_view = GroupedItemView(self.details_splitter)
         self.file_view.setObjectName("file_view")
         self.details_panel = QtGui.QGroupBox(self.details_splitter)
         self.details_panel.setMinimumSize(QtCore.QSize(300, 0))
@@ -62,4 +72,4 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.details_button.setText(QtGui.QApplication.translate("Dialog", "Show Details", None, QtGui.QApplication.UnicodeUTF8))
 
-from ..framework_qtwidgets import ShotgunFolderWidget, GroupedListView
+from ..framework_qtwidgets import ShotgunFolderWidget, GroupedItemView

@@ -12,12 +12,12 @@ import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 
 from .ui.dialog import Ui_Dialog
+from .ui import resources_rc  # Required for creating icons
+
 from .file_model import FileModel
-from .delegate_file_group import FileGroupDelegate
 from .file_history_model import FileHistoryModel
-from .delegate_file_history import FileHistoryDelegate
 from .actions import ActionManager
-from .framework_qtwidgets import ShotgunOverlayWidget
+from .framework_qtwidgets import ShotgunOverlayWidget, ViewItemDelegate
 
 task_manager = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "task_manager"
@@ -32,6 +32,14 @@ settings = sgtk.platform.import_framework("tk-framework-shotgunutils", "settings
 
 
 class AppDialog(QtGui.QWidget):
+    """
+    The main App dialog.
+    """
+
+    # Settings keys
+    VIEW_MODE_SETTING = "view_mode"
+    DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
+
     def __init__(self, parent=None):
         """
         :param parent: The parent QWidget for this control
@@ -69,12 +77,53 @@ class AppDialog(QtGui.QWidget):
         self._file_model = FileModel(self, self._bg_task_manager)
         self._ui.file_view.setModel(self._file_model)
 
-        self._delegate = FileGroupDelegate(self._ui.file_view)
-        self._ui.file_view.setItemDelegate(self._delegate)
-
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
         self._file_model_overlay.start_spin()
         self._file_model.files_processed.connect(self._file_model_overlay.hide)
+
+        list_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_card.png")
+        list_view_icon.addPixmap(
+            QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_card_active.png"),
+            QtGui.QIcon.Mode.Normal,
+            QtGui.QIcon.State.On,
+        )
+        self._ui.list_view_btn.setIcon(list_view_icon)
+
+        file_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_thumb.png")
+        file_view_icon.addPixmap(
+            QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_thumb_active.png"),
+            QtGui.QIcon.Mode.Normal,
+            QtGui.QIcon.State.On,
+        )
+        self._ui.file_view_btn.setIcon(file_view_icon)
+
+        # Enable mouse tracking to allow the delegate to receive mouse events
+        self._ui.file_view.setMouseTracking(True)
+
+        # Create a delegate for the file view. Set the row width to None
+        file_item_delegate = self._create_file_item_delegate(set_delegate=False)
+        # Create a delegate for the list view. Set the row width to -1 will expand each item row
+        # to the full available width and thus display one item per row in a "list" view.
+        list_item_delegate = self._create_file_item_delegate(set_delegate=False)
+        list_item_delegate.row_width = -1
+
+        # Set up the view modes
+        self.view_modes = [
+            {
+                "button": self._ui.file_view_btn,
+                "delegate": file_item_delegate,
+            },
+            {"button": self._ui.list_view_btn, "delegate": list_item_delegate},
+        ]
+        for i, view_mode in enumerate(self.view_modes):
+            view_mode["button"].clicked.connect(
+                lambda checked=False, mode=i: self._set_view_mode(mode)
+            )
+
+        # Get the last view mode used from the settings manager, default to the first view if
+        # no settings found
+        cur_view_mode = self._settings_manager.retrieve(self.VIEW_MODE_SETTING, 0)
+        self._set_view_mode(cur_view_mode)
 
         # -----------------------------------------------------
         # details view
@@ -109,24 +158,12 @@ class AppDialog(QtGui.QWidget):
 
         self._ui.file_history_view.setModel(self._file_history_proxy_model)
 
-        # setup a delegate
-        self._file_history_delegate = FileHistoryDelegate(
-            self._ui.file_history_view, self._ui.file_view, self._file_model
-        )
-        file_details_history_config = self._bundle.execute_hook_method(
-            "hook_ui_configurations", "file_history_details"
-        )
-        self._file_history_delegate.set_formatting(
-            file_details_history_config.get("top_left"),
-            file_details_history_config.get("top_right"),
-            file_details_history_config.get("body"),
-            file_details_history_config.get("thumbnail"),
-        )
-        self._ui.file_history_view.setItemDelegate(self._file_history_delegate)
+        self._create_file_history_item_delegate()
+        self._ui.file_history_view.setMouseTracking(True)
 
         self._ui.details_button.clicked.connect(self._toggle_details_panel)
         details_panel_visibility = self._settings_manager.retrieve(
-            "details_panel_visibility", False
+            self.DETAILS_PANEL_VISIBILITY_SETTING, False
         )
         self._set_details_panel_visibility(details_panel_visibility)
 
@@ -135,8 +172,8 @@ class AppDialog(QtGui.QWidget):
         # finally, update the UI by processing the files of the current scene
         self._file_model.process_files()
 
-        # make this slot connection once the model has started processing files otherwise the selection model doesn't
-        # exist
+        # make this slot connection once the model has started processing files otherwise the
+        # selection model doesn't exist
         file_view_selection_model = self._ui.file_view.selectionModel()
         if file_view_selection_model:
             file_view_selection_model.selectionChanged.connect(self._on_file_selection)
@@ -166,6 +203,20 @@ class AppDialog(QtGui.QWidget):
         if self._file_history_model:
             self._file_history_model.clear()
 
+        self._ui.file_view.setItemDelegate(None)
+        for view_mode in self.view_modes:
+            delegate = view_mode.get("delegate")
+            if delegate:
+                delegate.setParent(None)
+                delegate.deleteLater()
+                delegate = None
+
+        file_history_delegate = self._ui.file_history_view.itemDelegate()
+        self._ui.file_history_view.setItemDelegate(None)
+        file_history_delegate.setParent(None)
+        file_history_delegate.deleteLater()
+        file_history_delegate = None
+
         # and shut down the task manager
         if self._bg_task_manager:
             shotgun_globals.unregister_bg_task_manager(self._bg_task_manager)
@@ -185,11 +236,20 @@ class AppDialog(QtGui.QWidget):
 
     def _on_context_menu_requested(self, pnt):
         """
-        Slot triggered when a context menu has been requested from one of the file views.  This
-        will collect information about the item under the cursor and emit a file_context_menu_requested
-        signal.
+        Slot triggered when a context menu has been requested from one of the file views.
+        Call the method to show the context menu.
 
-        :param pnt: The position for the context menu relative to the source widget
+        :param pnt: The position for the context menu relative to the source widget.
+        """
+
+        self._show_context_menu(self.sender(), pnt)
+
+    def _show_context_menu(self, widget, pnt):
+        """
+        Show a context menu for the selected items.
+
+        :param widget: The source widget.
+        :param pnt: The position for the context menu relative to the source widget.
         """
 
         # get all the selected items
@@ -208,7 +268,7 @@ class AppDialog(QtGui.QWidget):
             items.append((file_item, file_model_item))
 
         # map the point to a global position:
-        pnt = self.sender().mapToGlobal(pnt)
+        pnt = widget.mapToGlobal(pnt)
 
         # build the context menu
         context_menu = QtGui.QMenu(self)
@@ -218,6 +278,49 @@ class AppDialog(QtGui.QWidget):
         context_menu.addAction(q_action)
 
         context_menu.exec_(pnt)
+
+    def _show_history_item_context_menu(self, view, index, pos):
+        """
+        Create and show the menu item actions for a history file item.
+
+        :param index: The file history item model index.
+        :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
+        :param pos: The mouse position, relative to the view, when the action was triggered.
+        :type pos: :class:`sgtk.platform.qt.QtCore.QPoint`.
+        :param view: The view (self._ui.file_history_view) that this index belongs to.
+        :type view: :class:`sgtk.platform.qt.QtGui.QListView`
+        :return: None
+        """
+
+        actions = []
+        selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
+
+        if selected_indexes:
+            # Get the currently selected file item to be updated.
+            update_item_index = selected_indexes[0]
+            item_to_update = update_item_index.model().itemFromIndex(update_item_index)
+            file_item_to_update = update_item_index.data(FileModel.FILE_ITEM_ROLE)
+
+            # Get the data from the file history item to update the selected file item with. The index
+            # passed in references the file history item.
+            if isinstance(index.model(), QtGui.QSortFilterProxyModel):
+                index = index.model().mapToSource(index)
+            history_item = index.model().itemFromIndex(index)
+            sg_data = history_item.get_sg_data()
+
+            update_action = ActionManager.add_update_to_specific_version_action(
+                (file_item_to_update, item_to_update), sg_data, None
+            )
+            actions.append(update_action)
+
+        if not actions:
+            no_action = QtGui.QAction("No Actions")
+            no_action.setEnabled(False)
+            actions.append(no_action)
+
+        menu = QtGui.QMenu()
+        menu.addActions(actions)
+        menu.exec_(view.mapToGlobal(pos))
 
     def _on_file_selection(self):
         """
@@ -253,7 +356,7 @@ class AppDialog(QtGui.QWidget):
             selection_model = self._ui.file_view.selectionModel()
             self._setup_details_panel(selection_model.selectedIndexes())
 
-        self._settings_manager.store("details_panel_visibility", visible)
+        self._settings_manager.store(self.DETAILS_PANEL_VISIBILITY_SETTING, visible)
 
     def _setup_details_panel(self, selected_items):
         """
@@ -284,3 +387,173 @@ class AppDialog(QtGui.QWidget):
 
             # load file history
             self._file_history_model.load_data(file_item.sg_data)
+
+    def _set_view_mode(self, mode_index):
+        """
+        Sets up the view mode for the UI `file_view`.
+
+        :param mode_index: The view mode index to set the view to.
+        :type mode_index: int
+        :return: None
+        """
+
+        assert 0 <= mode_index < len(self.view_modes), "Undefined view mode"
+
+        for i, view_mode in enumerate(self.view_modes):
+            is_cur_mode = i == mode_index
+            view_mode["button"].setChecked(is_cur_mode)
+            if is_cur_mode:
+                self._ui.file_view.setItemDelegate(view_mode["delegate"])
+
+        # Clear any selection on changing the view mode.
+        if self._ui.file_view.selectionModel():
+            self._ui.file_view.selectionModel().clear()
+        if self._ui.file_history_view.selectionModel():
+            self._ui.file_history_view.selectionModel().clear()
+
+        # Set the flag to update all item info and trigger a view update.
+        self._ui.file_view._update_all_item_info = True
+        self._ui.file_view.viewport().update()
+
+        self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
+
+    def _create_file_item_delegate(self, set_delegate=True):
+        """
+        Create and set up a :class:`ViewItemDelegate` object for the File view.
+
+        :return: The created delegate.
+        :rtype: :class:`ViewItemDelegate`
+        """
+
+        # The view (self._ui.file_view) passed to the ViewItemDelegate constructor must be a
+        # instance of subclass QAbstractItemView.
+        delegate = ViewItemDelegate(self._ui.file_view)
+
+        # Set the delegate model data roles
+        delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
+        delegate.title_role = FileModel.VIEW_ITEM_TITLE_ROLE
+        delegate.subtitle_role = FileModel.VIEW_ITEM_SUBTITLE_ROLE
+        delegate.details_role = FileModel.VIEW_ITEM_DETAILS_ROLE
+        delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
+        delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
+        delegate.width_role = FileModel.VIEW_ITEM_WIDTH_ROLE
+        delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
+        delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
+
+        # Set the thumbnail width to ensure text aligns between rows
+        delegate.thumbnail_width = 128
+
+        # Create an icon for the expand header action
+        expand_icon = QtGui.QIcon(":/tk-multi-breakdown2/tree_arrow_expanded.png")
+        expand_icon.addPixmap(
+            QtGui.QPixmap(":/tk-multi-breakdown2/tree_arrow_collapsed.png"),
+            QtGui.QIcon.Mode.Normal,
+            QtGui.QIcon.State.On,
+        )
+
+        # Add the group header expand action
+        delegate.add_actions(
+            [
+                {
+                    "icon": expand_icon,
+                    "show_always": True,
+                    "features": QtGui.QStyleOptionButton.Flat,
+                    "get_data": get_expand_action_data,
+                    "callback": lambda view, index, pos: view._expand_group(
+                        index.row(), None
+                    ),
+                },
+            ],
+            ViewItemDelegate.LEFT,
+        )
+        # Add the menu actions buton
+        delegate.add_actions(
+            [
+                {
+                    "icon": ":/tk-multi-breakdown2/tree_arrow_expanded.png",
+                    "callback": lambda view, index, pos: self._show_context_menu(
+                        view, pos
+                    ),
+                },
+            ],
+            ViewItemDelegate.TOP_RIGHT,
+        )
+
+        if set_delegate:
+            self._ui.file_view.setItemDelegate(delegate)
+
+        return delegate
+
+    def _create_file_history_item_delegate(self, set_delegate=True):
+        """
+        Create and set up a :class:`ViewItemDelegate` object for the File History view.
+
+        :param set_delegate: If True, set the delegate on the file history view.
+        :type set_delegate: bool (default=True)
+        :return: The created delegate.
+        :rtype: :class:`ViewItemDelegate`
+        """
+
+        # The view (self._ui.file_history_view) passed to the ViewItemDelegate constructor must be a
+        # instance of subclass QAbstractItemView.
+        delegate = ViewItemDelegate(self._ui.file_history_view)
+
+        # Set the delegate model data roles
+        delegate.thumbnail_role = FileHistoryModel.VIEW_ITEM_THUMBNAIL_ROLE
+        delegate.title_role = FileHistoryModel.VIEW_ITEM_TITLE_ROLE
+        delegate.subtitle_role = FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE
+        delegate.details_role = FileHistoryModel.VIEW_ITEM_DETAILS_ROLE
+
+        # Set the background pen to draw a border around the item
+        delegate.background_pen = QtGui.QPen(
+            QtGui.QApplication.palette().dark().color()
+        )
+
+        # Set the thumbnail width to ensure text aligns between rows
+        delegate.thumbnail_width = 64
+
+        # Add the menu actions button
+        delegate.add_actions(
+            [
+                {
+                    "icon": ":/tk-multi-breakdown2/tree_arrow_expanded.png",
+                    "callback": self._show_history_item_context_menu,
+                },
+            ],
+            ViewItemDelegate.FLOAT_TOP_RIGHT,
+        )
+
+        if set_delegate:
+            self._ui.file_history_view.setItemDelegate(delegate)
+
+        return delegate
+
+
+def get_expand_action_data(parent, index):
+    """
+    Return the action data for the group header expand action, and for the given index.
+    This data will determine how the action is displayed for the index.
+
+    :param parent: This is the parent of the :class:`ViewItemDelegate`, which is the file view.
+    :type parent: :class:`GroupItemView`
+    :param index: The index the action is for.
+    :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
+    :return: The data for the action and index.
+    :rtype: dict, e.g.:
+        {
+            "visible": bool  # Flag indicating whether the action is displayed or not
+            "state": :class:`sgtk.platform.qt.QtGui.QStyle.StateFlag`  # Flag indicating state of the icon
+                                                                       # e.g. enabled/disabled, on/off, etc.
+            "name": str # Override the default action name for this index
+        }
+    """
+
+    visible = not index.parent().isValid()
+    state = QtGui.QStyle.State_Active | QtGui.QStyle.State_Enabled
+
+    if parent.is_expanded(index):
+        state |= QtGui.QStyle.State_Off
+    else:
+        state |= QtGui.QStyle.State_On
+
+    return {"visible": visible, "state": state}

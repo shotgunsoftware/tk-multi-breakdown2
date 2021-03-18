@@ -9,6 +9,7 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import sgtk
+from sgtk import TankError
 from sgtk.platform.qt import QtGui, QtCore
 
 from .utils import get_ui_published_file_fields
@@ -18,8 +19,15 @@ shotgun_data = sgtk.platform.import_framework(
 )
 ShotgunDataRetriever = shotgun_data.ShotgunDataRetriever
 
+shotgun_model = sgtk.platform.import_framework(
+    "tk-framework-shotgunutils", "shotgun_model"
+)
 
-class FileModel(QtGui.QStandardItemModel):
+delegates = sgtk.platform.import_framework("tk-framework-qtwidgets", "delegates")
+ViewItemRolesMixin = delegates.ViewItemRolesMixin
+
+
+class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     """
     The FileModel maintains a model of all the files found when parsing the current scene. Details of each file are
     contained in a FileItem instance and presented as a single model item.
@@ -27,13 +35,60 @@ class FileModel(QtGui.QStandardItemModel):
     File items are grouped into groups defined by the app configuration.
     """
 
+    VIEW_ITEM_CONFIG_HOOK_PATH = "view_item_configuration_hook"
+
     # additional data roles defined for the model:
-    FILE_ITEM_ROLE = QtCore.Qt.UserRole + 32
+    _BASE_ROLE = QtCore.Qt.UserRole + 32
+    FILE_ITEM_ROLE = _BASE_ROLE + 1
+    # Update this role if more custom roles added
+    LAST_ROLE = FILE_ITEM_ROLE
 
     # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
 
-    class GroupModelItem(QtGui.QStandardItem):
+    class BaseModelItem(QtGui.QStandardItem):
+        """
+        The base model item class for the FileModel.
+        """
+
+        def __init__(self, *args, **kwargs):
+            """
+            Constructor
+
+            :param args: The positional arguments to pass to the :class:`sgtk.platform.qt.QtGui.QStandardItem` constructor.
+            :pram kwargs: The keyword arguments to the pass to the :class:`sgtk.platform.qt.QtGui.QStandardItem` constructor.
+            """
+
+            QtGui.QStandardItem.__init__(self, *args, **kwargs)
+
+        def data(self, role):
+            """
+            Override the :class:`sgtk.platform.qt.QtGui.QStandardItem` method.
+
+            Return the data for the item for the specified role.
+
+            :param role: The :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole` role.
+            :return: The data for the specified roel.
+            """
+
+            # Check if the model has a method defined for retrieving the item data for this role.
+            data_method = self.model().get_method_for_role(role)
+            if data_method:
+                try:
+                    result = data_method(self, self.data(FileModel.FILE_ITEM_ROLE))
+                except TypeError as error:
+                    raise TankError(
+                        "Failed to execute the method defined to retrieve item data for role `{role}`.\nError: {msg}".format(
+                            role=role, msg=error
+                        )
+                    )
+            else:
+                # Default to the base implementation
+                result = super(FileModel.BaseModelItem, self).data(role)
+
+            return shotgun_model.util.sanitize_qt(result)
+
+    class GroupModelItem(BaseModelItem):
         """
         Model item that represents a group in the model.
         """
@@ -44,7 +99,7 @@ class FileModel(QtGui.QStandardItemModel):
             """
             QtGui.QStandardItem.__init__(self, text)
 
-    class FileModelItem(QtGui.QStandardItem):
+    class FileModelItem(BaseModelItem):
         """
         Model item that represents a single FileItem in the model.
         """
@@ -87,6 +142,30 @@ class FileModel(QtGui.QStandardItemModel):
         self._sg_data_retriever.work_failure.connect(
             self._on_data_retriever_work_failed
         )
+
+        # Initialize the roles for the ViewItemDelegate
+        self.initialize_roles(self.LAST_ROLE)
+        # Get the hook instance for configuring the display for model view items.
+        view_item_config_hook_path = self._app.get_setting(
+            self.VIEW_ITEM_CONFIG_HOOK_PATH
+        )
+        view_item_config_hook = self._app.create_hook_instance(
+            view_item_config_hook_path
+        )
+
+        # Create a mapping of model item data roles to the method that will be called to retrieve
+        # the data for the item. The methods defined for each role must accept two parameters:
+        # (1) QStandardItem (2) dict
+        self.role_methods = {
+            FileModel.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_item_thumbnail,
+            FileModel.VIEW_ITEM_TITLE_ROLE: view_item_config_hook.get_item_title,
+            FileModel.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_item_subtitle,
+            FileModel.VIEW_ITEM_DETAILS_ROLE: view_item_config_hook.get_item_details,
+            FileModel.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_item_icons,
+            FileModel.VIEW_ITEM_WIDTH_ROLE: view_item_config_hook.get_item_width,
+            FileModel.VIEW_ITEM_LOADING_ROLE: view_item_config_hook.get_item_loading,
+            FileModel.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_item_separator,
+        }
 
     def destroy(self):
         """

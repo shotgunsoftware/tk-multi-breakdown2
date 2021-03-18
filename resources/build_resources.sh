@@ -42,7 +42,6 @@ function build_res {
 # build UI's:
 echo "building user interfaces..."
 build_ui dialog
-build_ui file_group_widget
 
 # build resources
 echo "building resources..."

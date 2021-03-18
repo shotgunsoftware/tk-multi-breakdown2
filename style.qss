@@ -9,30 +9,3 @@ By accessing, using, copying or modifying this work you indicate your
 agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 not expressly granted therein are reserved by Shotgun Software Inc.
 */
-
-/* Styling for FileGroupWidget in the files view */
-
-FileGroupWidget #header {
-    font-size: 14px;
-}
-FileGroupWidget #expand_check_box::indicator {
-    width: 12;
-    height: 12;
-}
-FileGroupWidget #expand_check_box {
-    font: 14px;
-}
-FileGroupWidget #expand_check_box::indicator:unchecked {
-    image: url(:/tk-multi-breakdown2/tree_arrow_collapsed.png);
-}
-FileGroupWidget #expand_check_box::indicator:unchecked:hover {
-    image: url(:/tk-multi-breakdown2/tree_arrow_collapsed.png);
-}
-FileGroupWidget #expand_check_box::indicator:checked {
-    image: url(:/tk-multi-breakdown2/tree_arrow_expanded.png);
-}
-
-/* Styling for FileWidget in the files view */
-FileWidget #box {
-    border: none;
-}

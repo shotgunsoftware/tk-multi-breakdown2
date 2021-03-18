@@ -30,6 +30,29 @@
       </spacer>
      </item>
      <item>
+      <widget class="QToolButton" name="file_view_btn">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="list_view_btn">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="details_button">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -58,7 +81,7 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="GroupedListView" name="file_view" native="true"/>
+     <widget class="GroupedItemView" name="file_view" native="true"/>
      <widget class="QGroupBox" name="details_panel">
       <property name="minimumSize">
        <size>
@@ -97,13 +120,13 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>GroupedListView</class>
+   <class>ShotgunFolderWidget</class>
    <extends>QWidget</extends>
    <header>..framework_qtwidgets</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ShotgunFolderWidget</class>
+   <class>GroupedItemView</class>
    <extends>QWidget</extends>
    <header>..framework_qtwidgets</header>
    <container>1</container>
