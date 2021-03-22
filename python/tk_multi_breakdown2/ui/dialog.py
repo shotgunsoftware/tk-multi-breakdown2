@@ -64,6 +64,38 @@ class Ui_Dialog(object):
         self.file_history_view.setObjectName("file_history_view")
         self.verticalLayout_2.addWidget(self.file_history_view)
         self.verticalLayout.addWidget(self.details_splitter)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.size_slider = QtGui.QSlider(Dialog)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.size_slider.sizePolicy().hasHeightForWidth())
+        self.size_slider.setSizePolicy(sizePolicy)
+        self.size_slider.setStyleSheet("QSlider::groove:horizontal {\n"
+"     /*border: 1px solid #999999; */\n"
+"     height: 2px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */\n"
+"     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #3F3F3F, stop:1 #545454);\n"
+"     margin: 2px 0;\n"
+"     border-radius: 1px;\n"
+" }\n"
+"\n"
+" QSlider::handle:horizontal {\n"
+"     background: #545454;\n"
+"     border: 1px solid #B6B6B6;\n"
+"     width: 5px;\n"
+"     margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */\n"
+"     border-radius: 3px;\n"
+" }\n"
+"")
+        self.size_slider.setMinimum(35)
+        self.size_slider.setMaximum(300)
+        self.size_slider.setOrientation(QtCore.Qt.Horizontal)
+        self.size_slider.setObjectName("size_slider")
+        self.horizontalLayout.addWidget(self.size_slider)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem1)
+        self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
