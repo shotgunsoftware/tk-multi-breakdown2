@@ -9,7 +9,6 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import sgtk
-from sgtk import TankError
 from sgtk.platform.qt import QtCore
 
 from .utils import get_ui_published_file_fields
@@ -34,7 +33,8 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
     # Additional data roles defined for the model
     _BASE_ROLE = QtCore.Qt.UserRole + 32
-    # Update this role if more custom roles added
+    # Keep track of the last model role. This will be used by the ViewItemRolesMixin as an offset when
+    # adding more roles to the model. Update this if more custom roles are added.
     LAST_ROLE = _BASE_ROLE
 
     def __init__(self, parent, bg_task_manager):

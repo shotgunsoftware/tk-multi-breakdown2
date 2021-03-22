@@ -58,6 +58,14 @@ class ViewItemConfiguration(HookClass):
             "thumbnail", False
         )
 
+        self._short_text_template_string = "<br/>".join(
+            [
+                "<b>{name}</b>, {[v]version_number::zeropadded}",
+                "{published_file_type.PublishedFileType.code}",
+                "{<NODE_NAME>}",
+            ]
+        )
+
     def get_item_title(self, item, file_item=None):
         """
         Returns the data to display for this model index item's title.
@@ -80,7 +88,11 @@ class ViewItemConfiguration(HookClass):
 
         if file_item:
             if self._title_template_string:
-                return (self._title_template_string, file_item.sg_data)
+                # Search and replace any non-shotgun data fields
+                template_string = _resolve_file_item_tokens(
+                    file_item, self._title_template_string
+                )
+                return (template_string, file_item.sg_data)
 
             return item.data(QtCore.Qt.DisplayRole)
 
@@ -109,7 +121,11 @@ class ViewItemConfiguration(HookClass):
         """
 
         if file_item and self._subtitle_template_string:
-            return (self._subtitle_template_string, file_item.sg_data)
+            # Search and replace any non-shotgun data fields
+            template_string = _resolve_file_item_tokens(
+                file_item, self._subtitle_template_string
+            )
+            return (template_string, file_item.sg_data)
 
         return None
 
@@ -136,18 +152,40 @@ class ViewItemConfiguration(HookClass):
         if file_item:
             if self._details_template_string:
                 # Search and replace any non-shotgun data fields
-                for token in ["NODE_NAME", "PATH"]:
-                    self._details_template_string = resolve_tokens(
-                        token,
-                        getattr(file_item, token.lower()),
-                        self._details_template_string,
-                    )
-
-                return (self._details_template_string, file_item.sg_data)
+                template_string = _resolve_file_item_tokens(
+                    file_item, self._details_template_string
+                )
+                return (template_string, file_item.sg_data)
 
             return file_item.sg_data
 
         return None
+
+    def get_item_short_text(self, item, file_item=None):
+        """
+        Returns the short text data to display for this model index item.
+
+        :param item: The model item.
+        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
+        :param file_item: The FileItem associated with the item. This will be None
+                          for :class:`GroupModelItem` items.
+        :type file_item: :class:`FileItem`
+
+        :return: The short text for this item.
+        :rtype: str | tuple<str,str>
+        """
+
+        if file_item and self._short_text_template_string:
+            # Search and replace any non-shotgun data fields
+            template_string = _resolve_file_item_tokens(
+                file_item, self._short_text_template_string
+            )
+            return (template_string, file_item.sg_data)
+
+        # Group header title
+        return "<span style='font: 14px;'>{}</span>".format(
+            item.data(QtCore.Qt.DisplayRole)
+        )
 
     def get_item_thumbnail(self, item, file_item=None):
         """
@@ -212,25 +250,6 @@ class ViewItemConfiguration(HookClass):
                 )
 
         return icons
-
-    def get_item_loading(self, item, file_item=None):
-        """
-        Returns True to indicate the item is in a loading state, else False.
-
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
-
-        :return: True to indicate the item is loading, else False.
-        :rtype: bool
-        """
-
-        if file_item:
-            return not file_item.highest_version_number
-
-        return False
 
     def get_item_separator(self, item, file_item=None):
         """
@@ -363,7 +382,7 @@ class ViewItemConfiguration(HookClass):
         return thumbnail
 
 
-def resolve_tokens(token, value, text):
+def _resolve_tokens(token, value, text):
     """
     Helper method to search and replace tokens in the given string.
 
@@ -380,3 +399,18 @@ def resolve_tokens(token, value, text):
     pattern = "{{<{pattern}>}}".format(pattern=token)
     value = value.replace("\\", "\\\\")
     return re.sub(pattern, r"{}".format(value), text)
+
+
+def _resolve_file_item_tokens(file_item, template_string):
+    """
+    Convenience method to resolve any File item (non-shotgun) specific fields.
+    """
+
+    for token in ["NODE_NAME", "PATH"]:
+        template_string = _resolve_tokens(
+            token,
+            getattr(file_item, token.lower()),
+            template_string,
+        )
+
+    return template_string

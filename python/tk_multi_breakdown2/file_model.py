@@ -40,7 +40,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     # additional data roles defined for the model:
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     FILE_ITEM_ROLE = _BASE_ROLE + 1
-    # Update this role if more custom roles added
+    # Keep track of the last model role. This will be used by the ViewItemRolesMixin as an offset when
+    # adding more roles to the model. Update this if more custom roles are added.
     LAST_ROLE = FILE_ITEM_ROLE
 
     # signal emitted once all the files have been processed
@@ -82,6 +83,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                             role=role, msg=error
                         )
                     )
+
+            elif role == FileModel.VIEW_ITEM_LOADING_ROLE:
+                file_item = self.data(FileModel.FILE_ITEM_ROLE)
+                return file_item and not file_item.highest_version_number
+
             else:
                 # Default to the base implementation
                 result = super(FileModel.BaseModelItem, self).data(role)
@@ -99,6 +105,22 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
             QtGui.QStandardItem.__init__(self, text)
 
+        def data(self, role):
+            """
+            Override the :class:`sgtk.platform.qt.QtGui.QStandardItem` method.
+
+            Return the data for the item for the specified role.
+
+            :param role: The :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole` role.
+            :return: The data for the specified roel.
+            """
+
+            if role == FileModel.VIEW_ITEM_HEIGHT_ROLE:
+                # Group item height always adjusts to content size
+                return -1
+
+            return super(FileModel.GroupModelItem, self).data(role)
+
     class FileModelItem(BaseModelItem):
         """
         Model item that represents a single FileItem in the model.
@@ -110,6 +132,31 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
 
             QtGui.QStandardItem.__init__(self, text)
+
+        def data(self, role):
+            """
+            Override the :class:`sgtk.platform.qt.QtGui.QStandardItem` method.
+
+            Return the data for the item for the specified role.
+
+            :param role: The :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole` role.
+            :return: The data for the specified roel.
+            """
+
+            if role == QtCore.Qt.BackgroundRole:
+                file_item = self.data(FileModel.FILE_ITEM_ROLE)
+                if (
+                    file_item
+                    and file_item.sg_data["version_number"]
+                    < file_item.highest_version_number
+                ):
+                    # Red background for items that are not the latest version.
+                    return QtGui.QBrush(QtGui.QColor(255, 0, 0, 50))
+
+                # This is the latest, render background as normally.
+                return QtGui.QApplication.palette().midlight()
+
+            return super(FileModel.FileModelItem, self).data(role)
 
     def __init__(self, parent, bg_task_manager):
         """
@@ -161,9 +208,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             FileModel.VIEW_ITEM_TITLE_ROLE: view_item_config_hook.get_item_title,
             FileModel.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_item_subtitle,
             FileModel.VIEW_ITEM_DETAILS_ROLE: view_item_config_hook.get_item_details,
+            FileModel.VIEW_ITEM_SHORT_TEXT_ROLE: view_item_config_hook.get_item_short_text,
             FileModel.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_item_icons,
             FileModel.VIEW_ITEM_WIDTH_ROLE: view_item_config_hook.get_item_width,
-            FileModel.VIEW_ITEM_LOADING_ROLE: view_item_config_hook.get_item_loading,
             FileModel.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_item_separator,
         }
 
