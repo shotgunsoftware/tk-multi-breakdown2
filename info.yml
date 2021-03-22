@@ -28,7 +28,7 @@ configuration:
     view_item_configuration_hook:
         type: hook
         default_value: "{self}/view_item_configuration.py"
-        description: Specify a hook that, if desired, configures the file item display in the main view.
+        description: Specify a hook that, if desired, configures how file items are rendered in the view.
 
     version_history:
         type: int
