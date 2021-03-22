@@ -17,7 +17,11 @@ from .ui import resources_rc  # Required for creating icons
 from .file_model import FileModel
 from .file_history_model import FileHistoryModel
 from .actions import ActionManager
-from .framework_qtwidgets import ShotgunOverlayWidget, ViewItemDelegate
+from .framework_qtwidgets import (
+    ShotgunOverlayWidget,
+    ViewItemDelegate,
+    ThumbnailItemDelegate,
+)
 
 task_manager = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "task_manager"
@@ -38,6 +42,7 @@ class AppDialog(QtGui.QWidget):
 
     # Settings keys
     VIEW_MODE_SETTING = "view_mode"
+    SIZE_SCALE_VALUE = "view_item_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
 
     def __init__(self, parent=None):
@@ -101,11 +106,16 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setMouseTracking(True)
 
         # Create a delegate for the file view. Set the row width to None
-        file_item_delegate = self._create_file_item_delegate(set_delegate=False)
+        # TODO choose which view (File list similar to wf2 or Thumbnail similar to loader, or we could do both)
+        # file_item_delegate = self._create_file_item_delegate(set_delegateFalse, thumbnail=False)
+        file_item_delegate = self._create_file_item_delegate(
+            set_delegate=False, thumbnail=True
+        )
         # Create a delegate for the list view. Set the row width to -1 will expand each item row
         # to the full available width and thus display one item per row in a "list" view.
         list_item_delegate = self._create_file_item_delegate(set_delegate=False)
         list_item_delegate.row_width = -1
+        list_item_delegate.scale_thumbnail_to_row_height(1.5)
 
         # Set up the view modes
         self.view_modes = [
@@ -119,6 +129,14 @@ class AppDialog(QtGui.QWidget):
             view_mode["button"].clicked.connect(
                 lambda checked=False, mode=i: self._set_view_mode(mode)
             )
+
+        scale_val = self._settings_manager.retrieve(self.SIZE_SCALE_VALUE, 140)
+        # position both slider and view
+        self._ui.size_slider.setValue(scale_val)
+        file_item_delegate.thumbnail_size = QtCore.QSize(scale_val, scale_val)
+        list_item_delegate.row_height = scale_val
+        # and track subsequent changes
+        self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
 
         # Get the last view mode used from the settings manager, default to the first view if
         # no settings found
@@ -234,6 +252,29 @@ class AppDialog(QtGui.QWidget):
         else:
             self._set_details_panel_visibility(True)
 
+    def _on_view_item_size_slider_change(self, value):
+        """
+        Slot triggered on the view item size slider value changed.
+
+        :param value: The value of the slider.
+        :return: None
+        """
+
+        for view_mode in self.view_modes:
+            delegate = view_mode["delegate"]
+            if not delegate:
+                continue
+
+            if isinstance(delegate, ThumbnailItemDelegate):
+                delegate.thumbnail_size = QtCore.QSize(value, value)
+            elif isinstance(delegate, ViewItemDelegate):
+                delegate.row_height = value
+
+        self._ui.file_view._update_all_item_info = True
+        self._ui.file_view.viewport().update()
+
+        self._settings_manager.store(self.SIZE_SCALE_VALUE, value)
+
     def _on_context_menu_requested(self, pnt):
         """
         Slot triggered when a context menu has been requested from one of the file views.
@@ -243,6 +284,29 @@ class AppDialog(QtGui.QWidget):
         """
 
         self._show_context_menu(self.sender(), pnt)
+
+    def _actions_menu_requested(self, view, index, pos):
+        """
+        Callback triggered when a view item's action menu is requested to be shown.
+        This will clear and select the given index, and show the item's actions menu.
+
+        :param view: The view the item belongs to.
+        :type view: :class:`GroupItemView`
+        :param index: The index of the item.
+        :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
+        :param pos: The position that the menu should be displayed at.
+        :type pos: :class:`sgtk.platform.qt.QtCore.QPoint`
+
+        :return: None
+        """
+
+        selection_model = view.selectionModel()
+        if selection_model:
+            view.selectionModel().select(
+                index, QtGui.QItemSelectionModel.ClearAndSelect
+            )
+
+        self._show_context_menu(view, pos)
 
     def _show_context_menu(self, widget, pnt):
         """
@@ -424,7 +488,7 @@ class AppDialog(QtGui.QWidget):
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
-    def _create_file_item_delegate(self, set_delegate=True):
+    def _create_file_item_delegate(self, set_delegate=True, thumbnail=False):
         """
         Create and set up a :class:`ViewItemDelegate` object for the File view.
 
@@ -434,21 +498,24 @@ class AppDialog(QtGui.QWidget):
 
         # The view (self._ui.file_view) passed to the ViewItemDelegate constructor must be a
         # instance of subclass QAbstractItemView.
-        delegate = ViewItemDelegate(self._ui.file_view)
+        if thumbnail:
+            delegate = ThumbnailItemDelegate(self._ui.file_view)
+            delegate.thumbnail_size = QtCore.QSize(128, 128)
+        else:
+            delegate = ViewItemDelegate(self._ui.file_view)
 
         # Set the delegate model data roles
         delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
         delegate.title_role = FileModel.VIEW_ITEM_TITLE_ROLE
         delegate.subtitle_role = FileModel.VIEW_ITEM_SUBTITLE_ROLE
         delegate.details_role = FileModel.VIEW_ITEM_DETAILS_ROLE
+        delegate.short_text_role = FileModel.VIEW_ITEM_SHORT_TEXT_ROLE
         delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
         delegate.width_role = FileModel.VIEW_ITEM_WIDTH_ROLE
+        delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
         delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
-
-        # Set the thumbnail width to ensure text aligns between rows
-        delegate.thumbnail_width = 128
 
         # Create an icon for the expand header action
         expand_icon = QtGui.QIcon(":/tk-multi-breakdown2/tree_arrow_expanded.png")
@@ -466,9 +533,7 @@ class AppDialog(QtGui.QWidget):
                     "show_always": True,
                     "features": QtGui.QStyleOptionButton.Flat,
                     "get_data": get_expand_action_data,
-                    "callback": lambda view, index, pos: view._expand_group(
-                        index.row(), None
-                    ),
+                    "callback": lambda view, index, pos: view.toggle_expand(index),
                 },
             ],
             ViewItemDelegate.LEFT,
@@ -479,9 +544,7 @@ class AppDialog(QtGui.QWidget):
                 {
                     "icon": ":/tk-multi-breakdown2/tree_arrow_expanded.png",
                     "padding": 0,
-                    "callback": lambda view, index, pos: self._show_context_menu(
-                        view, pos
-                    ),
+                    "callback": self._actions_menu_requested,
                 },
             ],
             ViewItemDelegate.TOP_RIGHT,
@@ -512,17 +575,18 @@ class AppDialog(QtGui.QWidget):
         delegate.subtitle_role = FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE
         delegate.details_role = FileHistoryModel.VIEW_ITEM_DETAILS_ROLE
 
+        # Add padding around the item rect.
         delegate.item_padding = 5
 
-        # Set the background pen to draw a border around the item
+        # Set the background pen to draw a border around the item.
         background_pen = QtGui.QPen(QtCore.Qt.black)
         background_pen.setWidthF(0.5)
         delegate.background_pen = background_pen
 
-        # Set the thumbnail width to ensure text aligns between rows
+        # Set the thumbnail width to ensure text aligns between rows.
         delegate.thumbnail_width = 64
 
-        # Add the menu actions button
+        # Add the menu actions button.
         delegate.add_actions(
             [
                 {
