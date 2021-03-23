@@ -115,6 +115,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :return: The data for the specified roel.
             """
 
+            if role == FileModel.FILE_ITEM_ROLE:
+                return None
+
             if role == FileModel.VIEW_ITEM_HEIGHT_ROLE:
                 # Group item height always adjusts to content size
                 return -1
@@ -126,12 +129,26 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         Model item that represents a single FileItem in the model.
         """
 
-        def __init__(self, text):
+        def __init__(self, text, file_item=None):
             """
             :param text: String used for the label/display role for this item
+            :param file_item: The file item data for this item
             """
 
             QtGui.QStandardItem.__init__(self, text)
+
+            self._file_item = file_item
+
+        @property
+        def file_item(self):
+            """
+            Get or set the file item data for this model item.
+            """
+            return self._file_item
+
+        @file_item.setter
+        def file_item(self, value):
+            self._file_item = value
 
         def data(self, role):
             """
@@ -142,6 +159,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :param role: The :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole` role.
             :return: The data for the specified roel.
             """
+
+            if role == FileModel.FILE_ITEM_ROLE:
+                return self.file_item
 
             if role == QtCore.Qt.BackgroundRole:
                 file_item = self.data(FileModel.FILE_ITEM_ROLE)
@@ -266,8 +286,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             else:
                 group_item = self._group_items[project["id"]]
 
-            file_model_item = FileModel.FileModelItem("")
-            file_model_item.setData(file_item, FileModel.FILE_ITEM_ROLE)
+            file_model_item = FileModel.FileModelItem("", file_item)
             group_item.appendRow(file_model_item)
 
             # for each item, we need to determine the latest version in order to know if the file is up-to-date or not
