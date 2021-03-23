@@ -37,12 +37,12 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
     VIEW_ITEM_CONFIG_HOOK_PATH = "view_item_configuration_hook"
 
-    # additional data roles defined for the model:
+    # Additional data roles defined for the model
     _BASE_ROLE = QtCore.Qt.UserRole + 32
-    FILE_ITEM_ROLE = _BASE_ROLE + 1
-    # Keep track of the last model role. This will be used by the ViewItemRolesMixin as an offset when
-    # adding more roles to the model. Update this if more custom roles are added.
-    LAST_ROLE = FILE_ITEM_ROLE
+    (
+        FILE_ITEM_ROLE,
+        NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
+    ) = range(_BASE_ROLE, _BASE_ROLE + 2)
 
     # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
@@ -190,8 +190,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self._on_data_retriever_work_failed
         )
 
-        # Initialize the roles for the ViewItemDelegate
-        self.initialize_roles(self.LAST_ROLE)
+        # Add additional roles defined by the ViewItemRolesMixin class.
+        self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
+
         # Get the hook instance for configuring the display for model view items.
         view_item_config_hook_path = self._app.get_setting(
             self.VIEW_ITEM_CONFIG_HOOK_PATH
@@ -204,14 +205,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # the data for the item. The methods defined for each role must accept two parameters:
         # (1) QStandardItem (2) dict
         self.role_methods = {
-            FileModel.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_item_thumbnail,
-            FileModel.VIEW_ITEM_TITLE_ROLE: view_item_config_hook.get_item_title,
-            FileModel.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_item_subtitle,
-            FileModel.VIEW_ITEM_DETAILS_ROLE: view_item_config_hook.get_item_details,
-            FileModel.VIEW_ITEM_SHORT_TEXT_ROLE: view_item_config_hook.get_item_short_text,
-            FileModel.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_item_icons,
-            FileModel.VIEW_ITEM_WIDTH_ROLE: view_item_config_hook.get_item_width,
-            FileModel.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_item_separator,
+            self.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_item_thumbnail,
+            self.VIEW_ITEM_TITLE_ROLE: view_item_config_hook.get_item_title,
+            self.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_item_subtitle,
+            self.VIEW_ITEM_DETAILS_ROLE: view_item_config_hook.get_item_details,
+            self.VIEW_ITEM_SHORT_TEXT_ROLE: view_item_config_hook.get_item_short_text,
+            self.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_item_icons,
+            self.VIEW_ITEM_WIDTH_ROLE: view_item_config_hook.get_item_width,
+            self.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_item_separator,
         }
 
     def destroy(self):

@@ -33,9 +33,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
     # Additional data roles defined for the model
     _BASE_ROLE = QtCore.Qt.UserRole + 32
-    # Keep track of the last model role. This will be used by the ViewItemRolesMixin as an offset when
-    # adding more roles to the model. Update this if more custom roles are added.
-    LAST_ROLE = _BASE_ROLE
+    (
+        NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
+    ) = range(_BASE_ROLE, _BASE_ROLE + 1)
 
     def __init__(self, parent, bg_task_manager):
         """
@@ -50,8 +50,8 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         self._app = sgtk.platform.current_bundle()
 
-        # Initialize the roles for the ViewItemDelegate
-        self.initialize_roles(self.LAST_ROLE)
+        # Add additional roles defined by the ViewItemRolesMixin class.
+        self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
 
         # Get the hook instance for configuring the display for model view items.
         view_item_config_hook_path = self._app.get_setting(
