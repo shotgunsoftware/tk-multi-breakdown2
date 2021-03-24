@@ -114,8 +114,8 @@ class AppDialog(QtGui.QWidget):
         # Create a delegate for the list view. Set the row width to -1 will expand each item row
         # to the full available width and thus display one item per row in a "list" view.
         list_item_delegate = self._create_file_item_delegate(set_delegate=False)
-        list_item_delegate.row_width = -1
-        list_item_delegate.scale_thumbnail_to_row_height(1.5)
+        list_item_delegate.item_width = -1
+        list_item_delegate.scale_thumbnail_to_item_height(1.5)
 
         # Set up the view modes
         self.view_modes = [
@@ -134,7 +134,7 @@ class AppDialog(QtGui.QWidget):
         # position both slider and view
         self._ui.size_slider.setValue(scale_val)
         file_item_delegate.thumbnail_size = QtCore.QSize(scale_val, scale_val)
-        list_item_delegate.row_height = scale_val
+        list_item_delegate.item_height = scale_val
         # and track subsequent changes
         self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
 
@@ -268,7 +268,7 @@ class AppDialog(QtGui.QWidget):
             if isinstance(delegate, ThumbnailItemDelegate):
                 delegate.thumbnail_size = QtCore.QSize(value, value)
             elif isinstance(delegate, ViewItemDelegate):
-                delegate.row_height = value
+                delegate.item_height = value
 
         self._ui.file_view._update_all_item_info = True
         self._ui.file_view.viewport().update()
@@ -501,6 +501,7 @@ class AppDialog(QtGui.QWidget):
         if thumbnail:
             delegate = ThumbnailItemDelegate(self._ui.file_view)
             delegate.thumbnail_size = QtCore.QSize(128, 128)
+            delegate.min_width = 85
         else:
             delegate = ViewItemDelegate(self._ui.file_view)
 
