@@ -505,7 +505,6 @@ class AppDialog(QtGui.QWidget):
         else:
             delegate = ViewItemDelegate(self._ui.file_view)
 
-        delegate.badge_height_pct = 0.75
         # Set the delegate model data roles
         delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
         delegate.header_role = FileModel.VIEW_ITEM_HEADER_ROLE
