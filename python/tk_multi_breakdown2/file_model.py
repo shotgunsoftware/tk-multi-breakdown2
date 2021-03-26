@@ -226,9 +226,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # (1) QStandardItem (2) dict
         self.role_methods = {
             self.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_item_thumbnail,
-            self.VIEW_ITEM_TITLE_ROLE: view_item_config_hook.get_item_title,
+            self.VIEW_ITEM_HEADER_ROLE: view_item_config_hook.get_item_title,
             self.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_item_subtitle,
-            self.VIEW_ITEM_DETAILS_ROLE: view_item_config_hook.get_item_details,
+            self.VIEW_ITEM_TEXT_ROLE: view_item_config_hook.get_item_details,
             self.VIEW_ITEM_SHORT_TEXT_ROLE: view_item_config_hook.get_item_short_text,
             self.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_item_icons,
             self.VIEW_ITEM_WIDTH_ROLE: view_item_config_hook.get_item_width,

@@ -66,9 +66,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         # (1) QStandardItem (2) dict
         self.role_methods = {
             FileHistoryModel.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_history_item_thumbnail,
-            FileHistoryModel.VIEW_ITEM_TITLE_ROLE: view_item_config_hook.get_history_item_title,
+            FileHistoryModel.VIEW_ITEM_HEADER_ROLE: view_item_config_hook.get_history_item_title,
             FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_history_item_subtitle,
-            FileHistoryModel.VIEW_ITEM_DETAILS_ROLE: view_item_config_hook.get_history_item_details,
+            FileHistoryModel.VIEW_ITEM_TEXT_ROLE: view_item_config_hook.get_history_item_details,
         }
 
     def load_data(self, sg_data):

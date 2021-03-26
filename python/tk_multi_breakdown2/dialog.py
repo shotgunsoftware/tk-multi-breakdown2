@@ -20,7 +20,7 @@ from .actions import ActionManager
 from .framework_qtwidgets import (
     ShotgunOverlayWidget,
     ViewItemDelegate,
-    ThumbnailItemDelegate,
+    ThumbnailViewItemDelegate,
 )
 
 task_manager = sgtk.platform.import_framework(
@@ -265,7 +265,7 @@ class AppDialog(QtGui.QWidget):
             if not delegate:
                 continue
 
-            if isinstance(delegate, ThumbnailItemDelegate):
+            if isinstance(delegate, ThumbnailViewItemDelegate):
                 delegate.thumbnail_size = QtCore.QSize(value, value)
             elif isinstance(delegate, ViewItemDelegate):
                 delegate.item_height = value
@@ -499,17 +499,18 @@ class AppDialog(QtGui.QWidget):
         # The view (self._ui.file_view) passed to the ViewItemDelegate constructor must be a
         # instance of subclass QAbstractItemView.
         if thumbnail:
-            delegate = ThumbnailItemDelegate(self._ui.file_view)
+            delegate = ThumbnailViewItemDelegate(self._ui.file_view)
             delegate.thumbnail_size = QtCore.QSize(128, 128)
             delegate.min_width = 85
         else:
             delegate = ViewItemDelegate(self._ui.file_view)
 
+        delegate.badge_height_pct = 0.75
         # Set the delegate model data roles
         delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
-        delegate.title_role = FileModel.VIEW_ITEM_TITLE_ROLE
+        delegate.header_role = FileModel.VIEW_ITEM_HEADER_ROLE
         delegate.subtitle_role = FileModel.VIEW_ITEM_SUBTITLE_ROLE
-        delegate.details_role = FileModel.VIEW_ITEM_DETAILS_ROLE
+        delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
         delegate.short_text_role = FileModel.VIEW_ITEM_SHORT_TEXT_ROLE
         delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
@@ -543,7 +544,9 @@ class AppDialog(QtGui.QWidget):
         delegate.add_actions(
             [
                 {
-                    "icon": ":/tk-multi-breakdown2/tree_arrow_expanded.png",
+                    "icon": QtGui.QIcon(
+                        ":/tk-multi-breakdown2/tree_arrow_expanded.png"
+                    ),
                     "padding": 0,
                     "callback": self._actions_menu_requested,
                 },
@@ -572,9 +575,9 @@ class AppDialog(QtGui.QWidget):
 
         # Set the delegate model data roles
         delegate.thumbnail_role = FileHistoryModel.VIEW_ITEM_THUMBNAIL_ROLE
-        delegate.title_role = FileHistoryModel.VIEW_ITEM_TITLE_ROLE
+        delegate.header_role = FileHistoryModel.VIEW_ITEM_HEADER_ROLE
         delegate.subtitle_role = FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE
-        delegate.details_role = FileHistoryModel.VIEW_ITEM_DETAILS_ROLE
+        delegate.text_role = FileHistoryModel.VIEW_ITEM_TEXT_ROLE
 
         # Add padding around the item rect.
         delegate.item_padding = 5
@@ -591,7 +594,9 @@ class AppDialog(QtGui.QWidget):
         delegate.add_actions(
             [
                 {
-                    "icon": ":/tk-multi-breakdown2/tree_arrow_expanded.png",
+                    "icon": QtGui.QIcon(
+                        ":/tk-multi-breakdown2/tree_arrow_expanded.png"
+                    ),
                     "padding": 0,
                     "callback": self._show_history_item_context_menu,
                 },
