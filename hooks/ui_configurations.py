@@ -71,12 +71,13 @@ class UIConfiguration(HookBaseClass):
         :returns: Dictionary containing template strings
         """
         return {
-            "top_left": "<b>{name}</b>",
+            "top_left": "<span style='font-size: 13px; font-weight: bold;'>{name}</span>",
             "top_right": "",
-            "body": "<b style='color:#18A7E3;'>Node</b> {<NODE_NAME>}<br/>"
-            "<b style='color:#18A7E3;'>Version</b> {version_number}<br/>"
-            "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}<br/>"
-            "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}",
+            # "top_right": "{created_at::short_timestamp}",
+            "body": "<span style='color:#18A7E3;'>Node</span> {<NODE_NAME>}<br/>"
+            "<span style='color:#18A7E3;'>Version</span> {version_number}<br/>"
+            "<span style='color:#18A7E3;'>Entity</span> {entity::showtype}<br/>"
+            "<span style='color:#18A7E3;'>Type</span> {published_file_type.PublishedFileType.code}",
             "thumbnail": True,
         }
 
@@ -115,8 +116,13 @@ class UIConfiguration(HookBaseClass):
         :returns: Dictionary containing template strings
         """
         return {
-            "top_left": "<b style='color:#18A7E3;'>Version {version_number}</b> <small>{created_at}</small>",
+            "top_left": "<br/>".join(
+                [
+                    "<span style='color:#18A7E3;'>Version</span> {version_number}",
+                    "<span style='color:#18A7E3;'>Date</span> {created_at}",
+                ]
+            ),
             "top_right": "",
-            "body": "<small style='font-style: italic;'>{created_by.HumanUser.name}: </small>{description}<br/>",
+            "body": "<span style='font-size: small; font-style: italic;'>{created_by.HumanUser.name}: {description}</span>",
             "thumbnail": True,
         }

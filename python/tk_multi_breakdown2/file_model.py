@@ -41,8 +41,26 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     (
         FILE_ITEM_ROLE,
+        FILE_ITEM_STATUS_ROLE,
+        FILE_ITEM_CREATED_AT_ROLE,
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 2)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 4)
+
+    # File item status enum
+    (
+        FILE_ITEM_STATUS_OK,
+        FILE_ITEM_STATUS_OUT_OF_SYNC,
+        FILE_ITEM_STATUS_LOCKED,
+    ) = range(3)
+
+    # File item status pixmaps FIXME use icons?
+    FILE_ITEM_STATUS_ICONS = {
+        FILE_ITEM_STATUS_OK: QtGui.QIcon(":/tk-multi-breakdown2/green_bullet.png"),
+        FILE_ITEM_STATUS_OUT_OF_SYNC: QtGui.QIcon(
+            ":/tk-multi-breakdown2/red_bullet.png"
+        ),
+        FILE_ITEM_STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/lock_bullet.png"),
+    }
 
     # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
@@ -72,6 +90,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :return: The data for the specified roel.
             """
 
+            result = None
+
             # Check if the model has a method defined for retrieving the item data for this role.
             data_method = self.model().get_method_for_role(role)
             if data_method:
@@ -83,10 +103,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                             role=role, msg=error
                         )
                     )
-
-            elif role == FileModel.VIEW_ITEM_LOADING_ROLE:
-                file_item = self.data(FileModel.FILE_ITEM_ROLE)
-                return file_item and not file_item.highest_version_number
 
             else:
                 # Default to the base implementation
@@ -121,6 +137,33 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             if role == FileModel.VIEW_ITEM_HEIGHT_ROLE:
                 # Group item height always adjusts to content size
                 return -1
+
+            if role == FileModel.VIEW_ITEM_LOADING_ROLE:
+                # The group header will indicate a loading state if any of the children are loading.
+                if self.hasChildren():
+                    for row in range(self.rowCount()):
+                        if self.child(row).data(role):
+                            return True
+                return False
+
+            if role == FileModel.FILE_ITEM_STATUS_ROLE:
+                if self.hasChildren():
+                    locked = True
+                    for row in range(self.rowCount()):
+                        child_status = self.child(row).data(role)
+                        if child_status == FileModel.FILE_ITEM_STATUS_OUT_OF_SYNC:
+                            # The group status is out of sync if any children are out of sync.
+                            return FileModel.FILE_ITEM_STATUS_OUT_OF_SYNC
+
+                        if child_status != FileModel.FILE_ITEM_STATUS_LOCKED:
+                            # The group status is locked only if all children are locked.
+                            locked = False
+
+                return (
+                    FileModel.FILE_ITEM_STATUS_LOCKED
+                    if locked
+                    else FileModel.FILE_ITEM_STATUS_OK
+                )
 
             return super(FileModel.GroupModelItem, self).data(role)
 
@@ -160,21 +203,35 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :return: The data for the specified roel.
             """
 
+            if role == QtCore.Qt.BackgroundRole:
+                return QtGui.QApplication.palette().midlight()
+
             if role == FileModel.FILE_ITEM_ROLE:
                 return self.file_item
 
-            if role == QtCore.Qt.BackgroundRole:
-                file_item = self.data(FileModel.FILE_ITEM_ROLE)
-                if (
-                    file_item
-                    and file_item.sg_data["version_number"]
-                    < file_item.highest_version_number
-                ):
-                    # Red background for items that are not the latest version.
-                    return QtGui.QBrush(QtGui.QColor(255, 0, 0, 50))
+            if role == FileModel.FILE_ITEM_CREATED_AT_ROLE:
+                if not self.file_item:
+                    return None
+                return self.file_item.sg_data.get("created_at")
 
-                # This is the latest, render background as normally.
-                return QtGui.QApplication.palette().midlight()
+            if role == FileModel.FILE_ITEM_STATUS_ROLE:
+                if self.file_item:
+                    if self.file_item.highest_version_number:
+                        if (
+                            self.file_item.sg_data["version_number"]
+                            >= self.file_item.highest_version_number
+                        ):
+                            return FileModel.FILE_ITEM_STATUS_OK
+
+                        # TODO add logic for locked items
+                        return FileModel.FILE_ITEM_STATUS_OUT_OF_SYNC
+
+                # Unkown state if there is no file item
+                return -1
+
+            if role == FileModel.VIEW_ITEM_LOADING_ROLE:
+                file_item = self.data(FileModel.FILE_ITEM_ROLE)
+                return file_item and not file_item.highest_version_number
 
             return super(FileModel.FileModelItem, self).data(role)
 
@@ -234,6 +291,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.VIEW_ITEM_WIDTH_ROLE: view_item_config_hook.get_item_width,
             self.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_item_separator,
         }
+
+    @classmethod
+    def get_status_icon(cls, status):
+        """
+        Return the icon for the status.
+        """
+
+        return cls.FILE_ITEM_STATUS_ICONS.get(status, QtGui.QIcon())
 
     def destroy(self):
         """

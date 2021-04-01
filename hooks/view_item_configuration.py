@@ -66,7 +66,7 @@ class ViewItemConfiguration(HookClass):
             ]
         )
 
-    def get_item_title(self, item, file_item=None):
+    def get_item_title(self, item, file_item):
         """
         Returns the data to display for this model index item's title.
 
@@ -96,11 +96,11 @@ class ViewItemConfiguration(HookClass):
 
             return item.data(QtCore.Qt.DisplayRole)
 
-        return "<span style='font: 14px;'>{}</span>".format(
+        return "<span style='font-size: 14px; font-weight: bold;'>{}</span>".format(
             item.data(QtCore.Qt.DisplayRole)
         )
 
-    def get_item_subtitle(self, item, file_item=None):
+    def get_item_subtitle(self, item, file_item):
         """
         Returns the data to display for this model index item's subtitle.
 
@@ -120,16 +120,44 @@ class ViewItemConfiguration(HookClass):
         :rtype: str | tuple<str,str>
         """
 
-        if file_item and self._subtitle_template_string:
-            # Search and replace any non-shotgun data fields
-            template_string = _resolve_file_item_tokens(
-                file_item, self._subtitle_template_string
-            )
-            return (template_string, file_item.sg_data)
+        subtitle = None
 
-        return None
+        if file_item:
+            if self._subtitle_template_string:
+                # Search and replace any non-shotgun data fields
+                template_string = _resolve_file_item_tokens(
+                    file_item, self._subtitle_template_string
+                )
+                subtitle = (template_string, file_item.sg_data)
 
-    def get_item_details(self, item, file_item=None):
+        else:
+            # Group header item
+            if not item.hasChildren():
+                subtitle = "NO FILES FOUND"
+
+            else:
+                child_rows = item.rowCount()
+                status_role = item.model().__class__.FILE_ITEM_STATUS_ROLE
+                status_out_of_sync = item.model().__class__.FILE_ITEM_STATUS_OUT_OF_SYNC
+                out_of_sync = 0
+                for row in range(child_rows):
+                    status = item.child(row).data(status_role)
+                    if status == status_out_of_sync:
+                        out_of_sync += 1
+
+                text = ["{total} FILES".format(total=child_rows)]
+                if out_of_sync > 0:
+                    text.append(
+                        "<b>{out_of_sync} OUT OF DATE</b>".format(
+                            out_of_sync=out_of_sync
+                        )
+                    )
+
+                subtitle = " | ".join(text)
+
+        return subtitle
+
+    def get_item_details(self, item, file_item):
         """
         Returns the data to display for this model index item's detailed text.
 
@@ -161,7 +189,7 @@ class ViewItemConfiguration(HookClass):
 
         return None
 
-    def get_item_short_text(self, item, file_item=None):
+    def get_item_short_text(self, item, file_item):
         """
         Returns the short text data to display for this model index item.
 
@@ -187,7 +215,7 @@ class ViewItemConfiguration(HookClass):
             item.data(QtCore.Qt.DisplayRole)
         )
 
-    def get_item_thumbnail(self, item, file_item=None):
+    def get_item_thumbnail(self, item, file_item):
         """
         Returns the data to display for this model index item's thumbnail.
 
@@ -210,7 +238,164 @@ class ViewItemConfiguration(HookClass):
 
         return thumbnail
 
-    def get_item_icons(self, item, file_item=None):
+    def get_item_icons(self, item, file_item):
+        """
+        Returns the data to display for this model index item's icons. Default implementation
+        does not show any icon badges over the thumbnail.
+
+        :param item: The model item.
+        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
+        :param file_item: The FileItem associated with the item. This will be None
+                          for :class:`GroupModelItem` items.
+        :type file_item: :class:`FileItem`
+
+        :return: Dictionary containing the item's icon data.
+        :rtype: dict, format e.g.:
+            {
+                "float-top-left":
+                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
+                "float-top-right":
+                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
+                "float-bottom-left":
+                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
+                "float-bottom-right":
+                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
+            }
+        """
+
+        return {}
+
+    def get_item_separator(self, item, file_item):
+        """
+        Returns True to indicate the item has a separator, else False. This may be
+        used to indicate to the delegate to draw a line separator for the item or not.
+
+        :param item: The model item.
+        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
+        :param file_item: The FileItem associated with the item. This will be None
+                          for :class:`GroupModelItem` items.
+        :type file_item: :class:`FileItem`
+
+        :return: True to indicate the item has a separator, else False.
+        :rtype: bool
+        """
+
+        # Only group headers have a separator.
+        return file_item is None
+
+    def get_item_width(self, item, file_item):
+        """
+        Returns the width for this item. This may be used by the delegate to help
+        draw the item as desired. NOTE: if the ViewItemDelegate has a fixed width
+        set up, this method will not affect the row width.
+
+        :param item: The model item.
+        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
+        :param file_item: The FileItem associated with the item. This will be None
+                          for :class:`GroupModelItem` items.
+        :type file_item: :class:`FileItem`
+
+        :return: The item rect display width
+        :rtype: int
+        """
+
+        # Set the width to 375 for File items and set to -1 for Group File items (headers)
+        # to expand to the full available width.
+        return 375 if file_item else -1
+
+    def get_history_item_title(self, item, sg_data, entity):
+        """
+        Returns the data to display for this model index item's title. Specifically, a
+        tuple will be returned, where item (1) is a template string and item (2) is the
+        Shotgun data to format the template string with. This tuple return value may be
+        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
+        string with the specified values from the Shotgun data provided.
+
+        :param item: The model item representing file history item.
+        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        :param sg_data: The Shotgun data associated with this item.
+        :type sg_data: dict
+
+        :return: The title data to display.
+        :rtype: tuple<str,str>
+        """
+
+        if self._history_title_template_string:
+            return (self._history_title_template_string, sg_data)
+
+        return None
+
+    def get_history_item_subtitle(self, item, sg_data, entity):
+        """
+        Returns the data to display for this model index item's subtitle. Specifically, a
+        tuple will be returned, where item (1) is a template string and item (2) is the
+        Shotgun data to format the template string with. This tuple return value may be
+        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
+        string with the specified values from the Shotgun data provided.
+
+        :param item: The model item representing file history item.
+        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        :param sg_data: The Shotgun data associated with this item.
+        :type sg_data: dict
+
+        :return: The subtitle data to display.
+        :rtype: tuple<str,str>
+        """
+
+        if self._history_subtitle_template_string:
+            return (self._history_subtitle_template_string, sg_data)
+
+        return None
+
+    def get_history_item_details(self, item, sg_data, entity):
+        """
+        Returns the data to display for this model index item's details. Specifically, a
+        tuple will be returned, where item (1) is a template string and item (2) is the
+        Shotgun data to format the template string with. This tuple return value may be
+        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
+        string with the specified values from the Shotgun data provided.
+
+        :param item: The model item representing file history item.
+        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        :param sg_data: The Shotgun data associated with this item.
+        :type sg_data: dict
+
+        :return: The details data to display.
+        :rtype: tuple<str,str>
+        """
+
+        if self._history_details_template_string:
+            return (self._history_details_template_string, sg_data)
+
+        return None
+
+    def get_history_item_thumbnail(self, item, sg_data, entity):
+        """
+        Returns the data to display for this model index item's thumbnail.
+
+        :param item: The model item representing file history item.
+        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        :param sg_data: The Shotgun data associated with this item.
+        :type sg_data: dict
+
+        :return: The item thumbnail.
+        :rtype: :class:`sgtk.platform.qt.QtGui.QPixmap`
+        """
+
+        thumbnail = None
+
+        if self._history_show_thumbnail:
+            thumbnail = item.data(QtCore.Qt.DecorationRole)
+            if thumbnail:
+                thumbnail = thumbnail.pixmap(512)
+            else:
+                # Return empty pixamp to indicate that a thumbnail should be drawn but the item
+                # does not specifically have one.
+                thumbnail = QtGui.QPixmap()
+
+        return thumbnail
+
+    def get_history_item_icons(self, item, sg_data, entity):
         """
         Returns the data to display for this model index item's icons.
 
@@ -236,150 +421,13 @@ class ViewItemConfiguration(HookClass):
 
         icons = {}
 
-        if not file_item:
-            return icons
-
-        if file_item.highest_version_number:
-            if file_item.sg_data["version_number"] >= file_item.highest_version_number:
-                icons["float-top-left"] = QtGui.QPixmap(
-                    ":/tk-multi-breakdown2/green_bullet.png"
-                )
-            else:
-                icons["float-top-left"] = QtGui.QPixmap(
-                    ":/tk-multi-breakdown2/red_bullet.png"
-                )
+        if entity and entity.get("id") == sg_data.get("id"):
+            icons["top-right"] = {
+                "pixmap": QtGui.QPixmap(":/tk-multi-breakdown2/green_bullet.png"),
+                "inset": False,
+            }
 
         return icons
-
-    def get_item_separator(self, item, file_item=None):
-        """
-        Returns True to indicate the item has a separator, else False. This may be
-        used to indicate to the delegate to draw a line separator for the item or not.
-
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
-
-        :return: True to indicate the item has a separator, else False.
-        :rtype: bool
-        """
-
-        # Only group headers have a separator.
-        return file_item is None
-
-    def get_item_width(self, item, file_item=None):
-        """
-        Returns the width for this item. This may be used by the delegate to help
-        draw the item as desired. NOTE: if the ViewItemDelegate has a fixed width
-        set up, this method will not affect the row width.
-
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
-
-        :return: The item rect display width
-        :rtype: int
-        """
-
-        # Set the width to 375 for File items and set to -1 for Group File items (headers)
-        # to expand to the full available width.
-        return 375 if file_item else -1
-
-    def get_history_item_title(self, item, sg_data):
-        """
-        Returns the data to display for this model index item's title. Specifically, a
-        tuple will be returned, where item (1) is a template string and item (2) is the
-        Shotgun data to format the template string with. This tuple return value may be
-        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the Shotgun data provided.
-
-        :param item: The model item representing file history item.
-        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
-        :type sg_data: dict
-
-        :return: The title data to display.
-        :rtype: tuple<str,str>
-        """
-
-        if self._history_title_template_string:
-            return (self._history_title_template_string, sg_data)
-
-        return None
-
-    def get_history_item_subtitle(self, item, sg_data):
-        """
-        Returns the data to display for this model index item's subtitle. Specifically, a
-        tuple will be returned, where item (1) is a template string and item (2) is the
-        Shotgun data to format the template string with. This tuple return value may be
-        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the Shotgun data provided.
-
-        :param item: The model item representing file history item.
-        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
-        :type sg_data: dict
-
-        :return: The subtitle data to display.
-        :rtype: tuple<str,str>
-        """
-
-        if self._history_subtitle_template_string:
-            return (self._history_subtitle_template_string, sg_data)
-
-        return None
-
-    def get_history_item_details(self, item, sg_data):
-        """
-        Returns the data to display for this model index item's details. Specifically, a
-        tuple will be returned, where item (1) is a template string and item (2) is the
-        Shotgun data to format the template string with. This tuple return value may be
-        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the Shotgun data provided.
-
-        :param item: The model item representing file history item.
-        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
-        :type sg_data: dict
-
-        :return: The details data to display.
-        :rtype: tuple<str,str>
-        """
-
-        if self._history_details_template_string:
-            return (self._history_details_template_string, sg_data)
-
-        return None
-
-    def get_history_item_thumbnail(self, item, sg_data):
-        """
-        Returns the data to display for this model index item's thumbnail.
-
-        :param item: The model item representing file history item.
-        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
-        :type sg_data: dict
-
-        :return: The item thumbnail.
-        :rtype: :class:`sgtk.platform.qt.QtGui.QPixmap`
-        """
-
-        thumbnail = None
-
-        if self._history_show_thumbnail:
-            thumbnail = item.data(QtCore.Qt.DecorationRole)
-            if thumbnail:
-                thumbnail = thumbnail.pixmap(512)
-            else:
-                # Return empty pixamp to indicate that a thumbnail should be drawn but the item
-                # does not specifically have one.
-                thumbnail = QtGui.QPixmap()
-
-        return thumbnail
 
 
 def _resolve_tokens(token, value, text):

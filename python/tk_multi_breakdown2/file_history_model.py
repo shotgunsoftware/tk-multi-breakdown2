@@ -34,8 +34,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     # Additional data roles defined for the model
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     (
+        ENTITY_DATA_ROLE,  # The entity that this model data records are 'history' of.
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 1)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 2)
 
     def __init__(self, parent, bg_task_manager):
         """
@@ -48,6 +49,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         ShotgunModel.__init__(self, parent, bg_task_manager=bg_task_manager)
 
+        self._entity = None
         self._app = sgtk.platform.current_bundle()
 
         # Add additional roles defined by the ViewItemRolesMixin class.
@@ -69,7 +71,16 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             FileHistoryModel.VIEW_ITEM_HEADER_ROLE: view_item_config_hook.get_history_item_title,
             FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_history_item_subtitle,
             FileHistoryModel.VIEW_ITEM_TEXT_ROLE: view_item_config_hook.get_history_item_details,
+            FileHistoryModel.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_history_item_icons,
         }
+
+    @property
+    def entity(self):
+        """
+        Get the entity whose history records make up this model (the data in this model are the
+        history records for this entity).
+        """
+        return self._entity
 
     def load_data(self, sg_data):
         """
@@ -78,6 +89,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         :param sg_data: Dictionary describing a publish in shotgun, including all the common
                         publish fields.
         """
+
+        # Set the entity property to the new entity that this model will contain history records for.
+        self._entity = sg_data
 
         app = sgtk.platform.current_bundle()
 
@@ -118,3 +132,27 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         """
 
         self.set_data_for_role_methods(item, sg_data)
+
+    def _get_args_for_role_method(self, item, role):
+        """
+        Override the :class:`ViewItemRolesMixin` method.
+
+        This method will be called before executing the method to retrieve the item
+        data for a given role.
+
+        Return any additional positional or keyword arguments to pass along to the
+        method executed for a role.staticmethod
+
+        :param item: The model item.
+        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        :param role: The item role.
+        :type role: :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole`
+
+        :return: Positional or keyword arguments to pass to a method executed to retreive
+                 item data for a role.
+        :rtype: tuple(list, dict)
+        """
+
+        args = ()
+        kwargs = {"entity": self.entity}
+        return (args, kwargs)

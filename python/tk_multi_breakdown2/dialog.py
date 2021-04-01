@@ -21,6 +21,7 @@ from .framework_qtwidgets import (
     ShotgunOverlayWidget,
     ViewItemDelegate,
     ThumbnailViewItemDelegate,
+    utils,
 )
 
 task_manager = sgtk.platform.import_framework(
@@ -504,6 +505,9 @@ class AppDialog(QtGui.QWidget):
             delegate.min_width = 85
         else:
             delegate = ViewItemDelegate(self._ui.file_view)
+            # FIXME testing
+            delegate.button_margin = 15
+            delegate.icon_size = QtCore.QSize(24, 24)
 
         # Set the delegate model data roles
         delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
@@ -526,6 +530,19 @@ class AppDialog(QtGui.QWidget):
             QtGui.QIcon.State.On,
         )
 
+        # TODO test icon mode/states
+        status_icon = QtGui.QIcon(":/tk-multi-breakdown2/green_bullet.png")
+        # status_icon.addPixmap(
+        #     QtGui.QPixmap(":/tk-multi-breakdown2/red_bullet.png"),
+        #     QtGui.QIcon.Mode.Normal,
+        #     QtGui.QIcon.State.Off,
+        # )
+        # status_icon.addPixmap(
+        #     QtGui.QPixmap(":/tk-multi-breakdown2/red_bullet.png"),
+        #     QtGui.QIcon.Mode.Disabled,
+        #     QtGui.QIcon.State.On,
+        # )
+
         # Add the group header expand action
         delegate.add_actions(
             [
@@ -536,22 +553,39 @@ class AppDialog(QtGui.QWidget):
                     "get_data": get_expand_action_data,
                     "callback": lambda view, index, pos: view.toggle_expand(index),
                 },
+                {
+                    "icon": QtGui.QIcon(),
+                    "show_always": True,
+                    "features": QtGui.QStyleOptionButton.Flat,
+                    "get_data": get_status_action_data,
+                },
             ],
             ViewItemDelegate.LEFT,
         )
-        # Add the menu actions buton
         delegate.add_actions(
             [
                 {
-                    "icon": QtGui.QIcon(
-                        ":/tk-multi-breakdown2/tree_arrow_expanded.png"
-                    ),
-                    "padding": 0,
-                    "callback": self._actions_menu_requested,
+                    "name": "",
+                    "show_always": True,
+                    "features": QtGui.QStyleOptionButton.Flat,
+                    "get_data": get_timestamp_action_data,
                 },
             ],
-            ViewItemDelegate.TOP_RIGHT,
+            ViewItemDelegate.RIGHT,
         )
+        # Add the menu actions buton
+        # delegate.add_actions(
+        #     [
+        #         {
+        #             "icon": QtGui.QIcon(
+        #                 ":/tk-multi-breakdown2/tree_arrow_expanded.png"
+        #             ),
+        #             "padding": 0,
+        #             "callback": self._actions_menu_requested,
+        #         },
+        #     ],
+        #     ViewItemDelegate.TOP_RIGHT,
+        # )
 
         if set_delegate:
             self._ui.file_view.setItemDelegate(delegate)
@@ -577,14 +611,10 @@ class AppDialog(QtGui.QWidget):
         delegate.header_role = FileHistoryModel.VIEW_ITEM_HEADER_ROLE
         delegate.subtitle_role = FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE
         delegate.text_role = FileHistoryModel.VIEW_ITEM_TEXT_ROLE
+        delegate.icon_role = FileHistoryModel.VIEW_ITEM_ICON_ROLE
 
         # Add padding around the item rect.
-        delegate.item_padding = 5
-
-        # Set the background pen to draw a border around the item.
-        background_pen = QtGui.QPen(QtCore.Qt.black)
-        background_pen.setWidthF(0.5)
-        delegate.background_pen = background_pen
+        delegate.item_padding = 7
 
         # Set the thumbnail width to ensure text aligns between rows.
         delegate.thumbnail_width = 64
@@ -637,3 +667,48 @@ def get_expand_action_data(parent, index):
         state |= QtGui.QStyle.State_On
 
     return {"visible": visible, "state": state}
+
+
+def get_status_action_data(parent, index):
+    """
+    Return the action data for the status action icon, and for the given index.
+    This data will determine how the action icon is displayed for the index.
+
+    :param parent: This is the parent of the :class:`ViewItemDelegate`, which is the file view.
+    :type parent: :class:`GroupItemView`
+    :param index: The index the action is for.
+    :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
+    :return: The data for the action and index.
+    :rtype: dict, e.g.:
+    """
+
+    # NOTE should we set the icon on the action that can toggle different icons based on state?
+
+    status = index.data(FileModel.FILE_ITEM_STATUS_ROLE)
+    status_icon = FileModel.get_status_icon(status)
+
+    return {"icon": status_icon}
+
+
+def get_timestamp_action_data(parent, index):
+    """
+    Return the action data for the status action icon, and for the given index.
+    This data will determine how the action icon is displayed for the index.
+
+    :param parent: This is the parent of the :class:`ViewItemDelegate`, which is the file view.
+    :type parent: :class:`GroupItemView`
+    :param index: The index the action is for.
+    :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
+    :return: The data for the action and index.
+    :rtype: dict, e.g.:
+    """
+
+    visible = index.parent().isValid()
+    datetime_obj = index.data(FileModel.FILE_ITEM_CREATED_AT_ROLE)
+    timestamp, _ = utils.create_human_readable_timestamp(
+        datetime_obj, "short_timestamp"
+    )
+    return {
+        "visible": visible,
+        "name": timestamp,
+    }
