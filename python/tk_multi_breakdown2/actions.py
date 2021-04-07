@@ -48,13 +48,30 @@ class ActionManager(object):
             return
 
         action = UpdateToSpecificVersionAction(
-            "Update to v%03d" % sg_data["version_number"], item, sg_data
+            "Override current reference with Version {version}".format(
+                version=sg_data["version_number"]
+            ),
+            item,
+            sg_data,
         )
 
         q_action = QtGui.QAction(action.label, parent)
         q_action.triggered[()].connect(lambda checked=False: action.execute())
 
         return q_action
+
+    @staticmethod
+    def execute_update_to_latest_action(items):
+        """
+        Execute the "Update to latest" action.
+
+        :param items: List of items to update to their latest versions
+        :type items: list<FileItem>
+        :return: The value returned by action method executed.
+        """
+
+        action = UpdateToLatestVersionAction("Update to latest", items)
+        return action.execute()
 
 
 class Action(object):
