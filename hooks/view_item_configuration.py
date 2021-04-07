@@ -60,9 +60,7 @@ class ViewItemConfiguration(HookClass):
 
         self._short_text_template_string = "<br/>".join(
             [
-                "<b>{name}</b>, {[v]version_number::zeropadded}",
-                "{published_file_type.PublishedFileType.code}",
-                "{<NODE_NAME>}",
+                "<span style='color: rgba(200, 200, 200, 40%);'>{published_file_type.PublishedFileType.code}</span>",
             ]
         )
 
@@ -145,15 +143,18 @@ class ViewItemConfiguration(HookClass):
                     if status == status_out_of_sync:
                         out_of_sync += 1
 
-                text = ["{total} FILES".format(total=child_rows)]
+                text = [
+                    "<span style='color: rgba(200, 200, 200, 40%);'>{} FILES</span>".format(
+                        child_rows
+                    )
+                ]
                 if out_of_sync > 0:
                     text.append(
-                        "<b>{out_of_sync} OUT OF DATE</b>".format(
-                            out_of_sync=out_of_sync
-                        )
+                        "{out_of_sync} OUT OF DATE".format(out_of_sync=out_of_sync)
                     )
 
-                subtitle = " | ".join(text)
+                join_char = "<span style='color: rgba(200, 200, 200, 40%);'> | </span>"
+                subtitle = join_char.join(text)
 
         return subtitle
 
@@ -210,10 +211,7 @@ class ViewItemConfiguration(HookClass):
             )
             return (template_string, file_item.sg_data)
 
-        # Group header title
-        return "<span style='font: 14px;'>{}</span>".format(
-            item.data(QtCore.Qt.DisplayRole)
-        )
+        return None
 
     def get_item_thumbnail(self, item, file_item):
         """
@@ -263,7 +261,18 @@ class ViewItemConfiguration(HookClass):
             }
         """
 
-        return {}
+        icons = {}
+
+        if file_item:
+            status_role = item.model().__class__.FILE_ITEM_STATUS_ROLE
+            status = item.data(status_role)
+            status_icon = item.model().get_status_icon(status)
+            icons["top-left"] = {
+                "pixmap": status_icon,
+                "inset": True,
+            }
+
+        return icons
 
     def get_item_separator(self, item, file_item):
         """
