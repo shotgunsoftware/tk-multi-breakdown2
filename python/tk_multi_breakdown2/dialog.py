@@ -46,6 +46,12 @@ class AppDialog(QtGui.QWidget):
     SIZE_SCALE_VALUE = "view_item_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
 
+    (
+        THUMBNAIL_VIEW_MODE,
+        LIST_VIEW_MODE,
+        GRID_VIEW_MODE,
+    ) = range(3)
+
     def __init__(self, parent=None):
         """
         :param parent: The parent QWidget for this control
@@ -95,6 +101,14 @@ class AppDialog(QtGui.QWidget):
         )
         self._ui.list_view_btn.setIcon(list_view_icon)
 
+        grid_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_thumb.png")
+        grid_view_icon.addPixmap(
+            QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_thumb_active.png"),
+            QtGui.QIcon.Mode.Normal,
+            QtGui.QIcon.State.On,
+        )
+        self._ui.grid_view_btn.setIcon(grid_view_icon)
+
         file_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_thumb.png")
         file_view_icon.addPixmap(
             QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_thumb_active.png"),
@@ -107,24 +121,30 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setMouseTracking(True)
 
         # Create a delegate for the file view. Set the row width to None
-        # TODO choose which view (File list similar to wf2 or Thumbnail similar to loader, or we could do both)
-        # file_item_delegate = self._create_file_item_delegate(set_delegateFalse, thumbnail=False)
         file_item_delegate = self._create_file_item_delegate(
             set_delegate=False, thumbnail=True
         )
         # Create a delegate for the list view. Set the row width to -1 will expand each item row
         # to the full available width and thus display one item per row in a "list" view.
         list_item_delegate = self._create_file_item_delegate(set_delegate=False)
-        list_item_delegate.item_width = -1
-        list_item_delegate.scale_thumbnail_to_item_height(1.5)
 
         # Set up the view modes
         self.view_modes = [
             {
+                "mode": self.THUMBNAIL_VIEW_MODE,
                 "button": self._ui.file_view_btn,
                 "delegate": file_item_delegate,
             },
-            {"button": self._ui.list_view_btn, "delegate": list_item_delegate},
+            {
+                "mode": self.GRID_VIEW_MODE,
+                "button": self._ui.grid_view_btn,
+                "delegate": list_item_delegate,
+            },
+            {
+                "mode": self.LIST_VIEW_MODE,
+                "button": self._ui.list_view_btn,
+                "delegate": list_item_delegate,
+            },
         ]
         for i, view_mode in enumerate(self.view_modes):
             view_mode["button"].clicked.connect(
@@ -132,12 +152,13 @@ class AppDialog(QtGui.QWidget):
             )
 
         scale_val = self._settings_manager.retrieve(self.SIZE_SCALE_VALUE, 140)
-        # position both slider and view
-        self._ui.size_slider.setValue(scale_val)
-        file_item_delegate.thumbnail_size = QtCore.QSize(scale_val, scale_val)
-        list_item_delegate.item_height = scale_val
-        # and track subsequent changes
         self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
+        self._ui.size_slider.setValue(scale_val)
+
+        self._ui.select_all_outdated_button.clicked.connect(
+            self._on_select_all_outdated
+        )
+        self._ui.update_selected_button.clicked.connect(self._on_update_selected)
 
         # Get the last view mode used from the settings manager, default to the first view if
         # no settings found
@@ -180,6 +201,14 @@ class AppDialog(QtGui.QWidget):
         self._create_file_history_item_delegate()
         self._ui.file_history_view.setMouseTracking(True)
 
+        # TODO replace with icons from Lena
+        details_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_thumb.png")
+        details_icon.addPixmap(
+            QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_thumb_active.png"),
+            QtGui.QIcon.Mode.Normal,
+            QtGui.QIcon.State.On,
+        )
+        self._ui.details_button.setIcon(details_icon)
         self._ui.details_button.clicked.connect(self._toggle_details_panel)
         details_panel_visibility = self._settings_manager.retrieve(
             self.DETAILS_PANEL_VISIBILITY_SETTING, False
@@ -267,9 +296,18 @@ class AppDialog(QtGui.QWidget):
                 continue
 
             if isinstance(delegate, ThumbnailViewItemDelegate):
-                delegate.thumbnail_size = QtCore.QSize(value, value)
+                width = value * (16 / 9.0)
+                delegate.thumbnail_size = QtCore.QSize(width, value)
+
             elif isinstance(delegate, ViewItemDelegate):
-                delegate.item_height = value
+                # FIXME cleanup
+                if view_mode["button"].isChecked():
+                    if view_mode["mode"] == self.LIST_VIEW_MODE:
+                        delegate.item_height = value
+                        delegate.item_width = -1
+                    elif view_mode["mode"] == self.GRID_VIEW_MODE:
+                        delegate.item_height = None
+                        delegate.item_width = value * 2
 
         self._ui.file_view._update_all_item_info = True
         self._ui.file_view.viewport().update()
@@ -410,21 +448,12 @@ class AppDialog(QtGui.QWidget):
         :param visible: Boolean to indicate whether the details panel should be visible or not
         """
 
-        # hide details panel
-        if not visible:
-            self._details_panel_visible = False
-            self._ui.details_panel.setVisible(False)
-            self._ui.details_button.setText("Show Details")
+        self._details_panel_visible = visible
+        self._ui.details_panel.setVisible(visible)
+        self._ui.details_button.setChecked(visible)
 
-        # show details panel
-        else:
-
-            self._details_panel_visible = True
-            self._ui.details_panel.setVisible(True)
-            self._ui.details_button.setText("Hide Details")
-
-            # if there is something selected, make sure the detail
-            # section is focused on this
+        if visible:
+            # Set up the details panel with the current selection.
             selection_model = self._ui.file_view.selectionModel()
             self._setup_details_panel(selection_model.selectedIndexes())
 
@@ -448,7 +477,6 @@ class AppDialog(QtGui.QWidget):
             __clear_publish_history()
 
         else:
-
             model_index = selected_items[0]
             file_item = model_index.data(FileModel.FILE_ITEM_ROLE)
             thumbnail = model_index.data(QtCore.Qt.DecorationRole)
@@ -475,7 +503,22 @@ class AppDialog(QtGui.QWidget):
             is_cur_mode = i == mode_index
             view_mode["button"].setChecked(is_cur_mode)
             if is_cur_mode:
+                delegate = view_mode["delegate"]
                 self._ui.file_view.setItemDelegate(view_mode["delegate"])
+
+                if view_mode["mode"] == self.LIST_VIEW_MODE:
+                    delegate.item_height = self._ui.size_slider.value()
+                    delegate.item_width = -1
+                    delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
+
+                elif view_mode["mode"] == self.GRID_VIEW_MODE:
+                    delegate.item_height = None
+                    delegate.item_width = self._ui.size_slider.value() * 2
+                    delegate.thumbnail_width = 128
+                    delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
+
+                elif view_mode["mode"] == self.THUMBNAIL_VIEW_MODE:
+                    delegate.text_role = FileModel.VIEW_ITEM_SHORT_TEXT_ROLE
 
         # Clear any selection on changing the view mode.
         if self._ui.file_view.selectionModel():
@@ -489,6 +532,55 @@ class AppDialog(QtGui.QWidget):
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
+    def _on_select_all_outdated(self):
+        """
+        Callback triggered when the "Select all Outdated" button is clicked. This will
+        select all items in the file view that are not using the latest version.
+        """
+
+        selection_model = self._ui.file_view.selectionModel()
+        if not selection_model:
+            return
+
+        selection_model.clearSelection()
+
+        outdated_selection = QtGui.QItemSelection()
+        group_rows = self._file_model.rowCount()
+
+        for group_row in range(group_rows):
+            group_item = self._file_model.item(group_row, 0)
+            file_item_rows = group_item.rowCount()
+            for file_item_row in range(file_item_rows):
+                file_item = group_item.child(file_item_row)
+
+                if (
+                    file_item.data(FileModel.FILE_ITEM_STATUS_ROLE)
+                    == FileModel.FILE_ITEM_STATUS_OUT_OF_SYNC
+                ):
+                    index = file_item.index()
+                    outdated_selection.select(index, index)
+
+        selection_model.select(outdated_selection, QtGui.QItemSelectionModel.Select)
+
+    def _on_update_selected(self):
+        """
+        Callback triggere when the "Update Selected" button is clicked. This will update
+        all selected items to the latest version.
+        """
+
+        selection_model = self._ui.file_view.selectionModel()
+        if not selection_model:
+            return
+
+        file_items = []
+        indexes = selection_model.selectedIndexes()
+        for index in indexes:
+            file_item = index.data(FileModel.FILE_ITEM_ROLE)
+            file_model_item = index.model().itemFromIndex(index)
+            file_items.append((file_item, file_model_item))
+
+        ActionManager.execute_update_to_latest_action(file_items)
+
     def _create_file_item_delegate(self, set_delegate=True, thumbnail=False):
         """
         Create and set up a :class:`ViewItemDelegate` object for the File view.
@@ -501,21 +593,18 @@ class AppDialog(QtGui.QWidget):
         # instance of subclass QAbstractItemView.
         if thumbnail:
             delegate = ThumbnailViewItemDelegate(self._ui.file_view)
-            delegate.thumbnail_size = QtCore.QSize(128, 128)
-            delegate.min_width = 85
+            delegate.thumbnail_size = QtCore.QSize(164, 128)
+            delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         else:
             delegate = ViewItemDelegate(self._ui.file_view)
-            # FIXME testing
-            delegate.button_margin = 15
-            delegate.icon_size = QtCore.QSize(24, 24)
+            delegate.thumbnail_width = 128
+            delegate.scale_thumbnail_to_item_height(1.5)
 
         # Set the delegate model data roles
         delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
         delegate.header_role = FileModel.VIEW_ITEM_HEADER_ROLE
         delegate.subtitle_role = FileModel.VIEW_ITEM_SUBTITLE_ROLE
         delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
-        delegate.short_text_role = FileModel.VIEW_ITEM_SHORT_TEXT_ROLE
-        delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
         delegate.width_role = FileModel.VIEW_ITEM_WIDTH_ROLE
         delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
@@ -530,34 +619,16 @@ class AppDialog(QtGui.QWidget):
             QtGui.QIcon.State.On,
         )
 
-        # TODO test icon mode/states
-        status_icon = QtGui.QIcon(":/tk-multi-breakdown2/green_bullet.png")
-        # status_icon.addPixmap(
-        #     QtGui.QPixmap(":/tk-multi-breakdown2/red_bullet.png"),
-        #     QtGui.QIcon.Mode.Normal,
-        #     QtGui.QIcon.State.Off,
-        # )
-        # status_icon.addPixmap(
-        #     QtGui.QPixmap(":/tk-multi-breakdown2/red_bullet.png"),
-        #     QtGui.QIcon.Mode.Disabled,
-        #     QtGui.QIcon.State.On,
-        # )
-
         # Add the group header expand action
         delegate.add_actions(
             [
                 {
                     "icon": expand_icon,
                     "show_always": True,
+                    "padding": 0,
                     "features": QtGui.QStyleOptionButton.Flat,
                     "get_data": get_expand_action_data,
                     "callback": lambda view, index, pos: view.toggle_expand(index),
-                },
-                {
-                    "icon": QtGui.QIcon(),
-                    "show_always": True,
-                    "features": QtGui.QStyleOptionButton.Flat,
-                    "get_data": get_status_action_data,
                 },
             ],
             ViewItemDelegate.LEFT,
@@ -565,14 +636,29 @@ class AppDialog(QtGui.QWidget):
         delegate.add_actions(
             [
                 {
-                    "name": "",
+                    "icon": QtGui.QIcon(),  # The get_data callback will set the icon based on status.
                     "show_always": True,
+                    "padding": 0,
                     "features": QtGui.QStyleOptionButton.Flat,
-                    "get_data": get_timestamp_action_data,
+                    "get_data": get_thumbnail_status_action_data
+                    if thumbnail
+                    else get_status_action_data,
                 },
             ],
-            ViewItemDelegate.RIGHT,
+            ViewItemDelegate.LEFT,
         )
+        if not thumbnail:
+            delegate.add_actions(
+                [
+                    {
+                        "name": "",  # The get_data callback will set the text.
+                        "show_always": True,
+                        "features": QtGui.QStyleOptionButton.Flat,
+                        "get_data": get_timestamp_action_data,
+                    },
+                ],
+                ViewItemDelegate.RIGHT,
+            )
         # Add the menu actions buton
         # delegate.add_actions(
         #     [
@@ -669,6 +755,29 @@ def get_expand_action_data(parent, index):
     return {"visible": visible, "state": state}
 
 
+def get_thumbnail_status_action_data(parent, index):
+    """
+    Return the action data for the status action icon, and for the given index.
+    This data will determine how the action icon is displayed for the index.
+
+    :param parent: This is the parent of the :class:`ViewItemDelegate`, which is the file view.
+    :type parent: :class:`GroupItemView`
+    :param index: The index the action is for.
+    :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
+    :return: The data for the action and index.
+    :rtype: dict, e.g.:
+    """
+
+    visible = index.data(FileModel.FILE_ITEM_ROLE) is None
+    status = index.data(FileModel.FILE_ITEM_STATUS_ROLE)
+    status_icon = FileModel.get_status_icon(status)
+
+    return {
+        "visible": visible,
+        "icon": status_icon,
+    }
+
+
 def get_status_action_data(parent, index):
     """
     Return the action data for the status action icon, and for the given index.
@@ -682,12 +791,12 @@ def get_status_action_data(parent, index):
     :rtype: dict, e.g.:
     """
 
-    # NOTE should we set the icon on the action that can toggle different icons based on state?
-
     status = index.data(FileModel.FILE_ITEM_STATUS_ROLE)
     status_icon = FileModel.get_status_icon(status)
 
-    return {"icon": status_icon}
+    return {
+        "icon": status_icon,
+    }
 
 
 def get_timestamp_action_data(parent, index):

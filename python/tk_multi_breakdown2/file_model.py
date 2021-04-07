@@ -53,7 +53,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         FILE_ITEM_STATUS_LOCKED,
     ) = range(3)
 
-    # File item status pixmaps FIXME use icons?
     FILE_ITEM_STATUS_ICONS = {
         FILE_ITEM_STATUS_OK: QtGui.QIcon(":/tk-multi-breakdown2/green_bullet.png"),
         FILE_ITEM_STATUS_OUT_OF_SYNC: QtGui.QIcon(
