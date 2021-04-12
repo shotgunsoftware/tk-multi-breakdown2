@@ -15,7 +15,9 @@ from .framework_qtwidgets import HierarchicalFilteringProxyModel
 
 
 class TreeProxyModel(HierarchicalFilteringProxyModel):
-    """"""
+    """
+    A proxy model for source models with a tree data structure.
+    """
 
     def __init__(self, parent, filter_items=None):
         """
@@ -154,23 +156,20 @@ class FilterItem(object):
         Filter str tupe.
         """
 
-        # TODO
-        return True
+        raise NotImplementedError
 
     def is_str_valid(self, str_value):
         """
         Filter str tupe.
         """
 
-        # TODO
-        return True
+        raise NotImplementedError
 
     def is_regex_str_valid(self, regex_value):
         """
         Filter regex str tupe.
         """
 
-        # TODO enforce correct filter value type
         match = self.filter_value.match(regex_value)
         return match.hasMatch()
 
@@ -179,16 +178,14 @@ class FilterItem(object):
         Filter str tupe.
         """
 
-        # TODO
-        return True
+        raise NotImplementedError
 
     def is_list_valid(self, str_value):
         """
         Filter str tupe.
         """
 
-        # TODO
-        return True
+        raise NotImplementedError
 
     @classmethod
     def is_group_op(cls, op):
