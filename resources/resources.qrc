@@ -2,12 +2,25 @@
     <qresource prefix="/tk-multi-breakdown2">
         <file>tree_arrow_expanded.png</file>
         <file>tree_arrow_collapsed.png</file>
-        <file>green_bullet.png</file>
-        <file>red_bullet.png</file>
-        <file>lock_bullet.png</file>
         <file>mode_switch_card.png</file>
         <file>mode_switch_card_active.png</file>
         <file>mode_switch_thumb.png</file>
         <file>mode_switch_thumb_active.png</file>
+        <file>current-outofdate@2x.png</file>
+        <file>current-override@2x.png</file>
+        <file>current-uptodate@2x.png</file>
+        <file>main-outofdate@2x.png</file>
+        <file>main-override@2x.png</file>
+        <file>main-uptodate@2x.png</file>
+        <file>info-active@2x.png</file>
+        <file>info-inactive@2x.png</file>
+        <file>current-outofdate.png</file>
+        <file>current-override.png</file>
+        <file>current-uptodate.png</file>
+        <file>main-outofdate.png</file>
+        <file>main-override.png</file>
+        <file>main-uptodate.png</file>
+        <file>info-active.png</file>
+        <file>info-inactive.png</file>
     </qresource>
 </RCC>
