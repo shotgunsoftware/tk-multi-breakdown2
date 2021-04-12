@@ -138,7 +138,7 @@ class AppDialog(QtGui.QWidget):
         # to the full available width and thus display one item per row in a "list" view.
         list_item_delegate = self._create_file_item_delegate(set_delegate=False)
 
-        # TEMP testing
+        # TODO: more advanced filtering - for now there is only a simple text filter on the item's displayed text
         self._display_text_filter = FilterItem(
             FilterItem.TYPE_REGEX_STR,
             FilterItem.OP_IN,
@@ -621,15 +621,10 @@ class AppDialog(QtGui.QWidget):
         :param search_text: The new search text
         """
 
-        # self._node_name_filter.filter_value = QtCore.QRegularExpression(
-        #     search_text, QtCore.QRegularExpression.CaseInsensitiveOption
-        # )
         self._display_text_filter.filter_value = QtCore.QRegularExpression(
             search_text, QtCore.QRegularExpression.CaseInsensitiveOption
         )
-        # self._file_proxy_model.filter_items = [self._node_name_filter, self._display_text_filter]
         self._file_proxy_model.filter_items = [self._display_text_filter]
-        # self._file_proxy_model.filter_items = [self._node_name_filter]
 
     def _create_file_item_delegate(self, set_delegate=True, thumbnail=False):
         """
