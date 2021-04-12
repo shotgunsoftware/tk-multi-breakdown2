@@ -36,3 +36,11 @@ overlay_widget = sgtk.platform.import_framework(
 ShotgunOverlayWidget = overlay_widget.ShotgunOverlayWidget
 
 utils = sgtk.platform.import_framework("tk-framework-qtwidgets", "utils")
+
+search_widget = sgtk.platform.import_framework(
+    "tk-framework-qtwidgets", "search_widget"
+)
+SearchWidget = search_widget.SearchWidget
+
+models = sgtk.platform.import_framework("tk-framework-qtwidgets", "models")
+HierarchicalFilteringProxyModel = models.HierarchicalFilteringProxyModel
