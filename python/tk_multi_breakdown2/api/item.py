@@ -32,6 +32,7 @@ class FileItem(object):
         self.sg_data = sg_data
         self.extra_data = extra_data
         self.latest_published_file = None
+        self.locked = False
 
     @property
     def highest_version_number(self):
@@ -52,4 +53,5 @@ class FileItem(object):
             "node_type": self.node_type,
             "path": self.path,
             "extra_data": self.extra_data,
+            "locked": self.locked,
         }

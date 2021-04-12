@@ -9,7 +9,7 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import sgtk
-from sgtk.platform.qt import QtCore
+from sgtk.platform.qt import QtCore, QtGui
 
 from .utils import get_ui_published_file_fields
 from . import constants
@@ -35,8 +35,23 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     (
         ENTITY_DATA_ROLE,  # The entity that this model data records are 'history' of.
+        STATUS_ROLE,  # The item status, one of the status enums
+        LOCKED_ROLE,  # True if the parent file item is locked to its current version
+        BADGE_ROLE,  # The badge to display for the item based on status
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 2)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 5)
+
+    (
+        STATUS_UP_TO_DATE,
+        STATUS_OUT_OF_DATE,
+        STATUS_LOCKED,
+    ) = range(3)
+
+    STATUS_BADGES = {
+        STATUS_UP_TO_DATE: QtGui.QIcon(":/tk-multi-breakdown2/current-uptodate.png"),
+        STATUS_OUT_OF_DATE: QtGui.QIcon(":/tk-multi-breakdown2/current-outofdate.png"),
+        STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/current-override.png"),
+    }
 
     def __init__(self, parent, bg_task_manager):
         """
@@ -49,8 +64,12 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         ShotgunModel.__init__(self, parent, bg_task_manager=bg_task_manager)
 
-        self._entity = None
         self._app = sgtk.platform.current_bundle()
+
+        # Store data pertaining to the parent entity of the items in this model.
+        self._entity = None
+        self._entity_highest_version_number = None
+        self._entity_locked = False
 
         # Add additional roles defined by the ViewItemRolesMixin class.
         self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
@@ -67,11 +86,12 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         # the data for the item. The methods defined for each role must accept two parameters:
         # (1) QStandardItem (2) dict
         self.role_methods = {
-            FileHistoryModel.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_history_item_thumbnail,
-            FileHistoryModel.VIEW_ITEM_HEADER_ROLE: view_item_config_hook.get_history_item_title,
-            FileHistoryModel.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_history_item_subtitle,
-            FileHistoryModel.VIEW_ITEM_TEXT_ROLE: view_item_config_hook.get_history_item_details,
-            FileHistoryModel.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_history_item_icons,
+            self.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_history_item_thumbnail,
+            self.VIEW_ITEM_HEADER_ROLE: view_item_config_hook.get_history_item_title,
+            self.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_history_item_subtitle,
+            self.VIEW_ITEM_TEXT_ROLE: view_item_config_hook.get_history_item_details,
+            self.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_history_item_icons,
+            self.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_history_item_separator,
         }
 
     @property
@@ -82,16 +102,52 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         """
         return self._entity
 
-    def load_data(self, sg_data):
+    @property
+    def entity_highest_version_number(self):
         """
-        Load the details for the shotgun publish entity described by sg_data.
+        Get the highest version number for the parent entity, which is the highest version an item could have
+        in this model data set.
+        """
+        return self._entity_highest_version_number
 
-        :param sg_data: Dictionary describing a publish in shotgun, including all the common
+    @property
+    def entity_locked(self):
+        """
+        Get whether or not the parent entity is locked to its current version.
+        """
+        return self._entity_locked
+
+    def is_current(self, history_sg_data):
+        """
+        Return True if the history item represented by history_sg_data is the current version in use for
+        the parent entity.
+        """
+
+        if not self.entity:
+            return False
+
+        return self.entity.get("id") == history_sg_data.get("id")
+
+    def load_data(self, sg_data, highest_version_number, locked):
+        """
+        Load the details for the shotgun publish entity described by sg_data. The publish entity
+        described by sg_data is the parent of the items loaded and stored as items in this model.
+
+        :param sg_data: The parent entity data describing a publish in shotgun, including all the common
                         publish fields.
+        :type sg_data: dict
+        :param highest_version_number: The highest version number for the parent entity. This is the
+                                       highest version that any item in this model can have, and is used
+                                       to determine if an item in this history model is up to date or not.
+        :type highest_vesrion_number: int
+        :param locked: True if the parent entity is locked to the current version.
+        :type locked: bool
         """
 
         # Set the entity property to the new entity that this model will contain history records for.
         self._entity = sg_data
+        self._entity_highest_version_number = highest_version_number
+        self._entity_locked = locked
 
         app = sgtk.platform.current_bundle()
 
@@ -131,6 +187,25 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
                         and other settings specified in load_data()
         """
 
+        # Get and set the status and badge data
+        if self.entity and self.entity.get("id") == sg_data.get("id"):
+            history_item_version_number = sg_data.get("version_number", -1)
+            if history_item_version_number < self.entity_highest_version_number:
+                status = self.STATUS_OUT_OF_DATE
+            else:
+                status = self.STATUS_UP_TO_DATE
+        else:
+            status = None
+
+        if self.entity_locked:
+            badge = self.STATUS_BADGES.get(self.STATUS_LOCKED, None)
+        else:
+            badge = self.STATUS_BADGES.get(status, None)
+
+        item.setData(status, self.STATUS_ROLE)
+        item.setData(badge, self.BADGE_ROLE)
+        item.setData(self.entity_locked, self.LOCKED_ROLE)
+
         self.set_data_for_role_methods(item, sg_data)
 
     def _get_args_for_role_method(self, item, role):
@@ -155,4 +230,5 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         args = ()
         kwargs = {"entity": self.entity}
+
         return (args, kwargs)

@@ -40,25 +40,32 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     # Additional data roles defined for the model
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     (
-        FILE_ITEM_ROLE,
-        FILE_ITEM_STATUS_ROLE,
-        FILE_ITEM_CREATED_AT_ROLE,
+        STATUS_ROLE,  # The item status
+        FILE_ITEM_ROLE,  # The file item object
+        FILE_ITEM_NODE_NAME_ROLE,  # Convenience role for the file item node_name field
+        FILE_ITEM_NODE_TYPE_ROLE,  # Convenience role for the file item node_type field
+        FILE_ITEM_PATH_ROLE,  # Convenience role for the file item path field
+        FILE_ITEM_SG_DATA_ROLE,  # Convenience role for the file item sg_data field
+        FILE_ITEM_EXTRA_DATA_ROLE,  # Convenience role for the file item extra_data field
+        FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,  # Convenience role for the file item latest_published_file field
+        FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 4)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 10)
 
     # File item status enum
     (
-        FILE_ITEM_STATUS_OK,
-        FILE_ITEM_STATUS_OUT_OF_SYNC,
-        FILE_ITEM_STATUS_LOCKED,
+        STATUS_OK,
+        STATUS_OUT_OF_SYNC,
+        STATUS_LOCKED,
     ) = range(3)
 
     FILE_ITEM_STATUS_ICONS = {
-        FILE_ITEM_STATUS_OK: QtGui.QIcon(":/tk-multi-breakdown2/green_bullet.png"),
-        FILE_ITEM_STATUS_OUT_OF_SYNC: QtGui.QIcon(
-            ":/tk-multi-breakdown2/red_bullet.png"
-        ),
-        FILE_ITEM_STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/lock_bullet.png"),
+        STATUS_OK: QtGui.QIcon(":/tk-multi-breakdown2/main-uptodate.png"),
+        STATUS_OUT_OF_SYNC: QtGui.QIcon(":/tk-multi-breakdown2/main-outofdate.png"),
+        STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/main-override.png"),
+        # STATUS_OK: QtGui.QIcon(":/tk-multi-breakdown2/main-uptodate@2x.png"),
+        # STATUS_OUT_OF_SYNC: QtGui.QIcon(":/tk-multi-breakdown2/main-outofdate@2x.png"),
+        # STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/main-override@2x.png"),
     }
 
     # signal emitted once all the files have been processed
@@ -130,7 +137,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :return: The data for the specified roel.
             """
 
-            if role == FileModel.FILE_ITEM_ROLE:
+            if role in (
+                FileModel.FILE_ITEM_ROLE,
+                FileModel.FILE_ITEM_NODE_NAME_ROLE,
+                FileModel.FILE_ITEM_NODE_TYPE_ROLE,
+                FileModel.FILE_ITEM_PATH_ROLE,
+                FileModel.FILE_ITEM_SG_DATA_ROLE,
+                FileModel.FILE_ITEM_EXTRA_DATA_ROLE,
+                FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,
+            ):
+                # File item specific roles, just return None.
                 return None
 
             if role == FileModel.VIEW_ITEM_HEIGHT_ROLE:
@@ -145,24 +161,20 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                             return True
                 return False
 
-            if role == FileModel.FILE_ITEM_STATUS_ROLE:
+            if role == FileModel.STATUS_ROLE:
                 if self.hasChildren():
                     locked = True
                     for row in range(self.rowCount()):
                         child_status = self.child(row).data(role)
-                        if child_status == FileModel.FILE_ITEM_STATUS_OUT_OF_SYNC:
+                        if child_status == FileModel.STATUS_OUT_OF_SYNC:
                             # The group status is out of sync if any children are out of sync.
-                            return FileModel.FILE_ITEM_STATUS_OUT_OF_SYNC
+                            return FileModel.STATUS_OUT_OF_SYNC
 
-                        if child_status != FileModel.FILE_ITEM_STATUS_LOCKED:
+                        if child_status != FileModel.STATUS_LOCKED:
                             # The group status is locked only if all children are locked.
                             locked = False
 
-                return (
-                    FileModel.FILE_ITEM_STATUS_LOCKED
-                    if locked
-                    else FileModel.FILE_ITEM_STATUS_OK
-                )
+                return FileModel.STATUS_LOCKED if locked else FileModel.STATUS_OK
 
             return super(FileModel.GroupModelItem, self).data(role)
 
@@ -208,29 +220,43 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             if role == FileModel.FILE_ITEM_ROLE:
                 return self.file_item
 
-            if role == FileModel.FILE_ITEM_CREATED_AT_ROLE:
-                if not self.file_item:
-                    return None
-                return self.file_item.sg_data.get("created_at")
+            if self.file_item:
+                if role == FileModel.FILE_ITEM_NODE_NAME_ROLE:
+                    return self.file_item.node_name
 
-            if role == FileModel.FILE_ITEM_STATUS_ROLE:
-                if self.file_item:
-                    if self.file_item.highest_version_number:
-                        if (
-                            self.file_item.sg_data["version_number"]
-                            >= self.file_item.highest_version_number
-                        ):
-                            return FileModel.FILE_ITEM_STATUS_OK
+                if role == FileModel.FILE_ITEM_NODE_TYPE_ROLE:
+                    return self.file_item.node_type
 
-                        # TODO add logic for locked items
-                        return FileModel.FILE_ITEM_STATUS_OUT_OF_SYNC
+                if role == FileModel.FILE_ITEM_PATH_ROLE:
+                    return self.file_item.path
 
-                # Unkown state if there is no file item
-                return -1
+                if role == FileModel.FILE_ITEM_SG_DATA_ROLE:
+                    return self.file_item.sg_data
 
-            if role == FileModel.VIEW_ITEM_LOADING_ROLE:
-                file_item = self.data(FileModel.FILE_ITEM_ROLE)
-                return file_item and not file_item.highest_version_number
+                if role == FileModel.FILE_ITEM_EXTRA_DATA_ROLE:
+                    return self.file_item.extra_data
+
+                if role == FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
+                    return self.file_item.latest_published_file
+
+                if role == FileModel.FILE_ITEM_CREATED_AT_ROLE:
+                    return self.file_item.sg_data.get("created_at")
+
+                if role == FileModel.STATUS_ROLE:
+                    if self.file_item.locked:
+                        return FileModel.STATUS_LOCKED
+
+                    if (
+                        not self.file_item.highest_version_number
+                        or self.file_item.sg_data["version_number"]
+                        < self.file_item.highest_version_number
+                    ):
+                        return FileModel.STATUS_OUT_OF_SYNC
+
+                    return FileModel.STATUS_OK
+
+                if role == FileModel.VIEW_ITEM_LOADING_ROLE:
+                    return self.file_item and not self.file_item.highest_version_number
 
             return super(FileModel.FileModelItem, self).data(role)
 

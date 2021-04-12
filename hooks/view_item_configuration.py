@@ -135,8 +135,8 @@ class ViewItemConfiguration(HookClass):
 
             else:
                 child_rows = item.rowCount()
-                status_role = item.model().__class__.FILE_ITEM_STATUS_ROLE
-                status_out_of_sync = item.model().__class__.FILE_ITEM_STATUS_OUT_OF_SYNC
+                status_role = item.model().STATUS_ROLE
+                status_out_of_sync = item.model().STATUS_OUT_OF_SYNC
                 out_of_sync = 0
                 for row in range(child_rows):
                     status = item.child(row).data(status_role)
@@ -261,10 +261,12 @@ class ViewItemConfiguration(HookClass):
             }
         """
 
+        # NOTE this is not currently used
+
         icons = {}
 
         if file_item:
-            status_role = item.model().__class__.FILE_ITEM_STATUS_ROLE
+            status_role = item.model().STATUS_ROLE
             status = item.data(status_role)
             status_icon = item.model().get_status_icon(status)
             icons["top-left"] = {
@@ -417,26 +419,57 @@ class ViewItemConfiguration(HookClass):
         :return: Dictionary containing the item's icon data.
         :rtype: dict, format e.g.:
             {
-                "float-top-left":
+                "top-left":
                     :class:`sgtk.platform.qt.QtGui.QPixmap`,
-                "float-top-right":
+                "top-right":
                     :class:`sgtk.platform.qt.QtGui.QPixmap`,
-                "float-bottom-left":
+                "bottom-left":
                     :class:`sgtk.platform.qt.QtGui.QPixmap`,
-                "float-bottom-right":
+                "bottom-right":
                     :class:`sgtk.platform.qt.QtGui.QPixmap`,
             }
         """
 
         icons = {}
 
-        if entity and entity.get("id") == sg_data.get("id"):
+        badge_icon = item.data(item.model().BADGE_ROLE)
+        if badge_icon:
             icons["top-right"] = {
-                "pixmap": QtGui.QPixmap(":/tk-multi-breakdown2/green_bullet.png"),
+                "pixmap": badge_icon,
                 "inset": False,
             }
 
         return icons
+
+    def get_history_item_separator(self, item, sg_data, entity):
+        """
+        Returns True to indicate the item has a separator, else False. This may be
+        used to indicate to the delegate to draw a line separator for the item or not.
+
+        :param item: The model item.
+        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
+        :param file_item: The FileItem associated with the item. This will be None
+                          for :class:`GroupModelItem` items.
+        :type file_item: :class:`FileItem`
+
+        :return: True to indicate the item has a separator, else False.
+        :rtype: bool
+        """
+
+        # NOTE uncomment to draw separtor above current version, when it is not the latest
+        # TODO delegate to handle decorations when drawing the separator
+        # status = item.data(item.model().STATUS_ROLE)
+        # show_separator = status is not None and status != item.model().STATUS_UP_TO_DATE
+
+        # if show_separator:
+        #     return {
+        #         "position": "top",
+        #         "decorations": {
+        #             "left": "New"
+        #         }
+        #     }
+
+        return False
 
 
 def _resolve_tokens(token, value, text):
