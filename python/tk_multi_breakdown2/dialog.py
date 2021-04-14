@@ -90,6 +90,8 @@ class AppDialog(QtGui.QWidget):
         )
 
         self._file_model = FileModel(self, self._bg_task_manager)
+        self._file_model.file_item_changed.connect(self._on_file_item_changed)
+
         self._file_proxy_model = TreeProxyModel(self)
         self._file_proxy_model.setSourceModel(self._file_model)
         self._ui.file_view.setModel(self._file_proxy_model)
@@ -304,6 +306,32 @@ class AppDialog(QtGui.QWidget):
             self._bg_task_manager = None
 
         return QtGui.QWidget.closeEvent(self, event)
+
+    def _on_file_item_changed(self, model_item):
+        """
+        Slot triggered when an item in the _file_model has changed.
+
+        Update the history details based if the changed item, is also the currently
+        selected item.
+
+        :param model_item: The changed item
+        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        """
+
+        selected = self._ui.file_view.selectionModel().selectedIndexes()
+
+        if not selected or len(selected) > 1:
+            return
+
+        changed_index = model_item.index()
+        selected_index = selected[0]
+        if isinstance(selected_index.model(), QtGui.QSortFilterProxyModel):
+            selected_index = selected_index.model().mapToSource(selected_index)
+
+        if selected_index == changed_index:
+            self._file_history_model.parent_file = model_item.data(
+                FileModel.FILE_ITEM_ROLE
+            )
 
     def _toggle_details_panel(self):
         """
