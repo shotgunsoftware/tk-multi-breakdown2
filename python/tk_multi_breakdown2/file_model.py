@@ -67,6 +67,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
     # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
+    # signal emitted specifically when the data changed for the FILE_ITEM_ROLE
+    file_item_changed = QtCore.Signal(QtGui.QStandardItem)
 
     class BaseModelItem(QtGui.QStandardItem):
         """
@@ -190,17 +192,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
             self._file_item = file_item
 
-        @property
-        def file_item(self):
-            """
-            Get or set the file item data for this model item.
-            """
-            return self._file_item
-
-        @file_item.setter
-        def file_item(self, value):
-            self._file_item = value
-
         def data(self, role):
             """
             Override the :class:`sgtk.platform.qt.QtGui.QStandardItem` method.
@@ -208,54 +199,80 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             Return the data for the item for the specified role.
 
             :param role: The :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole` role.
-            :return: The data for the specified roel.
+            :return: The data for the specified role.
             """
 
             if role == QtCore.Qt.BackgroundRole:
                 return QtGui.QApplication.palette().midlight()
 
             if role == FileModel.FILE_ITEM_ROLE:
-                return self.file_item
+                return self._file_item
 
-            if self.file_item:
+            if self._file_item:
                 if role == FileModel.FILE_ITEM_NODE_NAME_ROLE:
-                    return self.file_item.node_name
+                    return self._file_item.node_name
 
                 if role == FileModel.FILE_ITEM_NODE_TYPE_ROLE:
-                    return self.file_item.node_type
+                    return self._file_item.node_type
 
                 if role == FileModel.FILE_ITEM_PATH_ROLE:
-                    return self.file_item.path
+                    return self._file_item.path
 
                 if role == FileModel.FILE_ITEM_SG_DATA_ROLE:
-                    return self.file_item.sg_data
+                    return self._file_item.sg_data
 
                 if role == FileModel.FILE_ITEM_EXTRA_DATA_ROLE:
-                    return self.file_item.extra_data
+                    return self._file_item.extra_data
 
                 if role == FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
-                    return self.file_item.latest_published_file
+                    return self._file_item.latest_published_file
 
                 if role == FileModel.FILE_ITEM_CREATED_AT_ROLE:
-                    return self.file_item.sg_data.get("created_at")
+                    return self._file_item.sg_data.get("created_at")
 
                 if role == FileModel.STATUS_ROLE:
-                    if self.file_item.locked:
+                    if self._file_item.locked:
                         return FileModel.STATUS_LOCKED
 
                     if (
-                        not self.file_item.highest_version_number
-                        or self.file_item.sg_data["version_number"]
-                        < self.file_item.highest_version_number
+                        not self._file_item.highest_version_number
+                        or self._file_item.sg_data["version_number"]
+                        < self._file_item.highest_version_number
                     ):
                         return FileModel.STATUS_OUT_OF_SYNC
 
                     return FileModel.STATUS_OK
 
                 if role == FileModel.VIEW_ITEM_LOADING_ROLE:
-                    return self.file_item and not self.file_item.highest_version_number
+                    return (
+                        self._file_item and not self._file_item.highest_version_number
+                    )
 
             return super(FileModel.FileModelItem, self).data(role)
+
+        def setData(self, value, role):
+            """
+            Override teh :class:`sgtk.platform.qt.QtGui.QStandardItem` method.
+
+            Set the data for the item and role.
+
+            :param value: The data value to set for the item's role.
+            :param role: The :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole` role.
+            """
+
+            if role == FileModel.FILE_ITEM_ROLE:
+                # Send a request to retrieve and update the file item's thumbnail
+                self.model().request_thumbnail(self, value)
+                self._file_item = value
+
+                # Emit a specific signal for the FILE_ITEM_ROLE
+                self.model().file_item_changed.emit(self)
+
+                # Emit the standard model data changed
+                self.emitDataChanged()
+
+            else:
+                super(FileModel.FileModelItem, self).setData(value, role)
 
     def __init__(self, parent, bg_task_manager):
         """
@@ -384,14 +401,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self._pending_version_requests[task_id] = file_model_item
 
             # finally, download the file thumbnail
-            if file_item.sg_data.get("image"):
-                request_id = self._sg_data_retriever.request_thumbnail(
-                    file_item.sg_data["image"],
-                    file_item.sg_data["type"],
-                    file_item.sg_data["id"],
-                    "image",
-                )
-                self._pending_thumbnail_requests[request_id] = file_model_item
+            self.request_thumbnail(file_model_item, file_item)
 
         self.files_processed.emit()
 
@@ -459,3 +469,29 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             "File Model: Failed to find the latest published file for id %s: %s"
             % (uid, msg)
         )
+
+    def request_thumbnail(self, model_item, file_item):
+        """
+        Make an async request for the file item thumbnail, to set for the model item.
+
+        :param model_item: The model item object
+        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        :param file_item: The file item data object
+        :type file_item: FileItem
+
+        :return: None
+        """
+
+        if not file_item.sg_data.get("image"):
+            return
+
+        request_id = self._sg_data_retriever.request_thumbnail(
+            file_item.sg_data["image"],
+            file_item.sg_data["type"],
+            file_item.sg_data["id"],
+            "image",
+        )
+
+        # Store the model item with the request id, so that the model item can be retrieved
+        # to update when the async request completes.
+        self._pending_thumbnail_requests[request_id] = model_item
