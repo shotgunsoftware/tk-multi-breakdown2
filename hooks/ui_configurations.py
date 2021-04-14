@@ -73,7 +73,6 @@ class UIConfiguration(HookBaseClass):
         return {
             "top_left": "<span style='font-size: 13px; font-weight: bold;'>{name}</span>",
             "top_right": "",
-            # "top_right": "{created_at::short_timestamp}",
             "body": "<span style='color:#18A7E3;'>Node</span> {<NODE_NAME>}<br/>"
             "<span style='color:#18A7E3;'>Version</span> {version_number}<br/>"
             "<span style='color:#18A7E3;'>Entity</span> {entity::showtype}<br/>"
