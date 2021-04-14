@@ -784,6 +784,10 @@ class AppDialog(QtGui.QWidget):
         return delegate
 
 
+######################################################################################################
+# ViewItemDelegate action callbacks
+
+
 def get_expand_action_data(parent, index):
     """
     Return the action data for the group header expand action, and for the given index.
@@ -851,29 +855,6 @@ def get_thumbnail_status_action_data(parent, index):
     """
 
     visible = index.data(FileModel.FILE_ITEM_ROLE) is not None
-    status = index.data(FileModel.STATUS_ROLE)
-    status_icon = FileModel.get_status_icon(status)
-
-    return {
-        "visible": visible,
-        "icon": status_icon,
-    }
-
-
-def get_thumbnail_header_status_action_data(parent, index):
-    """
-    Return the action data for the status action icon, and for the given index.
-    This data will determine how the action icon is displayed for the index.
-
-    :param parent: This is the parent of the :class:`ViewItemDelegate`, which is the file view.
-    :type parent: :class:`GroupItemView`
-    :param index: The index the action is for.
-    :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
-    :return: The data for the action and index.
-    :rtype: dict, e.g.:
-    """
-
-    visible = index.data(FileModel.FILE_ITEM_ROLE) is None
     status = index.data(FileModel.STATUS_ROLE)
     status_icon = FileModel.get_status_icon(status)
 
