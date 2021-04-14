@@ -755,6 +755,9 @@ class AppDialog(QtGui.QWidget):
         delegate.icon_role = FileHistoryModel.VIEW_ITEM_ICON_ROLE
         delegate.separator_role = FileHistoryModel.VIEW_ITEM_SEPARATOR_ROLE
 
+        # Override tooltips applied to model items outside of the delegate.
+        delegate.override_item_tooltip = True
+
         # Set up delegaet styling
         delegate.item_padding = 4
         delegate.text_padding = ViewItemDelegate.Padding(4, 4, 4, 7)
