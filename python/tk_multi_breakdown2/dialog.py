@@ -44,7 +44,9 @@ class AppDialog(QtGui.QWidget):
 
     # Settings keys
     VIEW_MODE_SETTING = "view_mode"
-    SIZE_SCALE_VALUE = "view_item_size_scale"
+    LIST_SIZE_SCALE_VALUE = "view_item_list_size_scale"
+    GRID_SIZE_SCALE_VALUE = "view_item_grid_size_scale"
+    THUMBNAIL_SIZE_SCALE_VALUE = "view_item_thumb_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
 
     (
@@ -151,16 +153,25 @@ class AppDialog(QtGui.QWidget):
                 "mode": self.THUMBNAIL_VIEW_MODE,
                 "button": self._ui.file_view_btn,
                 "delegate": file_item_delegate,
+                "slider_value": self._settings_manager.retrieve(
+                    self.THUMBNAIL_SIZE_SCALE_VALUE, 100
+                ),
             },
             {
                 "mode": self.GRID_VIEW_MODE,
                 "button": self._ui.grid_view_btn,
                 "delegate": list_item_delegate,
+                "slider_value": self._settings_manager.retrieve(
+                    self.GRID_SIZE_SCALE_VALUE, 100
+                ),
             },
             {
                 "mode": self.LIST_VIEW_MODE,
                 "button": self._ui.list_view_btn,
                 "delegate": list_item_delegate,
+                "slider_value": self._settings_manager.retrieve(
+                    self.LIST_SIZE_SCALE_VALUE, 100
+                ),
             },
         ]
         for i, view_mode in enumerate(self.view_modes):
@@ -168,8 +179,6 @@ class AppDialog(QtGui.QWidget):
                 lambda checked=False, mode=i: self._set_view_mode(mode)
             )
 
-        scale_val = self._settings_manager.retrieve(self.SIZE_SCALE_VALUE, 140)
-        self._ui.size_slider.setValue(scale_val)
         self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
 
         self._ui.select_all_outdated_button.clicked.connect(
@@ -315,23 +324,27 @@ class AppDialog(QtGui.QWidget):
 
         for view_mode in self.view_modes:
             delegate = view_mode["delegate"]
+
             if view_mode["button"].isChecked():
+                view_mode["slider_value"] = value
+
                 if view_mode["mode"] == self.THUMBNAIL_VIEW_MODE:
                     width = value * (16 / 9.0)
                     delegate.thumbnail_size = QtCore.QSize(width, value)
+                    self._settings_manager.store(self.THUMBNAIL_SIZE_SCALE_VALUE, value)
 
                 elif view_mode["mode"] == self.LIST_VIEW_MODE:
                     delegate.item_height = value
                     delegate.item_width = -1
+                    self._settings_manager.store(self.LIST_SIZE_SCALE_VALUE, value)
 
                 elif view_mode["mode"] == self.GRID_VIEW_MODE:
                     delegate.item_height = None
                     delegate.item_width = value * 2
+                    self._settings_manager.store(self.GRID_SIZE_SCALE_VALUE, value)
 
         self._ui.file_view._update_all_item_info = True
         self._ui.file_view.viewport().update()
-
-        self._settings_manager.store(self.SIZE_SCALE_VALUE, value)
 
     def _on_context_menu_requested(self, pnt):
         """
@@ -532,8 +545,8 @@ class AppDialog(QtGui.QWidget):
 
         for i, view_mode in enumerate(self.view_modes):
             is_cur_mode = i == mode_index
-            is_checked = view_mode["button"].isChecked()
             view_mode["button"].setChecked(is_cur_mode)
+
             if is_cur_mode:
                 delegate = view_mode["delegate"]
                 self._ui.file_view.setItemDelegate(view_mode["delegate"])
@@ -555,14 +568,8 @@ class AppDialog(QtGui.QWidget):
                     "slider_value", self._ui.size_slider.value()
                 )
 
-            elif is_checked:
-                # The previous mode. Save the slider value for the current view mode that is
-                # about to be changed.
-                view_mode["slider_value"] = self._ui.size_slider.value()
-
         # Set the slider value for the current view, this will also update the viewport.
         self._ui.size_slider.setValue(slider_value)
-        self._on_view_item_size_slider_change(slider_value)
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
