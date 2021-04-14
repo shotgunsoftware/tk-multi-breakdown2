@@ -207,28 +207,3 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         item.setData(self.entity_locked, self.LOCKED_ROLE)
 
         self.set_data_for_role_methods(item, sg_data)
-
-    def _get_args_for_role_method(self, item, role):
-        """
-        Override the :class:`ViewItemRolesMixin` method.
-
-        This method will be called before executing the method to retrieve the item
-        data for a given role.
-
-        Return any additional positional or keyword arguments to pass along to the
-        method executed for a role.staticmethod
-
-        :param item: The model item.
-        :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param role: The item role.
-        :type role: :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole`
-
-        :return: Positional or keyword arguments to pass to a method executed to retreive
-                 item data for a role.
-        :rtype: tuple(list, dict)
-        """
-
-        args = ()
-        kwargs = {"entity": self.entity}
-
-        return (args, kwargs)

@@ -314,7 +314,7 @@ class ViewItemConfiguration(HookClass):
         # to expand to the full available width.
         return 375 if file_item else -1
 
-    def get_history_item_title(self, item, sg_data, entity):
+    def get_history_item_title(self, item, sg_data):
         """
         Returns the data to display for this model index item's title. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
@@ -336,7 +336,7 @@ class ViewItemConfiguration(HookClass):
 
         return None
 
-    def get_history_item_subtitle(self, item, sg_data, entity):
+    def get_history_item_subtitle(self, item, sg_data):
         """
         Returns the data to display for this model index item's subtitle. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
@@ -358,7 +358,7 @@ class ViewItemConfiguration(HookClass):
 
         return None
 
-    def get_history_item_details(self, item, sg_data, entity):
+    def get_history_item_details(self, item, sg_data):
         """
         Returns the data to display for this model index item's details. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
@@ -380,7 +380,7 @@ class ViewItemConfiguration(HookClass):
 
         return None
 
-    def get_history_item_thumbnail(self, item, sg_data, entity):
+    def get_history_item_thumbnail(self, item, sg_data):
         """
         Returns the data to display for this model index item's thumbnail.
 
@@ -406,7 +406,7 @@ class ViewItemConfiguration(HookClass):
 
         return thumbnail
 
-    def get_history_item_icons(self, item, sg_data, entity):
+    def get_history_item_icons(self, item, sg_data):
         """
         Returns the data to display for this model index item's icons.
 
@@ -441,7 +441,7 @@ class ViewItemConfiguration(HookClass):
 
         return icons
 
-    def get_history_item_separator(self, item, sg_data, entity):
+    def get_history_item_separator(self, item, sg_data):
         """
         Returns True to indicate the item has a separator, else False. This may be
         used to indicate to the delegate to draw a line separator for the item or not.
