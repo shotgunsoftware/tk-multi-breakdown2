@@ -68,7 +68,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
     # signal emitted specifically when the data changed for the FILE_ITEM_ROLE
-    file_item_changed = QtCore.Signal(QtGui.QStandardItem)
+    file_item_data_changed = QtCore.Signal(QtGui.QStandardItem)
 
     class BaseModelItem(QtGui.QStandardItem):
         """
@@ -266,7 +266,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 self._file_item = value
 
                 # Emit a specific signal for the FILE_ITEM_ROLE
-                self.model().file_item_changed.emit(self)
+                self.model().file_item_data_changed.emit(self)
 
                 # Emit the standard model data changed
                 self.emitDataChanged()
