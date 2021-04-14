@@ -417,13 +417,13 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         """
         if uid not in self._pending_thumbnail_requests:
             return
+
         file_model_item = self._pending_thumbnail_requests[uid]
         del self._pending_thumbnail_requests[uid]
 
         thumb_path = data.get("thumb_path")
         if thumb_path:
             file_model_item.setIcon(QtGui.QPixmap(thumb_path))
-            file_model_item.emitDataChanged()
 
     def _on_data_retriever_work_failed(self, uid, error_msg):
         """
