@@ -596,7 +596,9 @@ class AppDialog(QtGui.QWidget):
                     proxy_index = self._file_proxy_model.mapFromSource(index)
                     outdated_selection.select(proxy_index, proxy_index)
 
-        selection_model.select(outdated_selection, QtGui.QItemSelectionModel.Select)
+        if outdated_selection.indexes():
+            selection_model.select(outdated_selection, QtGui.QItemSelectionModel.Select)
+            self._ui.file_view.scrollTo(outdated_selection.indexes()[0])
 
     def _on_update_selected(self):
         """
