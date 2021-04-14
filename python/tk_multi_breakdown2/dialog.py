@@ -473,8 +473,8 @@ class AppDialog(QtGui.QWidget):
 
     def _on_file_selection(self):
         """
-        Slot triggered when a file is selected in the main view. This will collect details about the selected file in
-        order to display them in the details panel.
+        Slot triggered when selection changed in the main view. This will collect details about
+        the selected file in order to display them in the details panel.
         """
 
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
