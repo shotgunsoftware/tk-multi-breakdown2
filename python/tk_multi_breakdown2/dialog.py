@@ -505,12 +505,9 @@ class AppDialog(QtGui.QWidget):
         :param selected_items:  Model indexes of the selected items.
         """
 
-        if not selected_items:
-            return
-
-        if len(selected_items) != 1:
-            self._file_history_model.clear()
-            self._ui.file_details.clear()
+        if not selected_items or len(selected_items) > 1:
+            # Clear the details when there is no selection, or multiple items selected.
+            self._clear_details_panel()
 
         else:
             model_index = selected_items[0]
@@ -522,9 +519,15 @@ class AppDialog(QtGui.QWidget):
             self._ui.file_details.set_thumbnail(thumbnail)
 
             # load file history
-            self._file_history_model.load_data(
-                file_item.sg_data, file_item.highest_version_number, file_item.locked
-            )
+            self._file_history_model.load_data(file_item)
+
+    def _clear_details_panel(self):
+        """
+        Clear the details panel.
+        """
+
+        self._file_history_model.clear()
+        self._ui.file_details.clear()
 
     def _set_view_mode(self, mode_index):
         """
