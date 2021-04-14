@@ -245,6 +245,10 @@ class AppDialog(QtGui.QWidget):
         if file_view_selection_model:
             file_view_selection_model.selectionChanged.connect(self._on_file_selection)
 
+        # -----------------------------------------------------
+        # Log metric for app usage
+        self._bundle._log_metric_viewed_app()
+
     def closeEvent(self, event):
         """
         Overriden method triggered when the widget is closed.  Cleans up as much as possible
