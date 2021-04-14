@@ -537,12 +537,6 @@ class AppDialog(QtGui.QWidget):
 
         assert 0 <= mode_index < len(self.view_modes), "Undefined view mode"
 
-        # Clear any selection on changing the view mode.
-        if self._ui.file_view.selectionModel():
-            self._ui.file_view.selectionModel().clear()
-        if self._ui.file_history_view.selectionModel():
-            self._ui.file_history_view.selectionModel().clear()
-
         for i, view_mode in enumerate(self.view_modes):
             is_cur_mode = i == mode_index
             view_mode["button"].setChecked(is_cur_mode)
