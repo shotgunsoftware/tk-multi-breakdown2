@@ -102,6 +102,7 @@ class Ui_Dialog(object):
         self.size_slider.setSizePolicy(sizePolicy)
         self.size_slider.setMinimumSize(QtCore.QSize(150, 0))
         self.size_slider.setStyleSheet(" QSlider::handle:horizontal {\n"
+"    border: 1px solid palette(base);\n"
 "     border-radius: 3px;\n"
 "     width: 4px;\n"
 "     background: palette(light);\n"

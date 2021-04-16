@@ -186,6 +186,7 @@
              </property>
              <property name="styleSheet">
               <string notr="true"> QSlider::handle:horizontal {
+	border: 1px solid palette(base);
      border-radius: 3px;
      width: 4px;
      background: palette(light);
@@ -285,12 +286,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ShotgunFolderWidget</class>
-   <extends>QWidget</extends>
-   <header>..framework_qtwidgets</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>GroupedItemView</class>
    <extends>QWidget</extends>
    <header>..framework_qtwidgets</header>
@@ -298,6 +293,12 @@
   </customwidget>
   <customwidget>
    <class>SearchWidget</class>
+   <extends>QWidget</extends>
+   <header>..framework_qtwidgets</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ShotgunFolderWidget</class>
    <extends>QWidget</extends>
    <header>..framework_qtwidgets</header>
    <container>1</container>
