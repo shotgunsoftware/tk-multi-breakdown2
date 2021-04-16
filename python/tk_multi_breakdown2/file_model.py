@@ -41,6 +41,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     (
         STATUS_ROLE,  # The item status
+        REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
         FILE_ITEM_ROLE,  # The file item object
         FILE_ITEM_NODE_NAME_ROLE,  # Convenience role for the file item node_name field
         FILE_ITEM_NODE_TYPE_ROLE,  # Convenience role for the file item node_type field
@@ -50,7 +51,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,  # Convenience role for the file item latest_published_file field
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 10)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 11)
 
     # File item status enum
     (
@@ -137,6 +138,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
 
             if role in (
+                FileModel.REFERENCE_LOADED,
                 FileModel.FILE_ITEM_ROLE,
                 FileModel.FILE_ITEM_NODE_NAME_ROLE,
                 FileModel.FILE_ITEM_NODE_TYPE_ROLE,
@@ -247,6 +249,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                     return (
                         self._file_item and not self._file_item.highest_version_number
                     )
+
+                if role == FileModel.REFERENCE_LOADED:
+                    # TODO call a hook method per DCC to check if the reference associated with this
+                    # file item has been loaded into the scene (if the DCC supports loading and
+                    # unloading references, e.g. Maya).
+                    #
+                    # For now, we'll just say everything is loaded unless told otherwise.
+                    return True
 
             return super(FileModel.FileModelItem, self).data(role)
 
