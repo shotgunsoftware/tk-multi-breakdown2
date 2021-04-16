@@ -10,6 +10,7 @@
 
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
+from tank_vendor import six
 
 from .ui.dialog import Ui_Dialog
 from .ui import resources_rc  # Required for accessing icons
@@ -23,7 +24,8 @@ from .framework_qtwidgets import (
     ThumbnailViewItemDelegate,
     utils,
 )
-from .tree_proxy_model import TreeProxyModel, FilterItem
+from .tree_proxy_model import FilterItem
+from .file_proxy_model import FileProxyModel
 
 task_manager = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "task_manager"
@@ -42,12 +44,13 @@ class AppDialog(QtGui.QWidget):
     The main App dialog.
     """
 
-    # Settings keys
+    # Settings keys for storing and restoring user prefs
     VIEW_MODE_SETTING = "view_mode"
     LIST_SIZE_SCALE_VALUE = "view_item_list_size_scale"
     GRID_SIZE_SCALE_VALUE = "view_item_grid_size_scale"
     THUMBNAIL_SIZE_SCALE_VALUE = "view_item_thumb_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
+    SPLITTER_STATE = "splitter_state"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -78,6 +81,12 @@ class AppDialog(QtGui.QWidget):
         # create a settings manager where we can pull and push prefs later
         # prefs in this manager are shared
         self._settings_manager = settings.UserSettings(self._bundle)
+        # Define another QSettings object to store raw values. This is a work around for storing QByteArray objects in Python 3,
+        # since the settings manager converts QByteArray objects to str, which causes an error when retrieving it and trying
+        # to set the splitter state with a str instead of QByteArray object.
+        self._raw_values_settings = QtCore.QSettings(
+            "Shotgun Software", "{app}_raw_values".format(app=self._bundle.name)
+        )
 
         # -----------------------------------------------------
         # main file view
@@ -92,13 +101,61 @@ class AppDialog(QtGui.QWidget):
         self._file_model = FileModel(self, self._bg_task_manager)
         self._file_model.file_item_data_changed.connect(self._on_file_item_data_changed)
 
-        self._file_proxy_model = TreeProxyModel(self)
+        self._file_proxy_model = FileProxyModel(self)
         self._file_proxy_model.setSourceModel(self._file_model)
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
         self._file_model_overlay.start_spin()
         self._file_model.files_processed.connect(self._file_model_overlay.hide)
+
+        # Enable mouse tracking to allow the delegate to receive mouse events
+        self._ui.file_view.setMouseTracking(True)
+
+        # Create a delegate for the file view. Set the row width to None
+        file_item_delegate = self._create_file_item_delegate(
+            set_delegate=False, thumbnail=True
+        )
+        # Create a delegate for the list view. Set the row width to -1 will expand each item row
+        # to the full available width and thus display one item per row in a "list" view.
+        list_item_delegate = self._create_file_item_delegate(set_delegate=False)
+
+        # Filtering
+        # TODO: create a filtering widget that will handle the individual filter items
+        self._display_text_filter = FilterItem(
+            FilterItem.TYPE_STR,
+            FilterItem.OP_IN,
+            data_func=list_item_delegate.get_displayed_text,
+        )
+        self._up_to_date_status_filter = FilterItem(
+            FilterItem.TYPE_NUMBER,
+            FilterItem.OP_EQUAL,
+            filter_role=FileModel.STATUS_ROLE,
+            filter_value=FileModel.STATUS_UP_TO_DATE,
+        )
+        self._out_of_date_status_filter = FilterItem(
+            FilterItem.TYPE_NUMBER,
+            FilterItem.OP_EQUAL,
+            filter_role=FileModel.STATUS_ROLE,
+            filter_value=FileModel.STATUS_OUT_OF_SYNC,
+        )
+        self._group_status_filter = FilterItem(
+            FilterItem.TYPE_GROUP, FilterItem.OP_OR, filters=[]
+        )
+        up_to_date_filter_icon = QtGui.QIcon(
+            ":/tk-multi-breakdown2/main-uptodate@2x.png"
+        )
+        self._ui.up_to_date_filter_btn.setIcon(up_to_date_filter_icon)
+        self._ui.up_to_date_filter_btn.clicked.connect(
+            lambda checked: self._update_filters()
+        )
+        out_of_date_filter_icon = QtGui.QIcon(
+            ":/tk-multi-breakdown2/main-outofdate@2x.png"
+        )
+        self._ui.out_of_date_filter_btn.setIcon(out_of_date_filter_icon)
+        self._ui.out_of_date_filter_btn.clicked.connect(
+            lambda checked: self._update_filters()
+        )
 
         list_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_card.png")
         list_view_icon.addPixmap(
@@ -123,24 +180,6 @@ class AppDialog(QtGui.QWidget):
             QtGui.QIcon.State.On,
         )
         self._ui.file_view_btn.setIcon(file_view_icon)
-
-        # Enable mouse tracking to allow the delegate to receive mouse events
-        self._ui.file_view.setMouseTracking(True)
-
-        # Create a delegate for the file view. Set the row width to None
-        file_item_delegate = self._create_file_item_delegate(
-            set_delegate=False, thumbnail=True
-        )
-        # Create a delegate for the list view. Set the row width to -1 will expand each item row
-        # to the full available width and thus display one item per row in a "list" view.
-        list_item_delegate = self._create_file_item_delegate(set_delegate=False)
-
-        # TODO: more advanced filtering - for now there is only a simple text filter on the item's displayed text
-        self._display_text_filter = FilterItem(
-            FilterItem.TYPE_REGEX_STR,
-            FilterItem.OP_IN,
-            data_func=list_item_delegate.get_displayed_text,
-        )
 
         # Set up the view modes
         self.view_modes = [
@@ -182,7 +221,9 @@ class AppDialog(QtGui.QWidget):
         self._ui.update_selected_button.clicked.connect(self._on_update_selected)
 
         self._ui.search_widget.set_placeholder_text("Search Files")
-        self._ui.search_widget.search_edited.connect(self._on_search_widget_edited)
+        self._ui.search_widget.search_edited.connect(
+            lambda text: self._update_filters()
+        )
 
         # Get the last view mode used from the settings manager, default to the first view if
         # no settings found
@@ -193,6 +234,9 @@ class AppDialog(QtGui.QWidget):
         # details view
 
         self._details_panel_visible = False
+
+        # Overlays for when there is multiple or no selection, and no details are available.
+        self._details_overlay = ShotgunOverlayWidget(self._ui.details_panel)
 
         # format the details main widget
         main_file_details_history_config = self._bundle.execute_hook_method(
@@ -233,11 +277,25 @@ class AppDialog(QtGui.QWidget):
         )
         self._ui.details_button.setIcon(details_icon)
         self._ui.details_button.clicked.connect(self._toggle_details_panel)
+
         details_panel_visibility = self._settings_manager.retrieve(
             self.DETAILS_PANEL_VISIBILITY_SETTING, False
         )
         self._set_details_panel_visibility(details_panel_visibility)
 
+        # Restore the splitter state that divides the main view and the details
+        # First try to restore the state from the settings manager
+        splitter_state = self._settings_manager.retrieve(self.SPLITTER_STATE, None)
+        if not splitter_state:
+            # Splitter state was not found in the settings manager, check the raw values settings.
+            splitter_state = self._raw_values_settings.value(self.SPLITTER_STATE)
+
+        if splitter_state:
+            self._ui.details_splitter.restoreState(splitter_state)
+        else:
+            # Splitter state was not restored, default to set details size to 1 (the min value
+            # to show the details, but will be at a minimal size)
+            self._ui.details_splitter.setSizes([800, 1])
         # -----------------------------------------------------
 
         # finally, update the UI by processing the files of the current scene
@@ -271,12 +329,14 @@ class AppDialog(QtGui.QWidget):
         else:
             delegate = ViewItemDelegate(self._ui.file_view)
             delegate.text_padding = ViewItemDelegate.Padding(5, 7, 7, 7)
+            # Non-thumbnail delegates have a header and subtitle
 
         # Set the delegate model data roles
-        delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
         delegate.header_role = FileModel.VIEW_ITEM_HEADER_ROLE
         delegate.subtitle_role = FileModel.VIEW_ITEM_SUBTITLE_ROLE
+        delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
         delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
+        delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
         delegate.width_role = FileModel.VIEW_ITEM_WIDTH_ROLE
         delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
@@ -348,7 +408,7 @@ class AppDialog(QtGui.QWidget):
                     "features": QtGui.QStyleOptionButton.Flat,
                     "get_data": get_timestamp_action_data,
                 },
-                ViewItemDelegate.RIGHT,
+                ViewItemDelegate.FLOAT_RIGHT,
             )
 
         if set_delegate:
@@ -450,6 +510,19 @@ class AppDialog(QtGui.QWidget):
             shotgun_globals.unregister_bg_task_manager(self._bg_task_manager)
             self._bg_task_manager.shut_down()
             self._bg_task_manager = None
+
+        # Save the splitter state
+        state = self._ui.details_splitter.saveState()
+        if six.PY2:
+            self._settings_manager.store(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
+        else:
+            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+            # will convert QByteArray objects to str when storing).
+            self._raw_values_settings.setValue(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
 
         return QtGui.QWidget.closeEvent(self, event)
 
@@ -573,11 +646,19 @@ class AppDialog(QtGui.QWidget):
         :param selected_items:  Model indexes of the selected items.
         """
 
-        if not selected_items or len(selected_items) > 1:
-            # Clear the details when there is no selection, or multiple items selected.
+        if not selected_items:
             self._clear_details_panel()
+            self._details_overlay.show_message("Select an item to see more details.")
+
+        elif len(selected_items) > 1:
+            self._clear_details_panel()
+            self._details_overlay.show_message(
+                "Select a single item to see more details."
+            )
 
         else:
+            self._details_overlay.hide()
+
             model_index = selected_items[0]
             file_item = model_index.data(FileModel.FILE_ITEM_ROLE)
             thumbnail = model_index.data(QtCore.Qt.DecorationRole)
@@ -789,10 +870,36 @@ class AppDialog(QtGui.QWidget):
         :param search_text: The new search text
         """
 
-        self._display_text_filter.filter_value = QtCore.QRegularExpression(
-            search_text, QtCore.QRegularExpression.CaseInsensitiveOption
+        self._display_text_filter.filter_value = search_text
+        self._update_filters()
+
+    def _update_filters(self):
+        """
+        Slot triggered when the up to date filter button is checked.
+        """
+
+        self._display_text_filter.filter_value = (
+            self._ui.search_widget._get_search_text()
         )
-        self._file_proxy_model.filter_items = [self._display_text_filter]
+        filters = [self._display_text_filter]
+
+        filter_by_up_to_date = self._ui.up_to_date_filter_btn.isChecked()
+        filter_by_out_of_date = self._ui.out_of_date_filter_btn.isChecked()
+
+        if filter_by_out_of_date and filter_by_up_to_date:
+            self._group_status_filter.filters = [
+                self._up_to_date_status_filter,
+                self._out_of_date_status_filter,
+            ]
+            filters.append(self._group_status_filter)
+
+        elif filter_by_up_to_date:
+            filters.append(self._up_to_date_status_filter)
+
+        elif filter_by_out_of_date:
+            filters.append(self._out_of_date_status_filter)
+
+        self._file_proxy_model.filter_items = filters
 
     ######################################################################################################
     # ViewItemDelegate action method callbacks
@@ -808,7 +915,7 @@ class AppDialog(QtGui.QWidget):
         :param index: The index of the item.
         :type index: :class:`sgtk.platform.qt.QtCore.QModelIndex`
         :param pos: The position that the menu should be displayed at.
-        :type pos: :class:`sgtk.platform.qt.QtCore.QPoint`
+        :type pos: :class:`sgtk.platform.qt.QtCore.QPoent`
 
         :return: None
         """
