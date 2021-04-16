@@ -55,13 +55,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
     # File item status enum
     (
-        STATUS_OK,
+        STATUS_NONE,  # Status is none when the necessary data has not all loaded yet to determine the status
+        STATUS_UP_TO_DATE,
         STATUS_OUT_OF_SYNC,
         STATUS_LOCKED,
-    ) = range(3)
+    ) = range(4)
 
     FILE_ITEM_STATUS_ICONS = {
-        STATUS_OK: QtGui.QIcon(":/tk-multi-breakdown2/main-uptodate.png"),
+        STATUS_UP_TO_DATE: QtGui.QIcon(":/tk-multi-breakdown2/main-uptodate.png"),
         STATUS_OUT_OF_SYNC: QtGui.QIcon(":/tk-multi-breakdown2/main-outofdate.png"),
         STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/main-override.png"),
     }
@@ -175,7 +176,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                             # The group status is locked only if all children are locked.
                             locked = False
 
-                return FileModel.STATUS_LOCKED if locked else FileModel.STATUS_OK
+                return (
+                    FileModel.STATUS_LOCKED if locked else FileModel.STATUS_UP_TO_DATE
+                )
 
             return super(FileModel.GroupModelItem, self).data(role)
 
@@ -236,6 +239,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                     if self._file_item.locked:
                         return FileModel.STATUS_LOCKED
 
+                    if self.data(FileModel.VIEW_ITEM_LOADING_ROLE):
+                        # Item is still loading, too early to determine the status.
+                        return FileModel.STATUS_NONE
+
                     if (
                         not self._file_item.highest_version_number
                         or self._file_item.sg_data["version_number"]
@@ -243,11 +250,12 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                     ):
                         return FileModel.STATUS_OUT_OF_SYNC
 
-                    return FileModel.STATUS_OK
+                    return FileModel.STATUS_UP_TO_DATE
 
                 if role == FileModel.VIEW_ITEM_LOADING_ROLE:
                     return (
-                        self._file_item and not self._file_item.highest_version_number
+                        not self._file_item
+                        or not self._file_item.highest_version_number
                     )
 
                 if role == FileModel.REFERENCE_LOADED:
