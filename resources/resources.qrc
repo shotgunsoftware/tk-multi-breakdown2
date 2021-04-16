@@ -22,5 +22,6 @@
         <file>main-uptodate.png</file>
         <file>info-active.png</file>
         <file>info-inactive.png</file>
+        <file>red_bullet.png</file>
     </qresource>
 </RCC>

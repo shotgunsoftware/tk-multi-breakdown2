@@ -30,6 +30,32 @@
       </spacer>
      </item>
      <item>
+      <widget class="QToolButton" name="up_to_date_filter_btn">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="autoRaise">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="out_of_date_filter_btn">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="autoRaise">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="SearchWidget" name="search_widget" native="true">
        <property name="maximumSize">
         <size>
@@ -42,7 +68,7 @@
      <item>
       <widget class="QToolButton" name="file_view_btn">
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::TabFocus</enum>
        </property>
        <property name="text">
         <string/>
@@ -51,7 +77,7 @@
         <bool>true</bool>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="autoRaise">
         <bool>false</bool>
@@ -61,7 +87,7 @@
      <item>
       <widget class="QToolButton" name="grid_view_btn">
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::TabFocus</enum>
        </property>
        <property name="text">
         <string/>
@@ -77,7 +103,7 @@
      <item>
       <widget class="QToolButton" name="list_view_btn">
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::TabFocus</enum>
        </property>
        <property name="text">
         <string/>
@@ -93,13 +119,16 @@
      <item>
       <widget class="QToolButton" name="details_button">
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::TabFocus</enum>
        </property>
        <property name="text">
         <string/>
        </property>
        <property name="checkable">
         <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
        </property>
        <property name="autoRaise">
         <bool>false</bool>
@@ -121,7 +150,7 @@
      </property>
      <widget class="QFrame" name="file_view_frame">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -156,22 +185,11 @@
               </size>
              </property>
              <property name="styleSheet">
-              <string notr="true">QSlider::groove:horizontal {
-     /*border: 1px solid #999999; */
-     height: 2px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
-     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #3F3F3F, stop:1 #545454);
-     margin: 2px 0;
-     border-radius: 1px;
- }
-
- QSlider::handle:horizontal {
-     background: #545454;
-     border: 1px solid #B6B6B6;
-     width: 5px;
-     margin: -2px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+              <string notr="true"> QSlider::handle:horizontal {
      border-radius: 3px;
- }
-</string>
+     width: 4px;
+     background: palette(light);
+ }</string>
              </property>
              <property name="minimum">
               <number>20</number>
@@ -218,6 +236,12 @@
       </layout>
      </widget>
      <widget class="QGroupBox" name="details_panel">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="minimumSize">
        <size>
         <width>300</width>
@@ -226,7 +250,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>300</width>
+        <width>16777215</width>
         <height>16777215</height>
        </size>
       </property>
@@ -236,6 +260,12 @@
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="ShotgunFolderWidget" name="file_details" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>250</width>
