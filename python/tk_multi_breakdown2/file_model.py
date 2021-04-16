@@ -103,7 +103,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             data_method = self.model().get_method_for_role(role)
             if data_method:
                 try:
-                    result = data_method(self, self.data(FileModel.FILE_ITEM_ROLE))
+                    result = data_method(self.index())
                 except TypeError as error:
                     raise TankError(
                         "Failed to execute the method defined to retrieve item data for role `{role}`.\nError: {msg}".format(
@@ -156,11 +156,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 return -1
 
             if role == FileModel.VIEW_ITEM_LOADING_ROLE:
-                # The group header will indicate a loading state if any of the children are loading.
-                if self.hasChildren():
-                    for row in range(self.rowCount()):
-                        if self.child(row).data(role):
-                            return True
+                # Do not show a loading icon for the group item (loading status will be
+                # shown in the subtitle)
                 return False
 
             if role == FileModel.STATUS_ROLE:
@@ -223,14 +220,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 if role == FileModel.FILE_ITEM_PATH_ROLE:
                     return self._file_item.path
 
-                if role == FileModel.FILE_ITEM_SG_DATA_ROLE:
-                    return self._file_item.sg_data
-
                 if role == FileModel.FILE_ITEM_EXTRA_DATA_ROLE:
                     return self._file_item.extra_data
 
                 if role == FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
                     return self._file_item.latest_published_file
+
+                if role == FileModel.FILE_ITEM_SG_DATA_ROLE:
+                    return self._file_item.sg_data
 
                 if role == FileModel.FILE_ITEM_CREATED_AT_ROLE:
                     return self._file_item.sg_data.get("created_at")
