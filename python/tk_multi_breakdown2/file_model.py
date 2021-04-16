@@ -406,6 +406,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 group_item = self._group_items[project["id"]]
 
             file_model_item = FileModel.FileModelItem("", file_item)
+            # Set a placeholder icon, until the thumbnail is loaded.
+            file_model_item.setIcon(QtGui.QIcon())
+
             group_item.appendRow(file_model_item)
 
             # for each item, we need to determine the latest version in order to know if the file is up-to-date or not
