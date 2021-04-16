@@ -34,6 +34,9 @@ class ViewItemConfiguration(HookClass):
 
         super(ViewItemConfiguration, self).__init__(*args, **kwargs)
 
+        # FIXME update this icon, just using whatever we have available at the moment.
+        self._unloaded_ref_icon = QtGui.QIcon(":/tk-multi-breakdown2/red_bullet.png")
+
         file_item_config = self.parent.execute_hook_method(
             "hook_ui_configurations", "file_item_details"
         )
@@ -60,11 +63,40 @@ class ViewItemConfiguration(HookClass):
 
         self._short_text_template_string = "<br/>".join(
             [
+                # "<span style='font-size: 13px; font-weight: bold;'>{name}</span>",
                 "<span style='color: rgba(200, 200, 200, 40%);'>{published_file_type.PublishedFileType.code}</span>",
+                # "<span style='color: rgba(200, 200, 200, 40%);'>{sg_status_list::text::icon}</span>",
             ]
         )
 
-    def get_item_title(self, item, file_item):
+    @staticmethod
+    def get_file_item(index):
+        """
+        Convenience method to get the file item data from the index.
+        """
+
+        if not index.isValid():
+            return None
+
+        try:
+            role = index.model().FILE_ITEM_ROLE
+            return index.data(role)
+        except AttributeError:
+            # Let this error go, and try to get the file item from the source model.
+            pass
+
+        try:
+            role = index.model().sourceModel().FILE_ITEM_ROLE
+            return index.data(role)
+
+        except AttributeError:
+            raise sgtk.TankError(
+                "Model '{model_class}' does not have specified role 'FILE_ITEM_ROLE".format(
+                    model_class=index.model().__class__.__name__
+                )
+            )
+
+    def get_item_title(self, index):
         """
         Returns the data to display for this model index item's title.
 
@@ -84,6 +116,7 @@ class ViewItemConfiguration(HookClass):
         :rtype: str | tuple<str,str>
         """
 
+        file_item = self.get_file_item(index)
         if file_item:
             if self._title_template_string:
                 # Search and replace any non-shotgun data fields
@@ -92,13 +125,13 @@ class ViewItemConfiguration(HookClass):
                 )
                 return (template_string, file_item.sg_data)
 
-            return item.data(QtCore.Qt.DisplayRole)
+            return index.data(QtCore.Qt.DisplayRole)
 
         return "<span style='font-size: 14px; font-weight: bold;'>{}</span>".format(
-            item.data(QtCore.Qt.DisplayRole)
+            index.data(QtCore.Qt.DisplayRole)
         )
 
-    def get_item_subtitle(self, item, file_item):
+    def get_item_subtitle(self, index):
         """
         Returns the data to display for this model index item's subtitle.
 
@@ -119,6 +152,7 @@ class ViewItemConfiguration(HookClass):
         """
 
         subtitle = None
+        file_item = self.get_file_item(index)
 
         if file_item:
             if self._subtitle_template_string:
@@ -130,35 +164,93 @@ class ViewItemConfiguration(HookClass):
 
         else:
             # Group header item
-            if not item.hasChildren():
+            try:
+                # This will raise an Attribute error if this is not a proxy model
+                source_model = index.model().sourceModel()
+                # The index passed is from the proxy model
+                proxy_model = index.model()
+                proxy_index = index
+                source_index = proxy_model.mapToSource(index)
+                proxy_rows = proxy_model.rowCount(proxy_index)
+                source_rows = source_model.rowCount(source_index)
+            except AttributeError:
+                # This is the source index, no proxy model.
+                source_model = index.model()
+                source_index = index
+                source_rows = source_model.rowCount(source_index)
+                proxy_model = None
+                proxy_rows = 0
+                proxy_index = None
+
+            if not source_rows:
                 subtitle = "NO FILES FOUND"
 
             else:
-                child_rows = item.rowCount()
-                status_role = item.model().STATUS_ROLE
-                status_out_of_sync = item.model().STATUS_OUT_OF_SYNC
-                out_of_sync = 0
-                for row in range(child_rows):
-                    status = item.child(row).data(status_role)
-                    if status == status_out_of_sync:
-                        out_of_sync += 1
+                loaded = 0
+                source_out_of_sync = 0
+                for row in range(source_rows):
+                    child_index = source_model.index(row, 0, source_index)
 
-                text = [
-                    "<span style='color: rgba(200, 200, 200, 40%);'>{} FILES</span>".format(
-                        child_rows
+                    status = child_index.data(source_model.STATUS_ROLE)
+                    if status == source_model.STATUS_OUT_OF_SYNC:
+                        source_out_of_sync += 1
+
+                    is_loading = child_index.data(source_model.VIEW_ITEM_LOADING_ROLE)
+                    if not is_loading:
+                        loaded += 1
+
+                out_of_sync_str = None
+                if loaded < source_rows:
+                    # Show how many files are still loading.
+                    total_files_str = "LOADING {loaded} of {total} FILES".format(
+                        loaded=loaded,
+                        total=source_rows,
                     )
+                else:
+                    # Check if there are any filters applied, and indicate how many are shown of the total.
+                    proxy_out_of_sync = 0
+                    for row in range(proxy_rows):
+                        child_index = proxy_model.index(row, 0, proxy_index)
+                        # The status role and enum are defined on the source model
+                        status = child_index.data(source_model.STATUS_ROLE)
+                        if status == source_model.STATUS_OUT_OF_SYNC:
+                            proxy_out_of_sync += 1
+
+                    if proxy_rows != source_rows:
+                        total_files_str = (
+                            "SHOWING {proxy_count} OF {total_count} FILES".format(
+                                proxy_count=proxy_rows, total_count=source_rows
+                            )
+                        )
+                    else:
+                        # There are no filters applied
+                        total_files_str = "{total} FILES".format(total=source_rows)
+
+                    if source_out_of_sync > 0:
+                        if proxy_out_of_sync != source_out_of_sync:
+                            out_of_sync_str = "{proxy_out_of_sync} OF {total_out_of_sync} OUT OF DATE".format(
+                                proxy_out_of_sync=proxy_out_of_sync,
+                                total_out_of_sync=source_out_of_sync,
+                            )
+                        else:
+                            out_of_sync_str = "{out_of_sync} OUT OF DATE".format(
+                                out_of_sync=source_out_of_sync
+                            )
+
+                text_items = [
+                    "<span style='color: rgba(200, 200, 200, 40%);'>{}</span>".format(
+                        total_files_str
+                    ),
                 ]
-                if out_of_sync > 0:
-                    text.append(
-                        "{out_of_sync} OUT OF DATE".format(out_of_sync=out_of_sync)
-                    )
+                if out_of_sync_str:
+                    text_items.append(out_of_sync_str)
 
                 join_char = "<span style='color: rgba(200, 200, 200, 40%);'> | </span>"
-                subtitle = join_char.join(text)
+                subtitle = join_char.join(text_items)
 
         return subtitle
 
-    def get_item_details(self, item, file_item):
+    def get_item_details(self, index):
         """
         Returns the data to display for this model index item's detailed text.
 
@@ -178,6 +270,7 @@ class ViewItemConfiguration(HookClass):
         :rtype: str | tuple<str,str>
         """
 
+        file_item = self.get_file_item(index)
         if file_item:
             if self._details_template_string:
                 # Search and replace any non-shotgun data fields
@@ -190,7 +283,7 @@ class ViewItemConfiguration(HookClass):
 
         return None
 
-    def get_item_short_text(self, item, file_item):
+    def get_item_short_text(self, index):
         """
         Returns the short text data to display for this model index item.
 
@@ -204,6 +297,7 @@ class ViewItemConfiguration(HookClass):
         :rtype: str | tuple<str,str>
         """
 
+        file_item = self.get_file_item(index)
         if file_item and self._short_text_template_string:
             # Search and replace any non-shotgun data fields
             template_string = _resolve_file_item_tokens(
@@ -213,7 +307,7 @@ class ViewItemConfiguration(HookClass):
 
         return None
 
-    def get_item_thumbnail(self, item, file_item):
+    def get_item_thumbnail(self, index):
         """
         Returns the data to display for this model index item's thumbnail.
 
@@ -230,13 +324,13 @@ class ViewItemConfiguration(HookClass):
         if not self._show_thumbnail:
             return None
 
-        thumbnail = item.data(QtCore.Qt.DecorationRole)
+        thumbnail = index.data(QtCore.Qt.DecorationRole)
         if isinstance(thumbnail, QtGui.QIcon):
             thumbnail = thumbnail.pixmap(512)
 
         return thumbnail
 
-    def get_item_icons(self, item, file_item):
+    def get_item_icons(self, index):
         """
         Returns the data to display for this model index item's icons. Default implementation
         does not show any icon badges over the thumbnail.
@@ -248,35 +342,24 @@ class ViewItemConfiguration(HookClass):
         :type file_item: :class:`FileItem`
 
         :return: Dictionary containing the item's icon data.
-        :rtype: dict, format e.g.:
-            {
-                "float-top-left":
-                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
-                "float-top-right":
-                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
-                "float-bottom-left":
-                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
-                "float-bottom-right":
-                    :class:`sgtk.platform.qt.QtGui.QPixmap`,
-            }
+        :rtype: dict
         """
-
-        # NOTE this is not currently used
 
         icons = {}
 
+        file_item = self.get_file_item(index)
         if file_item:
-            status_role = item.model().STATUS_ROLE
-            status = item.data(status_role)
-            status_icon = item.model().get_status_icon(status)
-            icons["top-left"] = {
-                "pixmap": status_icon,
-                "inset": True,
-            }
+            role = index.model().REFERENCE_LOADED
+            is_local = index.data(role)
+            if not is_local:
+                icons["bottom-right"] = {
+                    "pixmap": self._unloaded_ref_icon,
+                    "inset": True,
+                }
 
         return icons
 
-    def get_item_separator(self, item, file_item):
+    def get_item_separator(self, index):
         """
         Returns True to indicate the item has a separator, else False. This may be
         used to indicate to the delegate to draw a line separator for the item or not.
@@ -291,10 +374,12 @@ class ViewItemConfiguration(HookClass):
         :rtype: bool
         """
 
+        file_item = self.get_file_item(index)
+
         # Only group headers have a separator.
         return file_item is None
 
-    def get_item_width(self, item, file_item):
+    def get_item_width(self, index):
         """
         Returns the width for this item. This may be used by the delegate to help
         draw the item as desired. NOTE: if the ViewItemDelegate has a fixed width
@@ -309,6 +394,8 @@ class ViewItemConfiguration(HookClass):
         :return: The item rect display width
         :rtype: int
         """
+
+        file_item = self.get_file_item(index)
 
         # Set the width to 375 for File items and set to -1 for Group File items (headers)
         # to expand to the full available width.
