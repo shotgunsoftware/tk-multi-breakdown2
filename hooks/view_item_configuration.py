@@ -17,16 +17,63 @@ HookClass = sgtk.get_hook_baseclass()
 
 class ViewItemConfiguration(HookClass):
     """
-    Hook to customize how a view item's data is displayed.
+    TODO decide whether or not to include this hook, or move it into the application code.
+
+    This is an advanced hook that allows for a deeper level of customization for the file
+    and file history views. See the hook class UIConfiguration (ui_configuratios.py) for
+    a simplified hook to customize the views. The simplified hook defines what data is
+    displayed for the item title, subtitle and main text body, and whether or not it has a
+    thumbnail. This advanced hook will call the simplified hook to gather what data to
+    display, as well as allows for further logic to customize how/when that data is displayed.
+
+    The methods in this hook are called from the FileModel and FileHistoryModel classes to
+    retrieve the data to pass to the view item delegate, which controls how each view item
+    is rendered. The FileModel stores the data displayed in the main file view. The
+    FileHistoryModel stores the data displayed in the file details panel; e.g. when a file
+    is selected, the file details that are shown for that selected item.
+
+    Hook methods that alter the main file view:
+        get_item_title:
+            - The return value will decide the text displayed in the item's top left text area.
+
+        get_item_subtitle:
+            - The return value will decide the text displayed in the item's top right text area.
+
+        get_item_details:
+            - The return value will decide the item's main text body.
+
+        get_item_short_text:
+            - The return value will decide the text displayed for the item's condensed text. This
+              value is used for the Thumbnail view.
+
+        get_item_thumbnail:
+            - The return value will decide the image displayed for the item.
+
+        get_item_icons:
+            - The return value will decide if any icons are displayed over the thumbnail; e.g:
+              status icons.
+
+        get_item_separator:
+            - The return value will decide if a separator line wil lbe drawn for the item.
+
+    Hook methods that alter the file details view (these will do the same as described for
+    the main file view, except in the details list view):
+        get_history_item_title
+        get_history_item_subtitle
+        get_history_item_details
+        get_history_item_thumbnail
+        get_history_item_icons
+        get_history_item_separator
     """
 
     def __init__(self, *args, **kwargs):
         """
-        Constructor
+        ViewItemConfiguration constructor.
 
-        Get the File and File History item configurations from the ui_configuration hook.
-        The File and File History item configurations define how to format and display
-        the items.
+        Get the File and File History item configurations from the simplified ui_configuration
+        hook. The File and File History item configurations define what data to display. The
+        methods in this hook will call the simplified hook to get the data to display, and
+        apply any further logic to how and/or when that data is displayed.
 
         :param args: The positional arguments to pass to the base constructor.
         :param kwags: The keyword arguments to tpass to the base constructor.
@@ -37,6 +84,7 @@ class ViewItemConfiguration(HookClass):
         # FIXME update this icon, just using whatever we have available at the moment.
         self._unloaded_ref_icon = QtGui.QIcon(":/tk-multi-breakdown2/red_bullet.png")
 
+        # The file UI configuration that defines what data to display for a file item
         file_item_config = self.parent.execute_hook_method(
             "hook_ui_configurations", "file_item_details"
         )
@@ -45,6 +93,7 @@ class ViewItemConfiguration(HookClass):
         self._details_template_string = file_item_config.get("body", "")
         self._show_thumbnail = file_item_config.get("thumbnail", False)
 
+        # The file history UI configuration that defines what data to display for a history item
         file_details_history_config = self.parent.execute_hook_method(
             "hook_ui_configurations", "file_history_details"
         )
@@ -61,11 +110,10 @@ class ViewItemConfiguration(HookClass):
             "thumbnail", False
         )
 
+        # Define the short text template string here.
         self._short_text_template_string = "<br/>".join(
             [
-                # "<span style='font-size: 13px; font-weight: bold;'>{name}</span>",
                 "<span style='color: rgba(200, 200, 200, 40%);'>{published_file_type.PublishedFileType.code}</span>",
-                # "<span style='color: rgba(200, 200, 200, 40%);'>{sg_status_list::text::icon}</span>",
             ]
         )
 
@@ -73,6 +121,12 @@ class ViewItemConfiguration(HookClass):
     def get_file_item(index):
         """
         Convenience method to get the file item data from the index.
+
+        :param index: A model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
+
+        :return: The file item data for the given index.
+        :rtype: FileItem
         """
 
         if not index.isValid():
@@ -106,11 +160,11 @@ class ViewItemConfiguration(HookClass):
         that will search and replace the tempalte string with the specified values from
         the Shotgun data provided.
 
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
+        See the UIConfiguration class (ui_configuartion.py) for more details on how to
+        construct a template string that can be processed and replaced with Shotgun data.
+
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
 
         :return: The title for this item.
         :rtype: str | tuple<str,str>
@@ -141,11 +195,11 @@ class ViewItemConfiguration(HookClass):
         that will search and replace the tempalte string with the specified values from
         the Shotgun data provided.
 
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
+        See the UIConfiguration class (ui_configuartion.py) for more details on how to
+        construct a template string that can be processed and replaced with Shotgun data.
+
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
 
         :return: The subtitle for this item.
         :rtype: str | tuple<str,str>
@@ -164,6 +218,8 @@ class ViewItemConfiguration(HookClass):
 
         else:
             # Group header item
+            #
+            # Attempt to get the source and proxy model and indexes
             try:
                 # This will raise an Attribute error if this is not a proxy model
                 source_model = index.model().sourceModel()
@@ -174,7 +230,7 @@ class ViewItemConfiguration(HookClass):
                 proxy_rows = proxy_model.rowCount(proxy_index)
                 source_rows = source_model.rowCount(source_index)
             except AttributeError:
-                # This is the source index, no proxy model.
+                # We only have access to the source model and index
                 source_model = index.model()
                 source_index = index
                 source_rows = source_model.rowCount(source_index)
@@ -182,10 +238,13 @@ class ViewItemConfiguration(HookClass):
                 proxy_rows = 0
                 proxy_index = None
 
+            # Build a status string based on the source and proxy model data
             if not source_rows:
+                # The model has no data
                 subtitle = "NO FILES FOUND"
-
             else:
+                # Iterate through the source model items, counting how many items are being loaded
+                # and how many have a status of out of sync
                 loaded = 0
                 source_out_of_sync = 0
                 for row in range(source_rows):
@@ -201,13 +260,14 @@ class ViewItemConfiguration(HookClass):
 
                 out_of_sync_str = None
                 if loaded < source_rows:
-                    # Show how many files are still loading.
+                    # The source model is loading items, set the group status to indicate the loading state.
                     total_files_str = "LOADING {loaded} of {total} FILES".format(
                         loaded=loaded,
                         total=source_rows,
                     )
                 else:
-                    # Check if there are any filters applied, and indicate how many are shown of the total.
+                    # The source model is done loading, check if there are any filters applied and indicate
+                    # if there are any items filtered or not.
                     proxy_out_of_sync = 0
                     for row in range(proxy_rows):
                         child_index = proxy_model.index(row, 0, proxy_index)
@@ -217,6 +277,7 @@ class ViewItemConfiguration(HookClass):
                             proxy_out_of_sync += 1
 
                     if proxy_rows != source_rows:
+                        # Filters are applied, display total and filtered items.
                         total_files_str = (
                             "SHOWING {proxy_count} OF {total_count} FILES".format(
                                 proxy_count=proxy_rows, total_count=source_rows
@@ -227,7 +288,10 @@ class ViewItemConfiguration(HookClass):
                         total_files_str = "{total} FILES".format(total=source_rows)
 
                     if source_out_of_sync > 0:
+                        # Display how many files are out of sync
+
                         if proxy_out_of_sync != source_out_of_sync:
+                            # Filters applied and have altered the total out of sync files currently shown.
                             out_of_sync_str = "{proxy_out_of_sync} OF {total_out_of_sync} OUT OF DATE".format(
                                 proxy_out_of_sync=proxy_out_of_sync,
                                 total_out_of_sync=source_out_of_sync,
@@ -237,6 +301,7 @@ class ViewItemConfiguration(HookClass):
                                 out_of_sync=source_out_of_sync
                             )
 
+                # Finally build the group status string to show in the item's subtitle
                 text_items = [
                     "<span style='color: rgba(200, 200, 200, 40%);'>{}</span>".format(
                         total_files_str
@@ -260,11 +325,11 @@ class ViewItemConfiguration(HookClass):
         that will search and replace the tempalte string with the specified values from
         the Shotgun data provided.
 
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
+        See the UIConfiguration class (ui_configuartion.py) for more details on how to
+        construct a template string that can be processed and replaced with Shotgun data.
+
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
 
         :return: The details for this item.
         :rtype: str | tuple<str,str>
@@ -287,11 +352,8 @@ class ViewItemConfiguration(HookClass):
         """
         Returns the short text data to display for this model index item.
 
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
 
         :return: The short text for this item.
         :rtype: str | tuple<str,str>
@@ -311,11 +373,8 @@ class ViewItemConfiguration(HookClass):
         """
         Returns the data to display for this model index item's thumbnail.
 
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
 
         :return: The item thumbnail.
         :rtype: :class:`sgtk.platform.qt.QtGui.QPixmap`
@@ -335,11 +394,8 @@ class ViewItemConfiguration(HookClass):
         Returns the data to display for this model index item's icons. Default implementation
         does not show any icon badges over the thumbnail.
 
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
 
         :return: Dictionary containing the item's icon data.
         :rtype: dict
@@ -364,11 +420,8 @@ class ViewItemConfiguration(HookClass):
         Returns True to indicate the item has a separator, else False. This may be
         used to indicate to the delegate to draw a line separator for the item or not.
 
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
 
         :return: True to indicate the item has a separator, else False.
         :rtype: bool
@@ -378,28 +431,6 @@ class ViewItemConfiguration(HookClass):
 
         # Only group headers have a separator.
         return file_item is None
-
-    def get_item_width(self, index):
-        """
-        Returns the width for this item. This may be used by the delegate to help
-        draw the item as desired. NOTE: if the ViewItemDelegate has a fixed width
-        set up, this method will not affect the row width.
-
-        :param item: The model item.
-        :type item: :class:`FileModelItem` | :class:`GroupModelItem`
-        :param file_item: The FileItem associated with the item. This will be None
-                          for :class:`GroupModelItem` items.
-        :type file_item: :class:`FileItem`
-
-        :return: The item rect display width
-        :rtype: int
-        """
-
-        file_item = self.get_file_item(index)
-
-        # Set the width to 375 for File items and set to -1 for Group File items (headers)
-        # to expand to the full available width.
-        return 375 if file_item else -1
 
     def get_history_item_title(self, item, sg_data):
         """

@@ -338,7 +338,6 @@ class AppDialog(QtGui.QWidget):
         delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
         delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
-        delegate.width_role = FileModel.VIEW_ITEM_WIDTH_ROLE
         delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
         delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE

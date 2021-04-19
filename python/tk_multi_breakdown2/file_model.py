@@ -87,6 +87,18 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
             QtGui.QStandardItem.__init__(self, *args, **kwargs)
 
+        def __eq__(self, other):
+            """
+            Overload the equality comparison operator to allow comparing BaseModelItem objects.
+            Model items are compared by their model index; e.g. two indexes are equivalent if
+            they have the same index.
+
+            :param other: The other model item to compare this one to.
+            :type other: BaseModelItem
+            """
+
+            return self.index() == other.index()
+
         def data(self, role):
             """
             Override the :class:`sgtk.platform.qt.QtGui.QStandardItem` method.
@@ -110,7 +122,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                             role=role, msg=error
                         )
                     )
-
             else:
                 # Default to the base implementation
                 result = super(FileModel.BaseModelItem, self).data(role)
@@ -250,10 +261,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                     return FileModel.STATUS_UP_TO_DATE
 
                 if role == FileModel.VIEW_ITEM_LOADING_ROLE:
-                    return (
-                        not self._file_item
-                        or not self._file_item.highest_version_number
-                    )
+                    # Check the model is loading this item or not.
+                    return self.model().is_loading(self)
 
                 if role == FileModel.REFERENCE_LOADED:
                     # TODO call a hook method per DCC to check if the reference associated with this
@@ -342,7 +351,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.VIEW_ITEM_TEXT_ROLE: view_item_config_hook.get_item_details,
             self.VIEW_ITEM_SHORT_TEXT_ROLE: view_item_config_hook.get_item_short_text,
             self.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_item_icons,
-            self.VIEW_ITEM_WIDTH_ROLE: view_item_config_hook.get_item_width,
             self.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_item_separator,
         }
 
@@ -423,6 +431,50 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         self.files_processed.emit()
 
+    def is_loading(self, model_item):
+        """
+        Return True if the item in the model is in a loading state. An item is considered to be loading if
+        the model item is found in the `_pending_version_requests`.
+
+        :param model_item: The item in the model.
+        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+
+        :return: True if model is loading the item, else False.
+        :rtype: bool
+        """
+
+        for item in self._pending_version_requests.values():
+            if item == model_item:
+                return True
+
+        return False
+
+    def request_thumbnail(self, model_item, file_item):
+        """
+        Make an async request for the file item thumbnail, to set for the model item.
+
+        :param model_item: The model item object
+        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        :param file_item: The file item data object
+        :type file_item: FileItem
+
+        :return: None
+        """
+
+        if not file_item.sg_data.get("image"):
+            return
+
+        request_id = self._sg_data_retriever.request_thumbnail(
+            file_item.sg_data["image"],
+            file_item.sg_data["type"],
+            file_item.sg_data["id"],
+            "image",
+        )
+
+        # Store the model item with the request id, so that the model item can be retrieved
+        # to update when the async request completes.
+        self._pending_thumbnail_requests[request_id] = model_item
+
     def _on_data_retriever_work_completed(self, uid, request_type, data):
         """
         Slot triggered when the data-retriever has finished doing some work. The data retriever is currently
@@ -487,29 +539,3 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             "File Model: Failed to find the latest published file for id %s: %s"
             % (uid, msg)
         )
-
-    def request_thumbnail(self, model_item, file_item):
-        """
-        Make an async request for the file item thumbnail, to set for the model item.
-
-        :param model_item: The model item object
-        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param file_item: The file item data object
-        :type file_item: FileItem
-
-        :return: None
-        """
-
-        if not file_item.sg_data.get("image"):
-            return
-
-        request_id = self._sg_data_retriever.request_thumbnail(
-            file_item.sg_data["image"],
-            file_item.sg_data["type"],
-            file_item.sg_data["id"],
-            "image",
-        )
-
-        # Store the model item with the request id, so that the model item can be retrieved
-        # to update when the async request completes.
-        self._pending_thumbnail_requests[request_id] = model_item
