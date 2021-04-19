@@ -72,13 +72,12 @@ class UIConfiguration(HookBaseClass):
         """
         return {
             "top_left": "<span style='font-size: 13px; font-weight: bold;'>{name}</span>",
-            # FIXME choose how to display status (e.g. in subtitle or body)
-            "top_right": "{sg_status_list::text::icon}",
+            "top_right": "",
             "body": "<span style='color:#18A7E3;'>Node</span> {<NODE_NAME>}<br/>"
             "<span style='color:#18A7E3;'>Version</span> {version_number}<br/>"
             "<span style='color:#18A7E3;'>Entity</span> {entity::showtype}<br/>"
             "<span style='color:#18A7E3;'>Type</span> {published_file_type.PublishedFileType.code}<br/>"
-            "<span style='color:#18A7E3;'>Status</span> {sg_status_list}",
+            "<span style='color:#18A7E3;'>Status</span> {sg_status_list::text}",
             "thumbnail": True,
         }
 
