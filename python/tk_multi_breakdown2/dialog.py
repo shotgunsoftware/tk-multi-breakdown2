@@ -443,7 +443,7 @@ class AppDialog(QtGui.QWidget):
 
         # Set up delegaet styling
         delegate.item_padding = 4
-        delegate.text_padding = ViewItemDelegate.Padding(4, 4, 4, 7)
+        delegate.text_padding = ViewItemDelegate.Padding(4, 4, 4, 12)
         delegate.thumbnail_padding = ViewItemDelegate.Padding(4, 0, 4, 4)
         # Set the thumbnail width to ensure text aligns between rows.
         delegate.thumbnail_width = 64
@@ -455,7 +455,7 @@ class AppDialog(QtGui.QWidget):
                 "padding": 0,
                 "callback": self._show_history_item_context_menu,
             },
-            ViewItemDelegate.FLOAT_TOP_RIGHT,
+            ViewItemDelegate.TOP_RIGHT,
         )
 
         if set_delegate:
