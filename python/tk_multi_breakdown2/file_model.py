@@ -62,9 +62,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     ) = range(4)
 
     FILE_ITEM_STATUS_ICONS = {
-        STATUS_UP_TO_DATE: QtGui.QIcon(":/tk-multi-breakdown2/main-uptodate.png"),
-        STATUS_OUT_OF_SYNC: QtGui.QIcon(":/tk-multi-breakdown2/main-outofdate.png"),
-        STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/main-override.png"),
+        STATUS_UP_TO_DATE: QtGui.QIcon(":/tk-multi-breakdown2/icons/main-uptodate.png"),
+        STATUS_OUT_OF_SYNC: QtGui.QIcon(
+            ":/tk-multi-breakdown2/icons/main-outofdate.png"
+        ),
+        STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/icons/main-override.png"),
     }
 
     # signal emitted once all the files have been processed

@@ -30,7 +30,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QToolButton" name="file_view_btn">
+      <widget class="QToolButton" name="thumbnail_view_btn">
        <property name="focusPolicy">
         <enum>Qt::TabFocus</enum>
        </property>

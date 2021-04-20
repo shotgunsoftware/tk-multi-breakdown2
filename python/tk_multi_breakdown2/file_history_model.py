@@ -45,10 +45,14 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     ) = range(2)
 
     STATUS_BADGES = {
-        STATUS_UP_TO_DATE: QtGui.QIcon(":/tk-multi-breakdown2/current-uptodate.png"),
-        STATUS_OUT_OF_DATE: QtGui.QIcon(":/tk-multi-breakdown2/current-outofdate.png"),
+        STATUS_UP_TO_DATE: QtGui.QIcon(
+            ":/tk-multi-breakdown2/icons/current-uptodate.png"
+        ),
+        STATUS_OUT_OF_DATE: QtGui.QIcon(
+            ":/tk-multi-breakdown2/icons/current-outofdate.png"
+        ),
     }
-    LOCKED_ICON = QtGui.QIcon(":/tk-multi-breakdown2/current-override.png")
+    LOCKED_ICON = QtGui.QIcon(":/tk-multi-breakdown2/icons/current-override.png")
 
     def __init__(self, parent, bg_task_manager):
         """

@@ -141,49 +141,51 @@ class AppDialog(QtGui.QWidget):
             FilterItem.TYPE_GROUP, FilterItem.OP_OR, filters=[]
         )
         up_to_date_filter_icon = QtGui.QIcon(
-            ":/tk-multi-breakdown2/main-uptodate@2x.png"
+            ":/tk-multi-breakdown2/icons/main-uptodate@2x.png"
         )
         self._ui.up_to_date_filter_btn.setIcon(up_to_date_filter_icon)
         self._ui.up_to_date_filter_btn.clicked.connect(
             lambda checked: self._update_filters()
         )
         out_of_date_filter_icon = QtGui.QIcon(
-            ":/tk-multi-breakdown2/main-outofdate@2x.png"
+            ":/tk-multi-breakdown2/icons/main-outofdate@2x.png"
         )
         self._ui.out_of_date_filter_btn.setIcon(out_of_date_filter_icon)
         self._ui.out_of_date_filter_btn.clicked.connect(
             lambda checked: self._update_filters()
         )
 
-        list_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_card.png")
+        list_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/mode_switch_card.png")
         list_view_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_card_active.png"),
+            QtGui.QPixmap(":/tk-multi-breakdown2/icons/mode_switch_card_active.png"),
             QtGui.QIcon.Mode.Normal,
             QtGui.QIcon.State.On,
         )
         self._ui.list_view_btn.setIcon(list_view_icon)
 
-        grid_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_thumb.png")
+        grid_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/grid-inactive.png")
         grid_view_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_thumb_active.png"),
+            QtGui.QPixmap(":/tk-multi-breakdown2/icons/grid-active.png"),
             QtGui.QIcon.Mode.Normal,
             QtGui.QIcon.State.On,
         )
         self._ui.grid_view_btn.setIcon(grid_view_icon)
 
-        file_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/mode_switch_thumb.png")
-        file_view_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/mode_switch_thumb_active.png"),
+        thumbnail_view_icon = QtGui.QIcon(
+            ":/tk-multi-breakdown2/icons/mode_switch_thumb.png"
+        )
+        thumbnail_view_icon.addPixmap(
+            QtGui.QPixmap(":/tk-multi-breakdown2/icons/mode_switch_thumb_active.png"),
             QtGui.QIcon.Mode.Normal,
             QtGui.QIcon.State.On,
         )
-        self._ui.file_view_btn.setIcon(file_view_icon)
+        self._ui.thumbnail_view_btn.setIcon(thumbnail_view_icon)
 
         # Set up the view modes
         self.view_modes = [
             {
                 "mode": self.THUMBNAIL_VIEW_MODE,
-                "button": self._ui.file_view_btn,
+                "button": self._ui.thumbnail_view_btn,
                 "delegate": thumbnail_item_delegate,
                 "slider_value": self._settings_manager.retrieve(
                     self.THUMBNAIL_SIZE_SCALE_VALUE, 100
@@ -268,9 +270,9 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_history_view.setItemDelegate(history_delegate)
         self._ui.file_history_view.setMouseTracking(True)
 
-        details_icon = QtGui.QIcon(":/tk-multi-breakdown2/info-inactive@2x.png")
+        details_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/info-inactive@2x.png")
         details_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/info-active@2x.png"),
+            QtGui.QPixmap(":/tk-multi-breakdown2/icons/info-active@2x.png"),
             QtGui.QIcon.Mode.Normal,
             QtGui.QIcon.State.On,
         )
@@ -340,9 +342,9 @@ class AppDialog(QtGui.QWidget):
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
 
         # Create an icon for the expand header action
-        expand_icon = QtGui.QIcon(":/tk-multi-breakdown2/tree_arrow_expanded.png")
+        expand_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/tree_arrow_expanded.png")
         expand_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/tree_arrow_collapsed.png"),
+            QtGui.QPixmap(":/tk-multi-breakdown2/icons/tree_arrow_collapsed.png"),
             QtGui.QIcon.Mode.Normal,
             QtGui.QIcon.State.On,
         )
@@ -374,7 +376,9 @@ class AppDialog(QtGui.QWidget):
         # Add the menu actions buton on top right
         delegate.add_action(
             {
-                "icon": QtGui.QIcon(":/tk-multi-breakdown2/tree_arrow_expanded.png"),
+                "icon": QtGui.QIcon(
+                    ":/tk-multi-breakdown2/icons/tree_arrow_expanded.png"
+                ),
                 "padding": 0,
                 "callback": self._actions_menu_requested,
             },
@@ -442,7 +446,9 @@ class AppDialog(QtGui.QWidget):
         # Add the menu actions button.
         delegate.add_action(
             {
-                "icon": QtGui.QIcon(":/tk-multi-breakdown2/tree_arrow_expanded.png"),
+                "icon": QtGui.QIcon(
+                    ":/tk-multi-breakdown2/icons/tree_arrow_expanded.png"
+                ),
                 "padding": 0,
                 "callback": self._show_history_item_context_menu,
             },

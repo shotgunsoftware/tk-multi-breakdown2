@@ -415,7 +415,9 @@ class UIConfigAdvanced(HookClass):
                 icons["bottom-right"] = {
                     # FIXME this is just a placeholder icon, this should be updated when showing
                     # icons for unloaded references is enabled.
-                    "pixmap": QtGui.QIcon(":/tk-multi-breakdown2/red_bullet.png"),
+                    "pixmap": QtGui.QIcon(
+                        ":/tk-multi-breakdown2/icons/icons/red_bullet.png"
+                    ),
                     "inset": True,
                 }
 
