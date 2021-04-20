@@ -224,3 +224,16 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         item.setData(badge, self.BADGE_ROLE)
         # Set up the methods to call to retrieve the data for the specified role.
         self.set_data_for_role_methods(item, sg_data)
+
+    def _set_tooltip(self, item, sg_item):
+        """
+        Override base method to ensure no tooltip is set from the model. Let the delegate
+        take care of showing the tooltip.
+
+        Sets a tooltip for this model item.
+
+        :param item: ShotgunStandardItem associated with the publish.
+        :param sg_item: Publish information from Shotgun.
+        """
+
+        # Do nothing, let the delegate show the tooltip.
