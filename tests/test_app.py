@@ -58,16 +58,34 @@ class TestApplication(AppTestBase):
 
         required_hooks = {
             "hook_scene_operations": [
-                {"method": "scan_scene", "kwargs": {},},
-                {"method": "update", "kwargs": {"item": {}},},
+                {
+                    "method": "scan_scene",
+                    "kwargs": {},
+                },
+                {
+                    "method": "update",
+                    "kwargs": {"item": {}},
+                },
             ],
             "hook_get_published_files": [
-                {"method": "get_latest_published_file", "kwargs": {"item": {}},}
+                {
+                    "method": "get_latest_published_file",
+                    "kwargs": {"item": {}},
+                }
             ],
             "hook_ui_configurations": [
-                {"method": "file_item_details", "kwargs": {},},
-                {"method": "main_file_history_details", "kwargs": {},},
-                {"method": "file_history_details", "kwargs": {},},
+                {
+                    "method": "file_item_details",
+                    "kwargs": {},
+                },
+                {
+                    "method": "main_file_history_details",
+                    "kwargs": {},
+                },
+                {
+                    "method": "file_history_details",
+                    "kwargs": {},
+                },
             ],
         }
         for hook_key, hook_data in required_hooks.items():

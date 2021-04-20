@@ -190,7 +190,12 @@ def bundle(bundle_settings, bundle_hook_methods):
 
 @pytest.mark.parametrize(
     "extra_fields",
-    [None, [], ["one_field"], ["one_field", "two_field", "three_field"],],
+    [
+        None,
+        [],
+        ["one_field"],
+        ["one_field", "two_field", "three_field"],
+    ],
 )
 def test_scan_scene(
     bundle, find_publish_return_value, bundle_hook_scan_scene_return_value, extra_fields

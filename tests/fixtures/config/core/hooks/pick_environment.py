@@ -16,6 +16,7 @@ from sgtk import Hook
 class PickEnvironment(Hook):
     def execute(self, context, **kwargs):
         """
+        Execute the pick environment hook for testing.
         """
 
         return os.environ.get("TEST_ENVIRONMENT", "test")

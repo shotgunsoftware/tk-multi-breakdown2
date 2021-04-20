@@ -32,7 +32,12 @@ class AppTestBase(TankTestBase):
 
         # Set up the python path to import required modules
         base_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "python",)
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "python",
+            )
         )
         app_dir = os.path.abspath(os.path.join(base_dir, "tk_multi_breakdown2"))
         api_dir = os.path.abspath(os.path.join(app_dir, "api"))
