@@ -150,6 +150,12 @@ class BreakdownManager(object):
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return
 
+        # store the current path into the extra_data in case we need to access it later in the hook
+        if not item.extra_data:
+            item.extra_data = {"old_path": item.path}
+        else:
+            item.extra_data["old_path"] = item.path
+
         item.path = sg_data["path"]["local_path"]
         self._bundle.execute_hook_method(
             "hook_scene_operations", "update", item=item.to_dict()

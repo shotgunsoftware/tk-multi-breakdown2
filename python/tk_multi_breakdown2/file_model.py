@@ -191,7 +191,7 @@ class FileModel(QtGui.QStandardItemModel):
         """
         if uid in self._pending_thumbnail_requests:
             del self._pending_thumbnail_requests[uid]
-        self._app.log_debug(
+        self._app.logger.debug(
             "File Model: Failed to find thumbnail for id %s: %s" % (uid, error_msg)
         )
 
@@ -222,7 +222,7 @@ class FileModel(QtGui.QStandardItemModel):
         """
         if uid in self._pending_version_requests:
             del self._pending_version_requests[uid]
-        self._app.log_debug(
+        self._app.logger.error(
             "File Model: Failed to find the latest published file for id %s: %s"
             % (uid, msg)
         )

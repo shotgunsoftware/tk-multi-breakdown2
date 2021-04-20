@@ -8,8 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
-from . import constants
-from .framework_qtwidgets import ShotgunListWidget, ShotgunFolderWidget
+from .framework_qtwidgets import utils
 
 
 def get_ui_published_file_fields(app):
@@ -28,9 +27,9 @@ def get_ui_published_file_fields(app):
         "hook_ui_configurations", "file_item_details"
     )
 
-    fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("top_left"))
-    fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("top_right"))
-    fields += ShotgunListWidget.resolve_sg_fields(file_item_config.get("body"))
+    fields += utils.resolve_sg_fields(file_item_config.get("top_left"))
+    fields += utils.resolve_sg_fields(file_item_config.get("top_right"))
+    fields += utils.resolve_sg_fields(file_item_config.get("body"))
     if file_item_config["thumbnail"]:
         fields.append("image")
 
@@ -38,12 +37,8 @@ def get_ui_published_file_fields(app):
         "hook_ui_configurations", "main_file_history_details"
     )
 
-    fields += ShotgunFolderWidget.resolve_sg_fields(
-        main_file_history_config.get("header")
-    )
-    fields += ShotgunFolderWidget.resolve_sg_fields(
-        main_file_history_config.get("body")
-    )
+    fields += utils.resolve_sg_fields(main_file_history_config.get("header"))
+    fields += utils.resolve_sg_fields(main_file_history_config.get("body"))
     if main_file_history_config["thumbnail"] and "image" not in fields:
         fields.append("image")
 
@@ -51,9 +46,9 @@ def get_ui_published_file_fields(app):
         "hook_ui_configurations", "file_history_details"
     )
 
-    fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("top_left"))
-    fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("top_right"))
-    fields += ShotgunListWidget.resolve_sg_fields(file_history_config.get("body"))
+    fields += utils.resolve_sg_fields(file_history_config.get("top_left"))
+    fields += utils.resolve_sg_fields(file_history_config.get("top_right"))
+    fields += utils.resolve_sg_fields(file_history_config.get("body"))
     if file_history_config["thumbnail"] and "image" not in fields:
         fields.append("image")
 

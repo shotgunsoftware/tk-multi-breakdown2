@@ -9,18 +9,27 @@
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
-import maya.cmds as cmds
 import sgtk
+
+try:
+    import builtins
+except ImportError:
+    import __builtins__ as builtins
+
+import vrScenegraph
+import vrFieldAccess
+import vrFileIO
+import vrNodePtr
+
+builtins.vrNodeService = vrNodeService
+builtins.vrReferenceService = vrReferenceService
+
 
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
 class BreakdownSceneOperations(HookBaseClass):
-    """
-    Breakdown operations for Maya.
-
-    This implementation handles detection of maya references and file texture nodes.
-    """
+    """"""
 
     def scan_scene(self):
         """
@@ -47,32 +56,32 @@ class BreakdownSceneOperations(HookBaseClass):
 
         refs = []
 
-        # first let's look at maya references
-        for ref in cmds.file(q=True, reference=True):
-            node_name = cmds.referenceQuery(ref, referenceNode=True)
+        for r in vrReferenceService.getSceneReferences():
 
-            # get the path and make it platform dependent
-            # (maya uses C:/style/paths)
-            maya_path = cmds.referenceQuery(
-                ref, filename=True, withoutCopyNumber=True
-            ).replace("/", os.path.sep)
-            refs.append(
-                {"node_name": node_name, "node_type": "reference", "path": maya_path}
-            )
-
-        # now look at file texture nodes
-        for file_node in cmds.ls(l=True, type="file"):
-            # ensure this is actually part of this scene and not referenced
-            if cmds.referenceQuery(file_node, isNodeReferenced=True):
-                # this is embedded in another reference, so don't include it in the breakdown
+            # we only want to keep the top references
+            has_parent = vrReferenceService.getParentReferences(r)
+            if has_parent:
                 continue
 
-            # get path and make it platform dependent (maya uses C:/style/paths)
-            path = cmds.getAttr("%s.fileTextureName" % file_node).replace(
-                "/", os.path.sep
-            )
+            if r.hasSmartReference():
+                node_type = "smart_reference"
+                path = r.getSmartPath()
+            elif r.hasSourceReference():
+                node_type = "source_reference"
+                path = r.getSourcePath()
+            else:
+                node_type = "reference"
+                path = None
 
-            refs.append({"node_name": file_node, "node_type": "file", "path": path})
+            if path:
+                refs.append(
+                    {
+                        "node_name": r.getName(),
+                        "node_type": node_type,
+                        "path": path,
+                        "extra_data": {"node_id": r.getObjectId()},
+                    }
+                )
 
         return refs
 
@@ -90,18 +99,33 @@ class BreakdownSceneOperations(HookBaseClass):
         node_name = item["node_name"]
         node_type = item["node_type"]
         path = item["path"]
+        extra_data = item["extra_data"]
 
-        if node_type == "reference":
-            # maya reference
-            self.logger.debug(
-                "Maya Reference %s: Updating to version %s" % (node_name, path)
-            )
-            cmds.file(path, loadReference=node_name)
+        ref_node = get_reference_by_id(extra_data["node_id"])
+        if not ref_node:
+            self.logger.error("Couldn't get reference node named {}".format(node_name))
+            return
 
-        elif node_type == "file":
-            # file texture node
-            self.logger.debug(
-                "File Texture %s: Updating to version %s" % (node_name, path)
-            )
-            file_name = cmds.getAttr("%s.fileTextureName" % node_name)
-            cmds.setAttr("%s.fileTextureName" % node_name, path, type="string")
+        new_node_name = os.path.splitext(os.path.basename(path))[0]
+
+        if node_type == "source_reference":
+            ref_node.setSourcePath(path)
+            ref_node.loadSourceReference()
+            ref_node.setName(new_node_name)
+        elif node_type == "smart_reference":
+            ref_node.setSmartPath(path)
+            vrReferenceService.reimportSmartReferences([ref_node])
+
+
+def get_reference_by_id(ref_id):
+    """
+    Get a reference node from its name.
+
+    :param ref_name: Name of the reference we want to get the associated node from
+    :returns: The reference node associated to the reference name
+    """
+    ref_list = vrReferenceService.getSceneReferences()
+    for r in ref_list:
+        if r.getObjectId() == ref_id:
+            return r
+    return None
