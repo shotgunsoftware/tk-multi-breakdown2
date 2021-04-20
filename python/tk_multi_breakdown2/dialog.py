@@ -24,7 +24,7 @@ from .framework_qtwidgets import (
     ThumbnailViewItemDelegate,
     utils,
 )
-from .tree_proxy_model import FilterItem
+from .filter_item import FilterItem
 from .file_proxy_model import FileProxyModel
 
 task_manager = sgtk.platform.import_framework(
@@ -702,7 +702,7 @@ class AppDialog(QtGui.QWidget):
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
-    ######################################################################################################
+    ################################################################################################
     # UI/Widget callbacks
 
     def _toggle_details_panel(self):
@@ -884,9 +884,8 @@ class AppDialog(QtGui.QWidget):
 
         self._file_proxy_model.filter_items = filters
 
-    ######################################################################################################
-    # ViewItemDelegate action method callbacks
-    # item's action is clicked
+    ################################################################################################
+    # ViewItemDelegate action method callbacks item's action is clicked
 
     def _actions_menu_requested(self, view, index, pos):
         """
@@ -912,7 +911,7 @@ class AppDialog(QtGui.QWidget):
         self._show_context_menu(view, pos)
 
 
-######################################################################################################
+####################################################################################################
 # ViewItemDelegate action function callbacks
 
 
