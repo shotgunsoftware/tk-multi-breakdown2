@@ -246,6 +246,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                     return self._file_item.sg_data.get("created_at")
 
                 if role == FileModel.STATUS_ROLE:
+                    # NOTE if we ever need to know if the file is up to date or not, while
+                    # it is also locked, we would need to create a separate role to determine
+                    # if the file is locked or not, in addition to this status role that would
+                    # then not check if the file is locked.
                     if self._file_item.locked:
                         return FileModel.STATUS_LOCKED
 

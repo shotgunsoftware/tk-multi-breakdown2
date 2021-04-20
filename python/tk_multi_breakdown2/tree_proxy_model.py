@@ -73,16 +73,21 @@ class TreeProxyModel(HierarchicalFilteringProxyModel):
 
         for filter_item in filter_items:
             if filter_item.is_group():
-                self._do_filter(src_idx, filter_item.filters, filter_item.filter_op)
-
+                if not filter_item.filters:
+                    # Just accept empty groups
+                    accepted = True
+                else:
+                    accepted = self._do_filter(
+                        src_idx, filter_item.filters, filter_item.filter_op
+                    )
             else:
                 accepted = filter_item.accepts(src_idx)
 
-                if op == FilterItem.OP_AND and not accepted:
-                    return False
+            if op == FilterItem.OP_AND and not accepted:
+                return False
 
-                if op == FilterItem.OP_OR and accepted:
-                    return True
+            if op == FilterItem.OP_OR and accepted:
+                return True
 
         if op == FilterItem.OP_AND:
             # Accept if the operation is AND since it would have been rejected immediately if

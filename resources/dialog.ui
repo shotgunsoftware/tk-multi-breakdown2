@@ -115,48 +115,14 @@
          <normaloff>:/tk-multi-breakdown2/icons/filter-inactive.png</normaloff>
          <normalon>:/tk-multi-breakdown2/icons/filter-active.png</normalon>:/tk-multi-breakdown2/icons/filter-inactive.png</iconset>
        </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="popupMode">
+        <enum>QToolButton::InstantPopup</enum>
+       </property>
        <property name="toolButtonStyle">
         <enum>Qt::ToolButtonTextBesideIcon</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="up_to_date_filter_btn">
-       <property name="toolTip">
-        <string>Click to show/hide up to date files</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/tk-multi-breakdown2/icons/main-uptodate.png</normaloff>:/tk-multi-breakdown2/icons/main-uptodate.png</iconset>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <property name="autoRaise">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="out_of_date_filter_btn">
-       <property name="toolTip">
-        <string>Click to show/hide out of date files</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/tk-multi-breakdown2/icons/main-outofdate.png</normaloff>:/tk-multi-breakdown2/icons/main-outofdate.png</iconset>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <property name="autoRaise">
-        <bool>false</bool>
        </property>
       </widget>
      </item>

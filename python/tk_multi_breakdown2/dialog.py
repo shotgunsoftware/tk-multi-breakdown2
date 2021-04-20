@@ -32,11 +32,13 @@ task_manager = sgtk.platform.import_framework(
 )
 BackgroundTaskManager = task_manager.BackgroundTaskManager
 
+settings = sgtk.platform.import_framework("tk-framework-shotgunutils", "settings")
 shotgun_globals = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_globals"
 )
-
-settings = sgtk.platform.import_framework("tk-framework-shotgunutils", "settings")
+shotgun_menus = sgtk.platform.import_framework(
+    "tk-framework-qtwidgets", "shotgun_menus"
+)
 
 
 class AppDialog(QtGui.QWidget):
@@ -114,8 +116,8 @@ class AppDialog(QtGui.QWidget):
 
         # Create a delegate for the file view. Set the row width to None
         thumbnail_item_delegate = self._create_file_item_delegate(thumbnail=True)
-        # Create a delegate for the list view. Set the row width to -1 will expand each item row
-        # to the full available width and thus display one item per row in a "list" view.
+        # Create a delegate for the list and grid view. The delegate can toggled to
+        # display either mode.
         list_item_delegate = self._create_file_item_delegate()
 
         # Filtering
@@ -125,27 +127,71 @@ class AppDialog(QtGui.QWidget):
             FilterItem.OP_IN,
             data_func=list_item_delegate.get_displayed_text,
         )
-        self._up_to_date_status_filter = FilterItem(
+        self._group_status_filter = FilterItem(
+            FilterItem.TYPE_GROUP, FilterItem.OP_OR, filters=[]
+        )
+        up_to_date_status_filter = FilterItem(
             FilterItem.TYPE_NUMBER,
             FilterItem.OP_EQUAL,
             filter_role=FileModel.STATUS_ROLE,
             filter_value=FileModel.STATUS_UP_TO_DATE,
         )
-        self._out_of_date_status_filter = FilterItem(
+        out_of_date_status_filter = FilterItem(
             FilterItem.TYPE_NUMBER,
             FilterItem.OP_EQUAL,
             filter_role=FileModel.STATUS_ROLE,
             filter_value=FileModel.STATUS_OUT_OF_SYNC,
         )
-        self._group_status_filter = FilterItem(
-            FilterItem.TYPE_GROUP, FilterItem.OP_OR, filters=[]
+        locked_filter = FilterItem(
+            FilterItem.TYPE_NUMBER,
+            FilterItem.OP_EQUAL,
+            filter_role=FileModel.STATUS_ROLE,
+            filter_value=FileModel.STATUS_LOCKED,
         )
-        self._ui.up_to_date_filter_btn.clicked.connect(
-            lambda checked: self._update_filters()
+        # TODO create custome widget to set on a QWidgetAction to then add to the menu, since the QAction
+        # is limited and will not display both checkbox and icon at the same time. As well, if we want
+        # to customize each filter action more, using the QWidgetAction is the way to go.
+        # out_of_date_action = QtGui.QWidgetAction(self)
+        # out_of_date_action.setDefaultWidget(b)
+        out_of_date_action = QtGui.QAction(
+            # FIXME can't show both icon and checkbox - for now just show the checkbox since these icons do
+            # not have an active/inactive state
+            # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-outofdate.png"),
+            "Out of Date",
+            self,
         )
-        self._ui.out_of_date_filter_btn.clicked.connect(
-            lambda checked: self._update_filters()
+        locked_action = QtGui.QAction(
+            # FIXME can't show both icon and checkbox - for now just show the checkbox since these icons do
+            # not have an active/inactive state
+            # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-override.png"),
+            "Reference Overrides",
+            self,
         )
+        up_to_date_action = QtGui.QAction(
+            # FIXME can't show both icon and checkbox - for now just show the checkbox since these icons do
+            # not have an active/inactive state
+            # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-uptodate.png"),
+            "Up to Date",
+            self,
+        )
+        self._status_actions = {
+            out_of_date_action: out_of_date_status_filter,
+            locked_action: locked_filter,
+            up_to_date_action: up_to_date_status_filter,
+        }
+
+        for action in self._status_actions:
+            action.setCheckable(True)
+            action.triggered.connect(lambda checked: self._update_filters())
+
+        sorted_actions = sorted(self._status_actions, key=lambda item: item.text())
+        # m = QtGui.QMenu(self)
+        m = shotgun_menus.ShotgunMenu(self)
+        m.add_group(sorted_actions, "STATUS")
+        # m.addSection("STATUS")
+        # m.addActions(sorted_actions)
+
+        self._ui.filter_btn.setMenu(m)
 
         # Set up the view modes
         self.view_modes = [
@@ -836,25 +882,21 @@ class AppDialog(QtGui.QWidget):
         self._display_text_filter.filter_value = (
             self._ui.search_widget._get_search_text()
         )
-        filters = [self._display_text_filter]
+        self._group_status_filter.filters = [
+            f for a, f in self._status_actions.items() if a.isChecked()
+        ]
 
-        filter_by_up_to_date = self._ui.up_to_date_filter_btn.isChecked()
-        filter_by_out_of_date = self._ui.out_of_date_filter_btn.isChecked()
+        if self._group_status_filter.filters:
+            # Set the filter button active to indicate there are filters currently applied from this filter menu
+            self._ui.filter_btn.setChecked(True)
+        else:
+            self._ui.filter_btn.setChecked(False)
 
-        if filter_by_out_of_date and filter_by_up_to_date:
-            self._group_status_filter.filters = [
-                self._up_to_date_status_filter,
-                self._out_of_date_status_filter,
-            ]
-            filters.append(self._group_status_filter)
-
-        elif filter_by_up_to_date:
-            filters.append(self._up_to_date_status_filter)
-
-        elif filter_by_out_of_date:
-            filters.append(self._out_of_date_status_filter)
-
-        self._file_proxy_model.filter_items = filters
+        # Set the updated filters to trigger the filter model to re-validate the data.
+        self._file_proxy_model.filter_items = [
+            self._display_text_filter,
+            self._group_status_filter,
+        ]
 
     ################################################################################################
     # ViewItemDelegate action method callbacks item's action is clicked
