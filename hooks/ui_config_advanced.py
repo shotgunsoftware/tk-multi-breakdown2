@@ -265,7 +265,7 @@ class UIConfigAdvanced(HookClass):
                 out_of_sync_str = None
                 if loaded < source_rows:
                     # The source model is loading items, set the group status to indicate the loading state.
-                    total_files_str = "LOADING {loaded} of {total} FILES".format(
+                    total_files_str = "LOADING {loaded}/{total} FILES".format(
                         loaded=loaded,
                         total=source_rows,
                     )
@@ -283,7 +283,7 @@ class UIConfigAdvanced(HookClass):
                     if proxy_rows != source_rows:
                         # Filters are applied, display total and filtered items.
                         total_files_str = (
-                            "SHOWING {proxy_count} OF {total_count} FILES".format(
+                            "SHOWING {proxy_count}/{total_count} FILES".format(
                                 proxy_count=proxy_rows, total_count=source_rows
                             )
                         )
@@ -296,7 +296,7 @@ class UIConfigAdvanced(HookClass):
 
                         if proxy_out_of_sync != source_out_of_sync:
                             # Filters applied and have altered the total out of sync files currently shown.
-                            out_of_sync_str = "{proxy_out_of_sync} OF {total_out_of_sync} OUT OF DATE".format(
+                            out_of_sync_str = "{proxy_out_of_sync}/{total_out_of_sync} OUT OF DATE".format(
                                 proxy_out_of_sync=proxy_out_of_sync,
                                 total_out_of_sync=source_out_of_sync,
                             )
