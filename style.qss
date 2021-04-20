@@ -40,3 +40,7 @@ QToolButton#list_view_btn:hover
   background-color: palette(light);
   border-radius: 4px;
 }
+
+QToolButton#filter_btn::menu-indicator{
+  width: 8px;
+}
