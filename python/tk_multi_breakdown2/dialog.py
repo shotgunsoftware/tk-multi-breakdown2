@@ -240,7 +240,7 @@ class AppDialog(QtGui.QWidget):
 
         # format the details main widget
         main_file_details_history_config = self._bundle.execute_hook_method(
-            "hook_ui_configurations", "main_file_history_details"
+            "hook_ui_config", "main_file_history_details"
         )
         self._ui.file_details.set_formatting(
             main_file_details_history_config.get("header"),

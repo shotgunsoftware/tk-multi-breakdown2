@@ -35,7 +35,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     File items are grouped into groups defined by the app configuration.
     """
 
-    VIEW_ITEM_CONFIG_HOOK_PATH = "view_item_configuration_hook"
+    UI_CONFIG_ADV_HOOK_PATH = "hook_ui_config_advanced"
 
     # Additional data roles defined for the model
     _BASE_ROLE = QtCore.Qt.UserRole + 32
@@ -334,24 +334,20 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
 
         # Get the hook instance for configuring the display for model view items.
-        view_item_config_hook_path = self._app.get_setting(
-            self.VIEW_ITEM_CONFIG_HOOK_PATH
-        )
-        view_item_config_hook = self._app.create_hook_instance(
-            view_item_config_hook_path
-        )
+        ui_config_adv_hook_path = self._app.get_setting(self.UI_CONFIG_ADV_HOOK_PATH)
+        ui_config_adv_hook = self._app.create_hook_instance(ui_config_adv_hook_path)
 
         # Create a mapping of model item data roles to the method that will be called to retrieve
         # the data for the item. The methods defined for each role must accept two parameters:
         # (1) QStandardItem (2) dict
         self.role_methods = {
-            self.VIEW_ITEM_THUMBNAIL_ROLE: view_item_config_hook.get_item_thumbnail,
-            self.VIEW_ITEM_HEADER_ROLE: view_item_config_hook.get_item_title,
-            self.VIEW_ITEM_SUBTITLE_ROLE: view_item_config_hook.get_item_subtitle,
-            self.VIEW_ITEM_TEXT_ROLE: view_item_config_hook.get_item_details,
-            self.VIEW_ITEM_SHORT_TEXT_ROLE: view_item_config_hook.get_item_short_text,
-            self.VIEW_ITEM_ICON_ROLE: view_item_config_hook.get_item_icons,
-            self.VIEW_ITEM_SEPARATOR_ROLE: view_item_config_hook.get_item_separator,
+            self.VIEW_ITEM_THUMBNAIL_ROLE: ui_config_adv_hook.get_item_thumbnail,
+            self.VIEW_ITEM_HEADER_ROLE: ui_config_adv_hook.get_item_title,
+            self.VIEW_ITEM_SUBTITLE_ROLE: ui_config_adv_hook.get_item_subtitle,
+            self.VIEW_ITEM_TEXT_ROLE: ui_config_adv_hook.get_item_details,
+            self.VIEW_ITEM_SHORT_TEXT_ROLE: ui_config_adv_hook.get_item_short_text,
+            self.VIEW_ITEM_ICON_ROLE: ui_config_adv_hook.get_item_icons,
+            self.VIEW_ITEM_SEPARATOR_ROLE: ui_config_adv_hook.get_item_separator,
         }
 
     @classmethod

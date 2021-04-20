@@ -15,16 +15,23 @@ from tank.util import sgre as re
 HookClass = sgtk.get_hook_baseclass()
 
 
-class ViewItemConfiguration(HookClass):
+class UIConfigAdvanced(HookClass):
     """
     TODO decide whether or not to include this hook, or move it into the application code.
 
-    This is an advanced hook that allows for a deeper level of customization for the file
-    and file history views. See the hook class UIConfiguration (ui_configuratios.py) for
-    a simplified hook to customize the views. The simplified hook defines what data is
-    displayed for the item title, subtitle and main text body, and whether or not it has a
-    thumbnail. This advanced hook will call the simplified hook to gather what data to
-    display, as well as allows for further logic to customize how/when that data is displayed.
+    This is an advanced hook to customize the UI. For a simple hook to customize the data
+    and formatting that is shown in the file and file history history views, see the
+    UIConfig hook class (ui_config.py).
+
+    This advanced hook allows the most flexibility in customzing the UI. While the simplified
+    hook defines what data is shown and how it is formatted, these advanced hook provide a
+    way to apply additional logic to alter how the views are displayed. For example, the
+    get_item_separator method checks whether or not the item is a group header or a regular
+    file item when deciding to draw a line separator for the item. A more complex example
+    can be found in get_item_subtitle, where the source and prooxy file models are parsed to
+    be able to display the total number of files, as well as how many are currently filtered.
+    These methods will call the simplified hook to get what data to display, and then apply
+    any further logic/processing before dispalying it.
 
     The methods in this hook are called from the FileModel and FileHistoryModel classes to
     retrieve the data to pass to the view item delegate, which controls how each view item
@@ -68,7 +75,7 @@ class ViewItemConfiguration(HookClass):
 
     def __init__(self, *args, **kwargs):
         """
-        ViewItemConfiguration constructor.
+        UIConfigAdvanced constructor.
 
         Get the File and File History item configurations from the simplified ui_configuration
         hook. The File and File History item configurations define what data to display. The
@@ -79,14 +86,11 @@ class ViewItemConfiguration(HookClass):
         :param kwags: The keyword arguments to tpass to the base constructor.
         """
 
-        super(ViewItemConfiguration, self).__init__(*args, **kwargs)
-
-        # FIXME update this icon, just using whatever we have available at the moment.
-        self._unloaded_ref_icon = QtGui.QIcon(":/tk-multi-breakdown2/red_bullet.png")
+        super(UIConfigAdvanced, self).__init__(*args, **kwargs)
 
         # The file UI configuration that defines what data to display for a file item
         file_item_config = self.parent.execute_hook_method(
-            "hook_ui_configurations", "file_item_details"
+            "hook_ui_config", "file_item_details"
         )
         self._title_template_string = file_item_config.get("top_left", "")
         self._subtitle_template_string = file_item_config.get("top_right", "")
@@ -95,7 +99,7 @@ class ViewItemConfiguration(HookClass):
 
         # The file history UI configuration that defines what data to display for a history item
         file_details_history_config = self.parent.execute_hook_method(
-            "hook_ui_configurations", "file_history_details"
+            "hook_ui_config", "file_history_details"
         )
         self._history_title_template_string = file_details_history_config.get(
             "top_left", ""
@@ -409,7 +413,9 @@ class ViewItemConfiguration(HookClass):
             is_local = index.data(role)
             if not is_local:
                 icons["bottom-right"] = {
-                    "pixmap": self._unloaded_ref_icon,
+                    # FIXME this is just a placeholder icon, this should be updated when showing
+                    # icons for unloaded references is enabled.
+                    "pixmap": QtGui.QIcon(":/tk-multi-breakdown2/red_bullet.png"),
                     "inset": True,
                 }
 
@@ -573,19 +579,6 @@ class ViewItemConfiguration(HookClass):
         :return: True to indicate the item has a separator, else False.
         :rtype: bool
         """
-
-        # NOTE uncomment to draw separtor above current version, when it is not the latest
-        # TODO delegate to handle decorations when drawing the separator
-        # status = item.data(item.model().STATUS_ROLE)
-        # show_separator = status is not None and status != item.model().STATUS_UP_TO_DATE
-
-        # if show_separator:
-        #     return {
-        #         "position": "top",
-        #         "decorations": {
-        #             "left": "New"
-        #         }
-        #     }
 
         return False
 

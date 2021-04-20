@@ -18,7 +18,7 @@ from .tree_proxy_model import TreeProxyModel
 class FileProxyModel(TreeProxyModel):
     """"""
 
-    VIEW_ITEM_CONFIG_HOOK_PATH = "view_item_configuration_hook"
+    UI_CONFIG_ADV_HOOK_PATH = "hook_ui_config_advanced"
 
     def __init__(self, *args, **kwargs):
         """
@@ -27,11 +27,9 @@ class FileProxyModel(TreeProxyModel):
 
         self._app = sgtk.platform.current_bundle()
 
-        view_item_config_hook_path = self._app.get_setting(
-            self.VIEW_ITEM_CONFIG_HOOK_PATH
-        )
-        self._view_item_config_hook = self._app.create_hook_instance(
-            view_item_config_hook_path
+        ui_config_adv_hook_path = self._app.get_setting(self.UI_CONFIG_ADV_HOOK_PATH)
+        self._ui_config_adv_hook = self._app.create_hook_instance(
+            ui_config_adv_hook_path
         )
 
         super(FileProxyModel, self).__init__(*args, **kwargs)
@@ -50,7 +48,7 @@ class FileProxyModel(TreeProxyModel):
             return
 
         if role == FileModel.VIEW_ITEM_SUBTITLE_ROLE:
-            return self._view_item_config_hook.get_item_subtitle(index)
+            return self._ui_config_adv_hook.get_item_subtitle(index)
 
         source_index = self.mapToSource(index)
         return self.sourceModel().data(source_index, role)
