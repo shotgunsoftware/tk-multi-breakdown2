@@ -10,6 +10,7 @@ agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 not expressly granted therein are reserved by Shotgun Software Inc.
 */
 
+QToolButton#filter_btn,
 QToolButton#up_to_date_filter_btn,
 QToolButton#out_of_date_filter_btn,
 QToolButton#details_button,
@@ -21,12 +22,14 @@ QToolButton#list_view_btn
   outline: none;
   padding: 4px;
 }
+QToolButton#filter_btn:checked,
 QToolButton#up_to_date_filter_btn:checked,
 QToolButton#out_of_date_filter_btn:checked,
 QToolButton#details_button:checked,
 QToolButton#thumbnail_view_btn:checked,
 QToolButton#grid_view_btn:checked,
 QToolButton#list_view_btn:checked,
+QToolButton#filter_btn:hover,
 QToolButton#up_to_date_filter_btn:hover,
 QToolButton#out_of_date_filter_btn:hover,
 QToolButton#details_button:hover,

@@ -37,6 +37,11 @@
        <property name="text">
         <string/>
        </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/tk-multi-breakdown2/icons/mode_switch_thumb.png</normaloff>
+         <normalon>:/tk-multi-breakdown2/icons/mode_switch_thumb_active.png</normalon>:/tk-multi-breakdown2/icons/mode_switch_thumb.png</iconset>
+       </property>
        <property name="checkable">
         <bool>true</bool>
        </property>
@@ -56,6 +61,11 @@
        <property name="text">
         <string/>
        </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/tk-multi-breakdown2/icons/mode_switch_card.png</normaloff>
+         <normalon>:/tk-multi-breakdown2/icons/mode_switch_card_active.png</normalon>:/tk-multi-breakdown2/icons/mode_switch_card.png</iconset>
+       </property>
        <property name="checkable">
         <bool>true</bool>
        </property>
@@ -71,6 +81,11 @@
        </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/tk-multi-breakdown2/icons/grid-inactive.png</normaloff>
+         <normalon>:/tk-multi-breakdown2/icons/grid-active.png</normalon>:/tk-multi-breakdown2/icons/grid-inactive.png</iconset>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -91,12 +106,31 @@
       </widget>
      </item>
      <item>
+      <widget class="QToolButton" name="filter_btn">
+       <property name="text">
+        <string>Filter</string>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/tk-multi-breakdown2/icons/filter-inactive.png</normaloff>
+         <normalon>:/tk-multi-breakdown2/icons/filter-active.png</normalon>:/tk-multi-breakdown2/icons/filter-inactive.png</iconset>
+       </property>
+       <property name="toolButtonStyle">
+        <enum>Qt::ToolButtonTextBesideIcon</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QToolButton" name="up_to_date_filter_btn">
        <property name="toolTip">
         <string>Click to show/hide up to date files</string>
        </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/tk-multi-breakdown2/icons/main-uptodate.png</normaloff>:/tk-multi-breakdown2/icons/main-uptodate.png</iconset>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -114,6 +148,10 @@
        <property name="text">
         <string/>
        </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/tk-multi-breakdown2/icons/main-outofdate.png</normaloff>:/tk-multi-breakdown2/icons/main-outofdate.png</iconset>
+       </property>
        <property name="checkable">
         <bool>true</bool>
        </property>
@@ -129,6 +167,11 @@
        </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/tk-multi-breakdown2/icons/info-inactive.png</normaloff>
+         <normalon>:/tk-multi-breakdown2/icons/info-active.png</normalon>:/tk-multi-breakdown2/icons/info-inactive.png</iconset>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -310,6 +353,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

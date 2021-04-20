@@ -140,46 +140,12 @@ class AppDialog(QtGui.QWidget):
         self._group_status_filter = FilterItem(
             FilterItem.TYPE_GROUP, FilterItem.OP_OR, filters=[]
         )
-        up_to_date_filter_icon = QtGui.QIcon(
-            ":/tk-multi-breakdown2/icons/main-uptodate@2x.png"
-        )
-        self._ui.up_to_date_filter_btn.setIcon(up_to_date_filter_icon)
         self._ui.up_to_date_filter_btn.clicked.connect(
             lambda checked: self._update_filters()
         )
-        out_of_date_filter_icon = QtGui.QIcon(
-            ":/tk-multi-breakdown2/icons/main-outofdate@2x.png"
-        )
-        self._ui.out_of_date_filter_btn.setIcon(out_of_date_filter_icon)
         self._ui.out_of_date_filter_btn.clicked.connect(
             lambda checked: self._update_filters()
         )
-
-        list_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/mode_switch_card.png")
-        list_view_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/icons/mode_switch_card_active.png"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.On,
-        )
-        self._ui.list_view_btn.setIcon(list_view_icon)
-
-        grid_view_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/grid-inactive.png")
-        grid_view_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/icons/grid-active.png"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.On,
-        )
-        self._ui.grid_view_btn.setIcon(grid_view_icon)
-
-        thumbnail_view_icon = QtGui.QIcon(
-            ":/tk-multi-breakdown2/icons/mode_switch_thumb.png"
-        )
-        thumbnail_view_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/icons/mode_switch_thumb_active.png"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.On,
-        )
-        self._ui.thumbnail_view_btn.setIcon(thumbnail_view_icon)
 
         # Set up the view modes
         self.view_modes = [

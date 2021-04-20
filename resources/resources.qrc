@@ -27,5 +27,9 @@
         <file>icons/grid-active@2x.png</file>
         <file>icons/grid-inactive.png</file>
         <file>icons/grid-inactive@2x.png</file>
+        <file>icons/filter-active.png</file>
+        <file>icons/filter-active@2x.png</file>
+        <file>icons/filter-inactive.png</file>
+        <file>icons/filter-inactive@2x.png</file>
     </qresource>
 </RCC>
