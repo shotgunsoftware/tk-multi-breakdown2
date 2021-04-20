@@ -30,42 +30,6 @@
       </spacer>
      </item>
      <item>
-      <widget class="QToolButton" name="up_to_date_filter_btn">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <property name="autoRaise">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="out_of_date_filter_btn">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <property name="autoRaise">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="SearchWidget" name="search_widget" native="true">
-       <property name="maximumSize">
-        <size>
-         <width>150</width>
-         <height>16777215</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QToolButton" name="file_view_btn">
        <property name="focusPolicy">
         <enum>Qt::TabFocus</enum>
@@ -78,6 +42,22 @@
        </property>
        <property name="checked">
         <bool>false</bool>
+       </property>
+       <property name="autoRaise">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="list_view_btn">
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
        <property name="autoRaise">
         <bool>false</bool>
@@ -101,9 +81,35 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="list_view_btn">
-       <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
+      <widget class="SearchWidget" name="search_widget" native="true">
+       <property name="maximumSize">
+        <size>
+         <width>150</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="up_to_date_filter_btn">
+       <property name="toolTip">
+        <string>Click to show/hide up to date files</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="autoRaise">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="out_of_date_filter_btn">
+       <property name="toolTip">
+        <string>Click to show/hide out of date files</string>
        </property>
        <property name="text">
         <string/>
