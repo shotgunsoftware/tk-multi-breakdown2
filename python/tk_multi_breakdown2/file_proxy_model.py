@@ -16,7 +16,10 @@ from .tree_proxy_model import TreeProxyModel
 
 
 class FileProxyModel(TreeProxyModel):
-    """"""
+    """
+    A proxy model for the FileModel. Subclasses the TreeProxyModel that implements
+    generic filtering.
+    """
 
     UI_CONFIG_ADV_HOOK_PATH = "hook_ui_config_advanced"
 
@@ -47,7 +50,13 @@ class FileProxyModel(TreeProxyModel):
         if not index.isValid():
             return
 
+        # Call any UI config hook methods from here (instead of the source model), which
+        # require access to proxy model data. By calling the hook methods here, the proxy
+        # model index is passed to the hook method, which provides access to both the
+        # proxy and source model data.
         if role == FileModel.VIEW_ITEM_SUBTITLE_ROLE:
+            # The subtitle requires the proxy model data to display how many files items
+            # are currently filtered
             return self._ui_config_adv_hook.get_item_subtitle(index)
 
         source_index = self.mapToSource(index)
