@@ -113,12 +113,10 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setMouseTracking(True)
 
         # Create a delegate for the file view. Set the row width to None
-        file_item_delegate = self._create_file_item_delegate(
-            set_delegate=False, thumbnail=True
-        )
+        thumbnail_item_delegate = self._create_file_item_delegate(thumbnail=True)
         # Create a delegate for the list view. Set the row width to -1 will expand each item row
         # to the full available width and thus display one item per row in a "list" view.
-        list_item_delegate = self._create_file_item_delegate(set_delegate=False)
+        list_item_delegate = self._create_file_item_delegate()
 
         # Filtering
         # TODO: create a filtering widget that will handle the individual filter items
@@ -186,7 +184,7 @@ class AppDialog(QtGui.QWidget):
             {
                 "mode": self.THUMBNAIL_VIEW_MODE,
                 "button": self._ui.file_view_btn,
-                "delegate": file_item_delegate,
+                "delegate": thumbnail_item_delegate,
                 "slider_value": self._settings_manager.retrieve(
                     self.THUMBNAIL_SIZE_SCALE_VALUE, 100
                 ),
@@ -266,7 +264,8 @@ class AppDialog(QtGui.QWidget):
 
         self._ui.file_history_view.setModel(self._file_history_proxy_model)
 
-        self._create_file_history_item_delegate()
+        history_delegate = self._create_file_history_item_delegate()
+        self._ui.file_history_view.setItemDelegate(history_delegate)
         self._ui.file_history_view.setMouseTracking(True)
 
         details_icon = QtGui.QIcon(":/tk-multi-breakdown2/info-inactive@2x.png")
@@ -311,31 +310,29 @@ class AppDialog(QtGui.QWidget):
         # Log metric for app usage
         self._bundle._log_metric_viewed_app()
 
-    def _create_file_item_delegate(self, set_delegate=True, thumbnail=False):
+    def _create_file_item_delegate(self, thumbnail=False):
         """
-        Create and set up a :class:`ViewItemDelegate` object for the File view.
+        Create and return a :class:`ViewItemDelegate` object for the File view.
 
         :return: The created delegate.
         :rtype: :class:`ViewItemDelegate`
         """
 
-        # The view (self._ui.file_view) passed to the ViewItemDelegate constructor must be a
-        # instance of subclass QAbstractItemView.
         if thumbnail:
             delegate = ThumbnailViewItemDelegate(self._ui.file_view)
+            delegate.text_role = FileModel.VIEW_ITEM_SHORT_TEXT_ROLE
             delegate.thumbnail_size = QtCore.QSize(164, 128)
             delegate.text_padding = ViewItemDelegate.Padding(4, 7, 4, 7)
 
         else:
             delegate = ViewItemDelegate(self._ui.file_view)
+            delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
             delegate.text_padding = ViewItemDelegate.Padding(5, 7, 7, 7)
-            # Non-thumbnail delegates have a header and subtitle
 
         # Set the delegate model data roles
         delegate.header_role = FileModel.VIEW_ITEM_HEADER_ROLE
         delegate.subtitle_role = FileModel.VIEW_ITEM_SUBTITLE_ROLE
         delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
-        delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
         delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
         delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
@@ -410,14 +407,11 @@ class AppDialog(QtGui.QWidget):
                 ViewItemDelegate.FLOAT_RIGHT,
             )
 
-        if set_delegate:
-            self._ui.file_view.setItemDelegate(delegate)
-
         return delegate
 
-    def _create_file_history_item_delegate(self, set_delegate=True):
+    def _create_file_history_item_delegate(self):
         """
-        Create and set up a :class:`ViewItemDelegate` object for the File History view.
+        Create and return a :class:`ViewItemDelegate` object for the File History view.
 
         :param set_delegate: If True, set the delegate on the file history view.
         :type set_delegate: bool (default=True)
@@ -425,8 +419,6 @@ class AppDialog(QtGui.QWidget):
         :rtype: :class:`ViewItemDelegate`
         """
 
-        # The view (self._ui.file_history_view) passed to the ViewItemDelegate constructor must be a
-        # instance of subclass QAbstractItemView.
         delegate = ViewItemDelegate(self._ui.file_history_view)
 
         # Set the delegate model data roles
@@ -456,9 +448,6 @@ class AppDialog(QtGui.QWidget):
             },
             ViewItemDelegate.TOP_RIGHT,
         )
-
-        if set_delegate:
-            self._ui.file_history_view.setItemDelegate(delegate)
 
         return delegate
 
@@ -698,15 +687,10 @@ class AppDialog(QtGui.QWidget):
 
                 if view_mode["mode"] == self.LIST_VIEW_MODE:
                     delegate.scale_thumbnail_to_item_height(2.0)
-                    delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
 
                 elif view_mode["mode"] == self.GRID_VIEW_MODE:
                     delegate.thumbnail_width = 164
                     delegate.scale_thumbnail_to_item_height(None)
-                    delegate.text_role = FileModel.VIEW_ITEM_TEXT_ROLE
-
-                elif view_mode["mode"] == self.THUMBNAIL_VIEW_MODE:
-                    delegate.text_role = FileModel.VIEW_ITEM_SHORT_TEXT_ROLE
 
                 # Get the value to set the slider to, once all views have been updated.
                 slider_value = view_mode.get(
