@@ -82,6 +82,11 @@ class UIConfig(HookBaseClass):
                     "<span style='color:#18A7E3;'>Status</span> {sg_status_list::displaytext}",
                 ]
             ),
+            "thumbnail_body": "<br/>".join(
+                [
+                    "<span style='color: rgba(200, 200, 200, 40%);'>{published_file_type.PublishedFileType.code}</span>",
+                ]
+            ),
             "thumbnail": True,
         }
 

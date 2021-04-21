@@ -95,6 +95,7 @@ class UIConfigAdvanced(HookClass):
         self._title_template_string = file_item_config.get("top_left", "")
         self._subtitle_template_string = file_item_config.get("top_right", "")
         self._details_template_string = file_item_config.get("body", "")
+        self._short_text_template_string = file_item_config.get("thumbnail_body", "")
         self._show_thumbnail = file_item_config.get("thumbnail", False)
 
         # The file history UI configuration that defines what data to display for a history item
@@ -112,13 +113,6 @@ class UIConfigAdvanced(HookClass):
         )
         self._history_show_thumbnail = file_details_history_config.get(
             "thumbnail", False
-        )
-
-        # Define the short text template string here.
-        self._short_text_template_string = "<br/>".join(
-            [
-                "<span style='color: rgba(200, 200, 200, 40%);'>{published_file_type.PublishedFileType.code}</span>",
-            ]
         )
 
     @staticmethod
