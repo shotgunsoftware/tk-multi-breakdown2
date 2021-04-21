@@ -26,6 +26,73 @@ class TestApplication(AppTestBase):
     functionality, like parametrization and pytest fixtures.
     """
 
+    # The hooks that the application expects to have, and their methods.
+    APP_HOOKS_DEF = {
+        "hook_scene_operations": [
+            {
+                "method": "scan_scene",
+                "kwargs": {},
+            },
+            {
+                "method": "update",
+                "kwargs": {"item": {}},
+            },
+        ],
+        "hook_get_published_files": [
+            {
+                "method": "get_latest_published_file",
+                "kwargs": {"item": {}},
+            }
+        ],
+        "hook_ui_config": [
+            {
+                "method": "file_item_details",
+                "kwargs": {},
+            },
+            {
+                "method": "main_file_history_details",
+                "kwargs": {},
+            },
+            {
+                "method": "file_history_details",
+                "kwargs": {},
+            },
+        ],
+        "hook_ui_config_advanced": [
+            {"method": "get_item_title", "kwargs": {"index": None}},
+            {"method": "get_item_subtitle", "kwargs": {"index": None}},
+            {"method": "get_item_details", "kwargs": {"index": None}},
+            {"method": "get_item_short_text", "kwargs": {"index": None}},
+            {"method": "get_item_thumbnail", "kwargs": {"index": None}},
+            {"method": "get_item_icons", "kwargs": {"index": None}},
+            {"method": "get_item_separator", "kwargs": {"index": None}},
+            {
+                "method": "get_history_item_title",
+                "kwargs": {"item": None, "sg_data": {}},
+            },
+            {
+                "method": "get_history_item_subtitle",
+                "kwargs": {"item": None, "sg_data": {}},
+            },
+            {
+                "method": "get_history_item_details",
+                "kwargs": {"item": None, "sg_data": {}},
+            },
+            {
+                "method": "get_history_item_thumbnail",
+                "kwargs": {"item": None, "sg_data": {}},
+            },
+            {
+                "method": "get_history_item_icons",
+                "kwargs": {"item": None, "sg_data": {}},
+            },
+            {
+                "method": "get_history_item_separator",
+                "kwargs": {"item": None, "sg_data": {}},
+            },
+        ],
+    }
+
     def setUp(self):
         """
         Set up before any tests are executed.
@@ -56,39 +123,7 @@ class TestApplication(AppTestBase):
         Test that the Application has the required hooks set up.
         """
 
-        required_hooks = {
-            "hook_scene_operations": [
-                {
-                    "method": "scan_scene",
-                    "kwargs": {},
-                },
-                {
-                    "method": "update",
-                    "kwargs": {"item": {}},
-                },
-            ],
-            "hook_get_published_files": [
-                {
-                    "method": "get_latest_published_file",
-                    "kwargs": {"item": {}},
-                }
-            ],
-            "hook_ui_configurations": [
-                {
-                    "method": "file_item_details",
-                    "kwargs": {},
-                },
-                {
-                    "method": "main_file_history_details",
-                    "kwargs": {},
-                },
-                {
-                    "method": "file_history_details",
-                    "kwargs": {},
-                },
-            ],
-        }
-        for hook_key, hook_data in required_hooks.items():
+        for hook_key, hook_data in self.APP_HOOKS_DEF.items():
             hook_name = self.app.get_setting(hook_key, None)
             assert hook_name is not None
 
