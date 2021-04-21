@@ -184,25 +184,22 @@ class AppDialog(QtGui.QWidget):
                 "mode": self.THUMBNAIL_VIEW_MODE,
                 "button": self._ui.thumbnail_view_btn,
                 "delegate": thumbnail_item_delegate,
-                "slider_value": self._settings_manager.retrieve(
-                    self.THUMBNAIL_SIZE_SCALE_VALUE, 100
-                ),
-            },
-            {
-                "mode": self.GRID_VIEW_MODE,
-                "button": self._ui.grid_view_btn,
-                "delegate": list_item_delegate,
-                "slider_value": self._settings_manager.retrieve(
-                    self.GRID_SIZE_SCALE_VALUE, 100
-                ),
+                "default_size": 64,
+                "size_settings_key": self.THUMBNAIL_SIZE_SCALE_VALUE,
             },
             {
                 "mode": self.LIST_VIEW_MODE,
                 "button": self._ui.list_view_btn,
                 "delegate": list_item_delegate,
-                "slider_value": self._settings_manager.retrieve(
-                    self.LIST_SIZE_SCALE_VALUE, 100
-                ),
+                "default_size": 85,
+                "size_settings_key": self.LIST_SIZE_SCALE_VALUE,
+            },
+            {
+                "mode": self.GRID_VIEW_MODE,
+                "button": self._ui.grid_view_btn,
+                "delegate": list_item_delegate,
+                "default_size": 260,
+                "size_settings_key": self.GRID_SIZE_SCALE_VALUE,
             },
         ]
         for i, view_mode in enumerate(self.view_modes):
@@ -224,7 +221,9 @@ class AppDialog(QtGui.QWidget):
 
         # Get the last view mode used from the settings manager, default to the first view if
         # no settings found
-        cur_view_mode = self._settings_manager.retrieve(self.VIEW_MODE_SETTING, 0)
+        cur_view_mode = self._settings_manager.retrieve(
+            self.VIEW_MODE_SETTING, self.LIST_VIEW_MODE
+        )
         self._set_view_mode(cur_view_mode)
 
         # -----------------------------------------------------
@@ -505,15 +504,11 @@ class AppDialog(QtGui.QWidget):
         # Save the splitter state
         state = self._ui.details_splitter.saveState()
         if six.PY2:
-            self._settings_manager.store(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
+            self._settings_manager.store(self.SPLITTER_STATE, state)
         else:
             # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
             # will convert QByteArray objects to str when storing).
-            self._raw_values_settings.setValue(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
+            self._raw_values_settings.setValue(self.SPLITTER_STATE, state)
 
         return QtGui.QWidget.closeEvent(self, event)
 
@@ -695,9 +690,9 @@ class AppDialog(QtGui.QWidget):
                     delegate.thumbnail_width = 164
                     delegate.scale_thumbnail_to_item_height(None)
 
-                # Get the value to set the slider to, once all views have been updated.
-                slider_value = view_mode.get(
-                    "slider_value", self._ui.size_slider.value()
+                # Get the value to set item size value to set on the delegate, after all views have been updated.
+                slider_value = self._settings_manager.retrieve(
+                    view_mode["size_settings_key"], view_mode["default_size"]
                 )
 
         # Set the slider value for the current view, this will also update the viewport.
@@ -775,22 +770,22 @@ class AppDialog(QtGui.QWidget):
             delegate = view_mode["delegate"]
 
             if view_mode["button"].isChecked():
-                view_mode["slider_value"] = value
+                # Store the item size value by view mode in the settings manager.
+                self._settings_manager.store(view_mode["size_settings_key"], value)
 
+                # Update the delegate to resize the items based on the slider value
+                # and current view mode
                 if view_mode["mode"] == self.THUMBNAIL_VIEW_MODE:
                     width = value * (16 / 9.0)
                     delegate.thumbnail_size = QtCore.QSize(width, value)
-                    self._settings_manager.store(self.THUMBNAIL_SIZE_SCALE_VALUE, value)
 
                 elif view_mode["mode"] == self.LIST_VIEW_MODE:
                     delegate.item_height = value
                     delegate.item_width = -1
-                    self._settings_manager.store(self.LIST_SIZE_SCALE_VALUE, value)
 
                 elif view_mode["mode"] == self.GRID_VIEW_MODE:
                     delegate.item_height = None
                     delegate.item_width = value * 2
-                    self._settings_manager.store(self.GRID_SIZE_SCALE_VALUE, value)
 
         self._ui.file_view._update_all_item_info = True
         self._ui.file_view.viewport().update()
