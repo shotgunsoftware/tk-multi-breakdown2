@@ -79,7 +79,7 @@ class UIConfig(HookBaseClass):
                     "<span style='color:#18A7E3;'>Version</span> {version_number}",
                     "<span style='color:#18A7E3;'>Entity</span> {entity::showtype}",
                     "<span style='color:#18A7E3;'>Type</span> {published_file_type.PublishedFileType.code}",
-                    "<span style='color:#18A7E3;'>Status</span> {sg_status_list::text}",
+                    "<span style='color:#18A7E3;'>Status</span> {sg_status_list::displaytext}",
                 ]
             ),
             "thumbnail": True,
@@ -105,7 +105,7 @@ class UIConfig(HookBaseClass):
                     "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}",
                     "<b style='color:#18A7E3;'>Version</b> {version_number}",
                     "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}",
-                    "<b style='color:#18A7E3;'>Status</b> {sg_status_list::text}",
+                    "<b style='color:#18A7E3;'>Status</b> {sg_status_list::displaytext}",
                 ]
             ),
             "thumbnail": True,
@@ -126,7 +126,7 @@ class UIConfig(HookBaseClass):
         """
         return {
             "top_left": "<span style='color:#18A7E3;'>Version</span> {version_number}",
-            "top_right": "{sg_status_list::text}",
+            "top_right": "{sg_status_list::displaytext}",
             "body": "<br/>".join(
                 [
                     "<span style='color:#18A7E3;'>Date</span> {created_at}",
