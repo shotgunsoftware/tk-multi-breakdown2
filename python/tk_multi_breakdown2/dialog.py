@@ -121,7 +121,7 @@ class AppDialog(QtGui.QWidget):
         list_item_delegate = self._create_file_item_delegate()
 
         # Filtering
-        # TODO: create a filtering widget that will handle the individual filter items
+        # TODO: create a filtering widget that will handle all the filter items for us.
         self._display_text_filter = FilterItem(
             FilterItem.TYPE_STR,
             FilterItem.OP_IN,
@@ -142,41 +142,30 @@ class AppDialog(QtGui.QWidget):
             filter_role=FileModel.STATUS_ROLE,
             filter_value=FileModel.STATUS_OUT_OF_SYNC,
         )
-        locked_filter = FilterItem(
-            FilterItem.TYPE_NUMBER,
-            FilterItem.OP_EQUAL,
-            filter_role=FileModel.STATUS_ROLE,
-            filter_value=FileModel.STATUS_LOCKED,
-        )
-        # TODO create custome widget to set on a QWidgetAction to then add to the menu, since the QAction
-        # is limited and will not display both checkbox and icon at the same time. As well, if we want
-        # to customize each filter action more, using the QWidgetAction is the way to go.
-        # out_of_date_action = QtGui.QWidgetAction(self)
-        # out_of_date_action.setDefaultWidget(b)
+        # TODO uncomment this implement file "locking" functionality
+        # locked_filter = FilterItem(
+        #     FilterItem.TYPE_NUMBER,
+        #     FilterItem.OP_EQUAL,
+        #     filter_role=FileModel.STATUS_ROLE,
+        #     filter_value=FileModel.STATUS_LOCKED,
+        # )
+        # locked_action = QtGui.QAction("Reference Overrides", self)
         out_of_date_action = QtGui.QAction(
-            # FIXME can't show both icon and checkbox - for now just show the checkbox since these icons do
-            # not have an active/inactive state
+            # FIXME can't show both icon and checkbox with QAction
             # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-outofdate.png"),
             "Out of Date",
             self,
         )
-        locked_action = QtGui.QAction(
-            # FIXME can't show both icon and checkbox - for now just show the checkbox since these icons do
-            # not have an active/inactive state
-            # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-override.png"),
-            "Reference Overrides",
-            self,
-        )
         up_to_date_action = QtGui.QAction(
-            # FIXME can't show both icon and checkbox - for now just show the checkbox since these icons do
-            # not have an active/inactive state
+            # FIXME can't show both icon and checkbox wtih QAction
             # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-uptodate.png"),
             "Up to Date",
             self,
         )
         self._status_actions = {
             out_of_date_action: out_of_date_status_filter,
-            locked_action: locked_filter,
+            # TODO uncomment this implement file "locking" functionality
+            # locked_action: locked_filter,
             up_to_date_action: up_to_date_status_filter,
         }
 
@@ -185,13 +174,9 @@ class AppDialog(QtGui.QWidget):
             action.triggered.connect(lambda checked: self._update_filters())
 
         sorted_actions = sorted(self._status_actions, key=lambda item: item.text())
-        # m = QtGui.QMenu(self)
-        m = shotgun_menus.ShotgunMenu(self)
-        m.add_group(sorted_actions, "STATUS")
-        # m.addSection("STATUS")
-        # m.addActions(sorted_actions)
-
-        self._ui.filter_btn.setMenu(m)
+        filter_menu = shotgun_menus.ShotgunMenu(self)
+        filter_menu.add_group(sorted_actions, "STATUS")
+        self._ui.filter_btn.setMenu(filter_menu)
 
         # Set up the view modes
         self.view_modes = [
