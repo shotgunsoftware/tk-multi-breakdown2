@@ -57,11 +57,11 @@ class BreakdownManager(object):
         )
 
         for obj in scene_objects:
-            file_item = FileItem(obj["node_name"], obj["node_type"], obj["path"])
-            file_item.extra_data = obj.get("extra_data")
             if obj["path"] in published_files.keys():
+                file_item = FileItem(obj["node_name"], obj["node_type"], obj["path"])
+                file_item.extra_data = obj.get("extra_data")
                 file_item.sg_data = published_files[obj["path"]]
-            file_items.append(file_item)
+                file_items.append(file_item)
 
         return file_items
 
@@ -88,6 +88,7 @@ class BreakdownManager(object):
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
 
+        :param extra_fields: A list of Shotgun fields to append to the Shotgun query fields.
         :param item: :class`FileItem` object we want to get the published file history
         :param extra_fields: A list of Shotgun fields to append to the Shotgun query
                              for published files.
@@ -119,9 +120,12 @@ class BreakdownManager(object):
             order=[{"direction": "desc", "field_name": "version_number"}],
         )
 
-        item.latest_published_file = pfs[0]
+        if pfs:
+            item.latest_published_file = pfs[0]
+            return pfs
 
-        return pfs
+        # Return empty list indicating no publish file history was found.
+        return []
 
     def update_to_latest_version(self, item):
         """
@@ -143,7 +147,7 @@ class BreakdownManager(object):
         :param sg_data: Dictionary of Shotgun data representing the published file we want to update the item to
         """
 
-        if not sg_data["path"]["local_path"]:
+        if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return
 
         # store the current path into the extra_data in case we need to access it later in the hook
