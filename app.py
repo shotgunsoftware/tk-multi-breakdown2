@@ -42,3 +42,18 @@ class SceneBreakdown2(sgtk.platform.Application):
         """
 
         return self._manager_class(self)
+
+    def _log_metric_viewed_app(self):
+        """
+        Module local metric logging helper method for the "Logged In" metric.
+        """
+
+        try:
+            from sgtk.util.metrics import EventMetric
+
+            EventMetric.log(
+                EventMetric.GROUP_APP, "Logged In", log_once=True, bundle=self
+            )
+        except:
+            # Ignore all errors, e.g. using a core that does not support metrics.
+            pass

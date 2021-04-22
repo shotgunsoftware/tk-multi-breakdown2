@@ -41,8 +41,7 @@ class FileWidget(QtGui.QWidget):
         self._ui.setupUi(self)
 
         # setup some stylesheet
-        p = QtGui.QPalette()
-        highlight_col = p.color(QtGui.QPalette.Active, QtGui.QPalette.Highlight)
+        highlight_col = self.palette().highlight().color(QtGui.QPalette.Active)
         self._highlight_str = "rgb(%s, %s, %s)" % (
             highlight_col.red(),
             highlight_col.green(),
