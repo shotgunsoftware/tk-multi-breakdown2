@@ -16,7 +16,7 @@ A hook to define how Published Files are queried; e.g. specifiy filters, fields,
 hook_ui_config:
 ---------------
 
-A simple hook to customize the display of the view and details widget. When the application displays the items in the main file view, the right-hand panel details widget and history view, it will call this hook in to determine which data to display for that particular widget and how it should be formatted.
+A simple hook to customize the display of the view and details widget. When the application displays the items in the main file view, the right-hand panel details widget and history view, it will call this hook to determine which data to display for that particular widget and how it should be formatted.
 
 **Methods:**
 
@@ -47,14 +47,14 @@ What this templated string does:
 Shotgun Token Resolution and Formatting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Shogun token resolution will convert the values defined like, ``{token}``, into formatted strings using Shotgun data. These token values can be defiend using the following format::
+The Shogun token resolution will convert the values defined like, ``{token}``, into formatted strings using Shotgun data. These token values can be defined using the following format::
 
     {[preroll]shotgun.field.name|sg_field_name_fallback::directive[postroll]}
 
 **Formatting Options:**
 
     Simple format: {field}
-      - Example, ``{code}`` wil lbe substituted with the entity's code value
+      - Example, ``{code}`` will be substituted with the entity's code value
 
     Deep links: {field1.field1_type.field_of_field1}
       - Example, ``{sg_sequence.Sequence.code}`` will be substituted with the entity's Sequence code value
@@ -70,12 +70,12 @@ The Shogun token resolution will convert the values defined like, ``{token}``, i
     Pre/Post Rolls: {[pre_roll]...[post_roll]}
       - If a value is null, pre- and post-strings are omitted from the final result.
       - Pre roll example, ``{[Name: ]code}`` - If code is set, 'Name: xxx' will be printed out, otherwise nothing.
-      - Pre and Post rolle example, ``{[Name: ]code[<br>]}`` - Same as above but with a post line break
+      - Pre and Post roll example, ``{[Name: ]code[<br>]}`` - Same as above but with a post line break
 
 hook_ui_config_advanced:
 ------------------------
 
-This is an advanced hook to customize the UI. For a simpliefied appraoch, see the hook_ui_config.
+This is an advanced hook to customize the UI. For a simplified approach, see the hook_ui_config.
 
 When using this hook, it is beneficial to have an understanding of Object Oriented Programming (e.g. class inheritance) and how Qt Models work (e.g. including the use of proxy models). You may also need to reference the Breakdown2 classes, such as the FileModel, FileProxyModel and FileHistoryModel, as well as the tk-framework-qtwidgets utils module and ViewItemDelegate class.
 
@@ -171,7 +171,7 @@ get_file_item(index)
 Basic Examples
 ^^^^^^^^^^^^^^
 
-This example demonstrates how to get the index data form a model role, to display for the file item's title field. The ``DisplayRole`` data will be retrieved for each index and shown in the top-left of the file itemt text.
+This example demonstrates how to get the index data from a model role, to display for the file item's title field. The ``DisplayRole`` data will be retrieved for each index and shown in the top-left of the file item text.
 
 .. code-block:: python
 
@@ -205,4 +205,4 @@ We can take this example one step further by using the hook attribute ``_title_t
 
       return index.data(Qt.DisplayRole)
 
-Here, we are returning a tuple containing the template string defined in the simple hook_ui_config and the FileItem object's Shotgun data dictionary. The returned tuple will then be passed to the ``ViewItemDelegate`` class, which will process the template string with the provided Shotgun data and replace any ``{token}`` values in the tempalte string with the Shotgun data. See :ref:`sg_token_res` for more details.
+Here, we are returning a tuple containing the template string defined in the simple hook_ui_config and the FileItem object's Shotgun data dictionary. The returned tuple will then be passed to the ``ViewItemDelegate`` class, which will process the template string with the provided Shotgun data and replace any ``{token}`` values in the template string with the Shotgun data. See :ref:`sg_token_res` for more details.
