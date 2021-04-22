@@ -48,13 +48,30 @@ class ActionManager(object):
             return
 
         action = UpdateToSpecificVersionAction(
-            "Update to v%03d" % sg_data["version_number"], item, sg_data
+            "Override current reference with Version {version}".format(
+                version=sg_data["version_number"]
+            ),
+            item,
+            sg_data,
         )
 
         q_action = QtGui.QAction(action.label, parent)
         q_action.triggered[()].connect(lambda checked=False: action.execute())
 
         return q_action
+
+    @staticmethod
+    def execute_update_to_latest_action(items):
+        """
+        Execute the "Update to latest" action.
+
+        :param items: List of items to update to their latest versions
+        :type items: list<FileItem>
+        :return: The value returned by action method executed.
+        """
+
+        action = UpdateToLatestVersionAction("Update to latest", items)
+        return action.execute()
 
 
 class Action(object):
@@ -104,8 +121,10 @@ class UpdateToLatestVersionAction(Action):
         Update a list of items to their latest version.
         """
         for file_item, file_model_item in self._items:
+            # Call the manager to update the file item object to the latest version.
             self._manager.update_to_latest_version(file_item)
-            file_model_item.emitDataChanged()
+            # Update the model item with the updated file item.
+            file_model_item.setData(file_item, file_model_item.model().FILE_ITEM_ROLE)
 
 
 class UpdateToSpecificVersionAction(Action):
@@ -130,5 +149,7 @@ class UpdateToSpecificVersionAction(Action):
         """
         file_item = self._items[0]
         file_model_item = self._items[1]
+        # Call the manager to update the file item to the specific version.
         self._manager.update_to_specific_version(file_item, self._sg_data)
-        file_model_item.emitDataChanged()
+        # Update the model item with the updated file item
+        file_model_item.setData(file_item, file_model_item.model().FILE_ITEM_ROLE)
