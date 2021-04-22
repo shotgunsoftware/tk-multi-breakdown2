@@ -23,4 +23,5 @@ Customizations
     :maxdepth: 2
 
     api
+    hooks
     engine-specific-notes
