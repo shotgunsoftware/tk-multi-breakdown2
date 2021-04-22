@@ -10,29 +10,37 @@ agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 not expressly granted therein are reserved by Shotgun Software Inc.
 */
 
-/* Styling for FileGroupWidget in the files view */
+QToolButton#filter_btn,
+QToolButton#up_to_date_filter_btn,
+QToolButton#out_of_date_filter_btn,
+QToolButton#details_button,
+QToolButton#thumbnail_view_btn,
+QToolButton#grid_view_btn,
+QToolButton#list_view_btn
+{
+  border: none;
+  outline: none;
+  padding: 4px;
+}
+QToolButton#filter_btn:checked,
+QToolButton#up_to_date_filter_btn:checked,
+QToolButton#out_of_date_filter_btn:checked,
+QToolButton#details_button:checked,
+QToolButton#thumbnail_view_btn:checked,
+QToolButton#grid_view_btn:checked,
+QToolButton#list_view_btn:checked,
+QToolButton#filter_btn:hover,
+QToolButton#up_to_date_filter_btn:hover,
+QToolButton#out_of_date_filter_btn:hover,
+QToolButton#details_button:hover,
+QToolButton#thumbnail_view_btn:hover,
+QToolButton#grid_view_btn:hover,
+QToolButton#list_view_btn:hover
+{
+  background-color: palette(light);
+  border-radius: 4px;
+}
 
-FileGroupWidget #header {
-    font-size: 14px;
-}
-FileGroupWidget #expand_check_box::indicator {
-    width: 12;
-    height: 12;
-}
-FileGroupWidget #expand_check_box {
-    font: 14px;
-}
-FileGroupWidget #expand_check_box::indicator:unchecked {
-    image: url(:/tk-multi-breakdown2/tree_arrow_collapsed.png);
-}
-FileGroupWidget #expand_check_box::indicator:unchecked:hover {
-    image: url(:/tk-multi-breakdown2/tree_arrow_collapsed.png);
-}
-FileGroupWidget #expand_check_box::indicator:checked {
-    image: url(:/tk-multi-breakdown2/tree_arrow_expanded.png);
-}
-
-/* Styling for FileWidget in the files view */
-FileWidget #box {
-    border: none;
+QToolButton#filter_btn::menu-indicator{
+  width: 8px;
 }

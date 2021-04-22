@@ -13,7 +13,7 @@ import sgtk
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
-class UIConfiguration(HookBaseClass):
+class UIConfig(HookBaseClass):
     """
     Controls the widget and fields configuration.
 
@@ -71,12 +71,22 @@ class UIConfiguration(HookBaseClass):
         :returns: Dictionary containing template strings
         """
         return {
-            "top_left": "<b>{name}</b>",
+            "top_left": "<span style='font-size: 13px; font-weight: bold;'>{name}</span>",
             "top_right": "",
-            "body": "<b style='color:#18A7E3;'>Node</b> {<NODE_NAME>}<br/>"
-            "<b style='color:#18A7E3;'>Version</b> {version_number}<br/>"
-            "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}<br/>"
-            "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}",
+            "body": "<br/>".join(
+                [
+                    "<span style='color:#18A7E3;'>Node</span> {<NODE_NAME>}",
+                    "<span style='color:#18A7E3;'>Version</span> {version_number}",
+                    "<span style='color:#18A7E3;'>Entity</span> {entity::showtype}",
+                    "<span style='color:#18A7E3;'>Type</span> {published_file_type.PublishedFileType.code}",
+                    "<span style='color:#18A7E3;'>Status</span> {sg_status_list::displaytext}",
+                ]
+            ),
+            "thumbnail_body": "<br/>".join(
+                [
+                    "<span style='color: rgba(200, 200, 200, 40%);'>{published_file_type.PublishedFileType.code}</span>",
+                ]
+            ),
             "thumbnail": True,
         }
 
@@ -94,10 +104,15 @@ class UIConfiguration(HookBaseClass):
         """
         return {
             "header": "",
-            "body": "<b style='color:#18A7E3;'>Name</b> {name}<br/>"
-            "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}<br/>"
-            "<b style='color:#18A7E3;'>Version</b> {version_number}<br/>"
-            "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}<br/>",
+            "body": "<br/>".join(
+                [
+                    "<b style='color:#18A7E3;'>Name</b> {name}",
+                    "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}",
+                    "<b style='color:#18A7E3;'>Version</b> {version_number}",
+                    "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}",
+                    "<b style='color:#18A7E3;'>Status</b> {sg_status_list::displaytext}",
+                ]
+            ),
             "thumbnail": True,
         }
 
@@ -115,8 +130,13 @@ class UIConfiguration(HookBaseClass):
         :returns: Dictionary containing template strings
         """
         return {
-            "top_left": "<b style='color:#18A7E3;'>Version {version_number}</b> <small>{created_at}</small>",
-            "top_right": "",
-            "body": "<small style='font-style: italic;'>{created_by.HumanUser.name}: </small>{description}<br/>",
+            "top_left": "<span style='color:#18A7E3;'>Version</span> {version_number}",
+            "top_right": "{sg_status_list::displaytext}",
+            "body": "<br/>".join(
+                [
+                    "<span style='color:#18A7E3;'>Date</span> {created_at}",
+                    "<span style='font-size: small; font-style: italic;'>{created_by.HumanUser.name}: {description}</span>",
+                ]
+            ),
             "thumbnail": True,
         }
