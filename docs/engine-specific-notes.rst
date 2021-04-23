@@ -1,23 +1,50 @@
 Toolkit Engine Notes
 ####################
 
-3ds Max (tk-3dsmax)
-*******************
-
 Alias (tk-alias)
 ****************
+
+.. toctree::
+    :maxdepth: 1
+
+    tk-alias
 
 Houdini (tk-houdini)
 ********************
 
+.. toctree::
+    :maxdepth: 1
+
+    tk-houdini
+
 Mari (tk-mari)
 **************
+
+.. toctree::
+    :maxdepth: 1
+
+    tk-mari
 
 Maya (tk-maya)
 **************
 
-Nuke Studio (tk-nukestudio)
-***************************
+.. toctree::
+    :maxdepth: 1
+
+    tk-maya
+
+Nuke & Nuke Studio (tk-nuke & tk-nukestudio)
+********************************************
+
+.. toctree::
+    :maxdepth: 1
+
+    tk-nuke
 
 VRED (tk-vred)
 **************
+
+.. toctree::
+    :maxdepth: 1
+
+    tk-vred
