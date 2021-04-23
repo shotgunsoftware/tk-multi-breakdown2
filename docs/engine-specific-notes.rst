@@ -16,18 +16,8 @@ Mari (tk-mari)
 Maya (tk-maya)
 **************
 
-.. toctree::
-    :maxdepth: 1
-
-    tk-maya
-
 Nuke Studio (tk-nukestudio)
 ***************************
 
 VRED (tk-vred)
 **************
-
-.. toctree::
-    :maxdepth: 1
-
-    tk-vred

@@ -12,23 +12,30 @@ configuration:
 
     hook_scene_operations:
         type: hook
-        description:
         default_value: "{self}/{engine_name}_scene_operations.py"
-
-    hook_ui_configurations:
-        type: hook
-        description:
-        default_value: "{self}/ui_configurations.py"
+        description: Specify an engine specific hook that, if desired, handles detecting the scene references.
 
     hook_get_published_files:
         type: hook
-        description:
         default_value: "{self}/get_published_files.py"
+        description: Specificy a hook that, if desired, defines how Pubilshed File entites are retrieved
+                     from the Shotgun API.
+
+    hook_ui_config:
+        type: hook
+        description:
+        default_value: "{self}/ui_config.py"
+        description: Specify a hook that, if desired, configures the UI.
+
+    hook_ui_config_advanced:
+        type: hook
+        default_value: "{self}/ui_config_advanced.py"
+        description: Specify an advanced hook that, if desired, configures the UI.
 
     version_history:
         type: int
-        description:
         default_value: 5
+        description:
 
     published_file_fields:
         type: list
