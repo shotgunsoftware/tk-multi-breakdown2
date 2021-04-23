@@ -10,14 +10,19 @@ Improvements beyond the original Breakdown App
 ==============================================
 
 * Ability to manage references in multiple Shotgun Projects
+* Ability to override to a version of a PublishedFile that is not the latest
+* Get version history file information
+* Multiple configurable and scalable viewing styles available
 
 Default configuration behaviour
 ===============================
 
+* To be completed
+
 Customizations
 ==============
 
-.. image:: ./images/open_diagram.png
+* To be completed
 
 .. toctree::
     :maxdepth: 2
