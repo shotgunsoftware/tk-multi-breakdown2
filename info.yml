@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,7 +6,7 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 configuration:
 
@@ -23,7 +23,6 @@ configuration:
 
     hook_ui_config:
         type: hook
-        description:
         default_value: "{self}/ui_config.py"
         description: Specify a hook that, if desired, configures the UI.
 
@@ -35,7 +34,7 @@ configuration:
     version_history:
         type: int
         default_value: 5
-        description:
+        description: Number of versions to display in the file history information window.
 
     published_file_fields:
         type: list
@@ -45,15 +44,15 @@ configuration:
                      These fields will also be used when scanning the scene to get the current scene elements.
 
 # the Shotgun fields that this app needs in order to operate correctly
-requires_shotgun_fields:
+requires_shotgun_fields: # TODO: Is linked_projects.Asset required?
 
 # More verbose description of this item
-display_name: "Scene Breakdown"
-description: "Tools to see what in the scene is out of date."
+display_name: "Scene Breakdown2"
+description: "Tools to manage referenced PublishedFiles in your scene."
 
 # Required minimum versions for this item to run
-requires_shotgun_version:
-requires_core_version: "v0.19.4"
+requires_shotgun_version: # TODO: Find when linked_projects was released
+requires_core_version: "v0.19.19" # TODO: waiting for release of v0.19.20
 requires_engine_version:
 
 # this app works in all engines - it does not contain
@@ -62,5 +61,5 @@ supported_engines:
 
 # the frameworks required to run this app
 frameworks:
-    - {"name": "tk-framework-shotgunutils", "version": "v5.x.x"}
-    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x"}
+    - {"name": "tk-framework-shotgunutils", "version": "v5.x.x", "minimum_version": "v5.7.9"}
+    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.9.4"} # TODO: waiting for release
