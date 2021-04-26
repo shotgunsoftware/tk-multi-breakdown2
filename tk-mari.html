@@ -1,0 +1,403 @@
+
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Mari Default hook &mdash; tk-multi-breakdown2 v0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Maya Default hook" href="tk-maya.html" />
+    <link rel="prev" title="Houdini Default hook" href="tk-houdini.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+    <a href='http://developer.shotgunsoftware.com'>
+    
+        <img style='width: 191px;
+                height: 60px;
+                margin: 2px;
+                border-radius: 0px;
+                padding: 0px;'
+            src='_static/logo@2x.png'/>
+    
+    </a>
+    
+
+          
+            <a href="index.html" class="icon icon-home"> tk-multi-breakdown2
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+    
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api.html">Breakdown API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hooks.html">Breakdown Hooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="engine-specific-notes.html">Toolkit Engine Notes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="engine-specific-notes.html#alias-tk-alias">Alias (tk-alias)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine-specific-notes.html#houdini-tk-houdini">Houdini (tk-houdini)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="engine-specific-notes.html#mari-tk-mari">Mari (tk-mari)</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Mari Default hook</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="engine-specific-notes.html#maya-tk-maya">Maya (tk-maya)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine-specific-notes.html#nuke-nuke-studio-tk-nuke-tk-nukestudio">Nuke &amp; Nuke Studio (tk-nuke &amp; tk-nukestudio)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine-specific-notes.html#vred-tk-vred">VRED (tk-vred)</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+    <a href='genindex.html'>Alphabetic Index</a>
+
+    <div style='margin-top: 50px;
+                margin-left: 10px;
+                margin-right: 10px;
+                padding: 10px;
+                color: #b3b3b3;
+                font-size: 70%;
+                border-radius: 3px;
+                background-color: #444;
+                line-height: 18px;
+                '>
+    <style>
+        a.custom_post_menu { display: inline;
+                             padding: 0px;
+                             text-decoration: underline; }
+    </style>
+
+    <b>tk-multi-breakdown2</b> v0.1.0.<br>
+    
+        This documentation is part of the Shotgun Pipeline Toolkit.
+    
+    For more information, please visit
+    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    The code associated with this documentation can be found
+    <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
+
+    </div>
+
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tk-multi-breakdown2</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="engine-specific-notes.html">Toolkit Engine Notes</a> &raquo;</li>
+        
+      <li>Mari Default hook</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mari-default-hook">
+<h1>Mari Default hook<a class="headerlink" href="#mari-default-hook" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright (c) 2021 Shotgun Software Inc.</span>
+<span class="c1">#</span>
+<span class="c1"># CONFIDENTIAL AND PROPRIETARY</span>
+<span class="c1">#</span>
+<span class="c1"># This work is provided &quot;AS IS&quot; and subject to the Shotgun Pipeline Toolkit</span>
+<span class="c1"># Source Code License included in this distribution package. See LICENSE.</span>
+<span class="c1"># By accessing, using, copying or modifying this work you indicate your</span>
+<span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
+<span class="c1"># not expressly granted therein are reserved by Shotgun Software Inc.</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">sgtk</span>
+<span class="kn">from</span> <span class="nn">sgtk</span> <span class="kn">import</span> <span class="n">TankError</span>
+
+<span class="kn">import</span> <span class="nn">mari</span>
+
+<span class="n">HookBaseClass</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">get_hook_baseclass</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">BreakdownSceneOperations</span><span class="p">(</span><span class="n">HookBaseClass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Breakdown operations for Mari.</span>
+
+<span class="sd">    This implementation handles detection of mari geometry versions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The scan scene method is executed once at startup and its purpose is</span>
+<span class="sd">        to analyze the current scene and return a list of references that are</span>
+<span class="sd">        to be potentially operated on.</span>
+
+<span class="sd">        The return data structure is a list of dictionaries. Each scene reference</span>
+<span class="sd">        that is returned should be represented by a dictionary with three keys:</span>
+
+<span class="sd">        - &quot;node_name&quot;: The name of the &#39;node&#39; that is to be operated on. Most DCCs have</span>
+<span class="sd">          a concept of a node, path or some other way to address a particular</span>
+<span class="sd">          object in the scene.</span>
+<span class="sd">        - &quot;node_type&quot;: The object type that this is. This is later passed to the</span>
+<span class="sd">          update method so that it knows how to handle the object.</span>
+<span class="sd">        - &quot;path&quot;: Path on disk to the referenced object.</span>
+<span class="sd">        - &quot;extra_data&quot;: Optional key to pass some extra data to the update method</span>
+<span class="sd">          in case we&#39;d like to access them when updating the nodes.</span>
+
+<span class="sd">        Toolkit will scan the list of items, see if any of the objects matches</span>
+<span class="sd">        a published file and try to determine if there is a more recent version</span>
+<span class="sd">        available. Any such versions are then displayed in the UI as out of date.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mari</span><span class="o">.</span><span class="n">projects</span><span class="o">.</span><span class="n">current</span><span class="p">():</span>
+            <span class="c1"># can&#39;t do anything if we don&#39;t have an open project!</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="c1"># find all geo in the current project using the engine utility method:</span>
+        <span class="n">mari_engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span>
+        <span class="n">all_geo</span> <span class="o">=</span> <span class="n">mari_engine</span><span class="o">.</span><span class="n">list_geometry</span><span class="p">()</span>
+
+        <span class="c1"># now, for all geo, find all versions:</span>
+        <span class="n">found_versions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">geo</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geo&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">all_geo</span><span class="p">]:</span>
+
+            <span class="c1"># get all versions for this geo:</span>
+            <span class="n">all_geo_versions</span> <span class="o">=</span> <span class="n">mari_engine</span><span class="o">.</span><span class="n">list_geometry_versions</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span>
+
+            <span class="c1"># now find the publish path for the current version:</span>
+            <span class="n">current_version</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">currentVersion</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">geo_version</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;geo_version&quot;</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_geo_versions</span>
+            <span class="p">]:</span>
+                <span class="k">if</span> <span class="n">geo_version</span> <span class="o">==</span> <span class="n">current_version</span><span class="p">:</span>
+                    <span class="c1"># found the current version :)</span>
+                    <span class="n">found_versions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">{</span><span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">geo</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="s2">&quot;geo&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span>
+                    <span class="p">)</span>
+                    <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">found_versions</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform replacements given a number of scene items passed from the app.</span>
+
+<span class="sd">        Once a selection has been performed in the main UI and the user clicks</span>
+<span class="sd">        the update button, this method is called.</span>
+
+<span class="sd">        :param item: Dictionary on the same form as was generated by the scan_scene hook above.</span>
+<span class="sd">                     The path key now holds the path that the node should be updated *to* rather than the current path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mari_engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span>
+
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">]</span>
+        <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">]</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;geo&quot;</span><span class="p">:</span>
+
+            <span class="n">geo</span> <span class="o">=</span> <span class="n">mari</span><span class="o">.</span><span class="n">geo</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">geo</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TankError</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to find geometry &#39;</span><span class="si">%s</span><span class="s2">&#39; in the current project&quot;</span> <span class="o">%</span> <span class="n">node_name</span>
+                <span class="p">)</span>
+
+            <span class="n">already_loaded</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">all_geo_versions</span> <span class="o">=</span> <span class="n">mari_engine</span><span class="o">.</span><span class="n">list_geometry_versions</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">geo_version</span><span class="p">,</span> <span class="n">geo_path</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;geo_version&quot;</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_geo_versions</span>
+            <span class="p">]:</span>
+                <span class="k">if</span> <span class="n">geo_path</span> <span class="o">==</span> <span class="n">path</span><span class="p">:</span>
+                    <span class="c1"># we already have this version loaded so just set it as current</span>
+                    <span class="n">geo</span><span class="o">.</span><span class="n">setCurrentVersion</span><span class="p">(</span><span class="n">geo_version</span><span class="o">.</span><span class="n">name</span><span class="p">())</span>
+                    <span class="n">already_loaded</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">already_loaded</span><span class="p">:</span>
+                <span class="c1"># add the new version</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="s2">&quot;version_number&quot;</span><span class="p">]</span>
+                <span class="n">found_publishes</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">sgtk</span><span class="p">,</span> <span class="p">[</span><span class="n">path</span><span class="p">],</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span>
+                <span class="p">)</span>
+                <span class="n">sg_publish_data</span> <span class="o">=</span> <span class="n">found_publishes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_publish_data</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">TankError</span><span class="p">(</span>
+                        <span class="s2">&quot;Failed to find geometry &#39;</span><span class="si">%s</span><span class="s2">&#39; in the current project&quot;</span>
+                        <span class="o">%</span> <span class="n">node_name</span>
+                    <span class="p">)</span>
+                <span class="n">new_version</span> <span class="o">=</span> <span class="n">mari_engine</span><span class="o">.</span><span class="n">add_geometry_version</span><span class="p">(</span><span class="n">geo</span><span class="p">,</span> <span class="n">sg_publish_data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_version</span><span class="p">:</span>
+                    <span class="n">geo</span><span class="o">.</span><span class="n">setCurrentVersion</span><span class="p">(</span><span class="n">new_version</span><span class="o">.</span><span class="n">name</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tk-maya.html" class="btn btn-neutral float-right" title="Maya Default hook" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tk-houdini.html" class="btn btn-neutral float-left" title="Houdini Default hook" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Autodesk
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+  
+ 
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-2114792-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+
+</body>
+</html>
