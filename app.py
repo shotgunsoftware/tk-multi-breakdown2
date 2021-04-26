@@ -52,7 +52,10 @@ class SceneBreakdown2(sgtk.platform.Application):
             from sgtk.util.metrics import EventMetric
 
             EventMetric.log(
-                EventMetric.GROUP_APP, "Logged In", log_once=True, bundle=self
+                EventMetric.GROUP_TOOLKIT,
+                "Opened Breakdown2 App",
+                log_once=False,
+                bundle=self,
             )
         except:
             # Ignore all errors, e.g. using a core that does not support metrics.
