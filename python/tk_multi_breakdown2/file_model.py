@@ -377,17 +377,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
     def process_files(self):
         """
-        Scan the current scene to get all the items we could perform actions on and for each item, build a model item
-        and a data structure to represent them.
+        Scan the current scene to get all the items we could perform actions on and for each item,
+        build a model item and a data structure to represent them.
         """
 
         # scan the current scene
         file_items = self._manager.scan_scene(extra_fields=self._published_file_fields)
 
         for file_item in file_items:
-
-            # if the item doesn't have any associated shotgun data, it means that the file is not a Published File so
-            # skip it
+            # if the item doesn't have any associated shotgun data, it means that the file is not a
+            # Published File so skip it
             if not file_item.sg_data:
                 continue
 
