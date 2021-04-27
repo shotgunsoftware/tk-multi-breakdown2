@@ -336,6 +336,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self._on_data_retriever_work_failed
         )
 
+        # Get all the required fields when querying for published files. Call the hook to get
+        # them once and store them, since they are not expected to not change within this session.
+        self._published_file_fields = get_ui_published_file_fields(self._app)
+
         # Add additional roles defined by the ViewItemRolesMixin class.
         self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
 
@@ -395,8 +399,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         """
 
         # scan the current scene
-        extra_fields = get_ui_published_file_fields(self._app)
-        file_items = self._manager.scan_scene(extra_fields=extra_fields)
+        file_items = self._manager.scan_scene(extra_fields=self._published_file_fields)
 
         for file_item in file_items:
 
