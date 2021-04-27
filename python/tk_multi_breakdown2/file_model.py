@@ -50,8 +50,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         FILE_ITEM_EXTRA_DATA_ROLE,  # Convenience role for the file item extra_data field
         FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,  # Convenience role for the file item latest_published_file field
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
+        FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 11)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 12)
 
     # File item status enum
     (
@@ -144,6 +145,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 FileModel.FILE_ITEM_SG_DATA_ROLE,
                 FileModel.FILE_ITEM_EXTRA_DATA_ROLE,
                 FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,
+                FileModel.FILE_ITEM_CREATED_AT_ROLE,
+                FileModel.FILE_ITEM_TAGS_ROLE,
             ):
                 # File item specific roles, just return None.
                 return None
@@ -227,6 +230,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
                 if role == FileModel.FILE_ITEM_CREATED_AT_ROLE:
                     return self._file_item.sg_data.get("created_at")
+
+                if role == FileModel.FILE_ITEM_TAGS_ROLE:
+                    return self._file_item.sg_data.get(
+                        "tags"
+                    ) or self._file_item.sg_data.get("tag_list")
 
                 if role == FileModel.STATUS_ROLE:
                     # NOTE if we ever need to know if the file is up to date or not, while
