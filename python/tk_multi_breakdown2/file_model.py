@@ -29,8 +29,8 @@ ViewItemRolesMixin = delegates.ViewItemRolesMixin
 
 class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     """
-    The FileModel maintains a model of all the files found when parsing the current scene. Details of each file are
-    contained in a FileItem instance and presented as a single model item.
+    The FileModel maintains a model of all the files found when parsing the current scene. Details
+    of each file are contained in a FileItem instance and presented as a single model item.
 
     File items are grouped into groups defined by the app configuration.
     """
