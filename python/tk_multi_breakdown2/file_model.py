@@ -79,16 +79,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         The base model item class for the FileModel.
         """
 
-        def __init__(self, *args, **kwargs):
-            """
-            Constructor
-
-            :param args: The positional arguments to pass to the :class:`sgtk.platform.qt.QtGui.QStandardItem` constructor.
-            :pram kwargs: The keyword arguments to the pass to the :class:`sgtk.platform.qt.QtGui.QStandardItem` constructor.
-            """
-
-            QtGui.QStandardItem.__init__(self, *args, **kwargs)
-
         def __eq__(self, other):
             """
             Overload the equality comparison operator to allow comparing BaseModelItem objects.
@@ -134,12 +124,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         """
         Model item that represents a group in the model.
         """
-
-        def __init__(self, text):
-            """
-            :param text: String used for the label/display role for this item
-            """
-            QtGui.QStandardItem.__init__(self, text)
 
         def data(self, role):
             """
