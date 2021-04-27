@@ -421,8 +421,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
     def is_loading(self, model_item):
         """
-        Return True if the item in the model is in a loading state. An item is considered to be loading if
-        the model item is found in the `_pending_version_requests` or the `_pending_thumbnail_requests`.
+        Return True if the item in the model is in a loading state. An item is considered to be
+        loading if the model item is found in the `_pending_version_requests` or
+        `_pending_thumbnail_requests`.
 
         :param model_item: The item in the model.
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
