@@ -181,15 +181,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         Model item that represents a single FileItem in the model.
         """
 
-        def __init__(self, text, file_item=None):
+        def __init__(self, *args, **kwargs):
             """
-            :param text: String used for the label/display role for this item
-            :param file_item: The file item data for this item
+            Constructor. Initialize the file item data to None, the file item data will be
+            set in the setData method using the FileModel.FILE_ITEM_ROLE.
             """
 
-            QtGui.QStandardItem.__init__(self, text)
-
-            self._file_item = file_item
+            super(FileModel.FileModelItem, self).__init__(*args, **kwargs)
+            self._file_item = None
 
         def data(self, role):
             """
@@ -402,21 +401,22 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             else:
                 group_item = self._group_items[project["id"]]
 
-            file_model_item = FileModel.FileModelItem("", file_item)
+            file_model_item = FileModel.FileModelItem()
+            # Add the model item to the group before setting and data on the item, to ensure it has
+            # a model associated with it.
+            group_item.appendRow(file_model_item)
             # Set a placeholder icon, until the thumbnail is loaded.
             file_model_item.setIcon(QtGui.QIcon())
+            # Set the file item data, an async request will be made to get the thumbnail.
+            file_model_item.setData(file_item, FileModel.FILE_ITEM_ROLE)
 
-            group_item.appendRow(file_model_item)
-
-            # for each item, we need to determine the latest version in order to know if the file is up-to-date or not
+            # for each item, we need to determine the latest version in order to know if the file
+            # is up-to-date or not
             task_id = self._bg_task_manager.add_task(
                 self._manager.get_latest_published_file,
                 task_kwargs={"item": file_item},
             )
             self._pending_version_requests[task_id] = file_model_item
-
-            # finally, download the file thumbnail
-            self.request_thumbnail(file_model_item, file_item)
 
         self.files_processed.emit()
 
