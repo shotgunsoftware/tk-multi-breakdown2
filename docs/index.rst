@@ -9,6 +9,9 @@ tk-multi-breakdown2 (Breakdown2) is a customizable Toolkit App that allows studi
 Improvements beyond the original Breakdown App
 ==============================================
 
+.. important::
+    We now use Shotgun instead of the filesystem to determine the versions of PublishedFiles available.
+
 * Ability to manage references in multiple Shotgun Projects
 * Ability to override to a version of a PublishedFile that is not the latest
 * Get version history file information
@@ -17,12 +20,12 @@ Improvements beyond the original Breakdown App
 Default configuration behaviour
 ===============================
 
-* To be completed
+Please see the :ref:`engine-specific-notes` section to see the default hooks provided.
 
 Customizations
 ==============
 
-* To be completed
+Please read the :ref:`breakdown-hooks` section of this documentation.
 
 .. toctree::
     :maxdepth: 2
