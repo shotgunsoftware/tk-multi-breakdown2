@@ -19,7 +19,7 @@ configuration:
         type: hook
         default_value: "{self}/get_published_files.py"
         description: Specificy a hook that, if desired, defines how Pubilshed File entites are retrieved
-                     from the Shotgun API.
+                     from the ShotGrid API.
 
     hook_ui_config:
         type: hook
@@ -40,7 +40,7 @@ configuration:
         type: list
         values: {type: str}
         allows_empty: True
-        description: List of Published File fields returned when querying Shotgun for published file history.
+        description: List of Published File fields returned when querying ShotGrid for published file history.
                      These fields will also be used when scanning the scene to get the current scene elements.
 
 # the Shotgun fields that this app needs in order to operate correctly

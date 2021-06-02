@@ -64,7 +64,7 @@ class BreakdownSceneOperations(HookBaseClass):
 
             if not node_sg_data:
                 self.logger.error(
-                    "Couldn't find a Shotgun Published File entry for {}".format(
+                    "Couldn't find a ShotGrid Published File entry for {}".format(
                         r.source_path
                     )
                 )

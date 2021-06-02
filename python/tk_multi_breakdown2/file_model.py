@@ -400,7 +400,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         for file_item in file_items:
 
-            # if the item doesn't have any associated shotgun data, it means that the file is not a Published File so
+            # if the item doesn't have any associated ShotGrid data, it means that the file is not a Published File so
             # skip it
             if not file_item.sg_data:
                 continue
