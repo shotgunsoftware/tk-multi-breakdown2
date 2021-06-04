@@ -171,7 +171,7 @@ class UIConfigAdvanced(HookClass):
         file_item = self.get_file_item(index)
         if file_item:
             if self._title_template_string:
-                # Search and replace any non-shotgun data fields
+                # Search and replace any non-ShotGrid data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._title_template_string
                 )
@@ -208,7 +208,7 @@ class UIConfigAdvanced(HookClass):
 
         if file_item:
             if self._subtitle_template_string:
-                # Search and replace any non-shotgun data fields
+                # Search and replace any non-ShotGrid data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._subtitle_template_string
                 )
@@ -336,7 +336,7 @@ class UIConfigAdvanced(HookClass):
         file_item = self.get_file_item(index)
         if file_item:
             if self._details_template_string:
-                # Search and replace any non-shotgun data fields
+                # Search and replace any non-ShotGrid data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._details_template_string
                 )
@@ -359,7 +359,7 @@ class UIConfigAdvanced(HookClass):
 
         file_item = self.get_file_item(index)
         if file_item and self._short_text_template_string:
-            # Search and replace any non-shotgun data fields
+            # Search and replace any non-ShotGrid data fields
             template_string = _resolve_file_item_tokens(
                 file_item, self._short_text_template_string
             )
@@ -600,7 +600,7 @@ def _resolve_tokens(token, value, text):
 
 def _resolve_file_item_tokens(file_item, template_string):
     """
-    Convenience method to resolve any File item (non-shotgun) specific fields.
+    Convenience method to resolve any File item (non-ShotGrid) specific fields.
     """
 
     for token in ["NODE_NAME", "PATH"]:
