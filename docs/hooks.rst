@@ -45,7 +45,8 @@ What this templated string does:
 .. _sg_token_res:
 
 ShotGrid Token Resolution and Formatting
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 The ShotGrid token resolution will convert the values defined like, ``{token}``, into formatted strings using Shotgun data. These token values can be defined using the following format::
 
