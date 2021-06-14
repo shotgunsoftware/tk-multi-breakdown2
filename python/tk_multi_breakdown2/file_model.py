@@ -13,6 +13,7 @@ from sgtk import TankError
 from sgtk.platform.qt import QtGui, QtCore
 
 from .utils import get_ui_published_file_fields
+from .framework_qtwidgets import FilterItem
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
@@ -41,6 +42,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     (
         STATUS_ROLE,  # The item status
+        STATUS_FILTER_DATA_ROLE,  # The item status data used for filtering
         REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
         FILE_ITEM_ROLE,  # The file item object
         FILE_ITEM_NODE_NAME_ROLE,  # Convenience role for the file item node_name field
@@ -52,7 +54,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
         FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 12)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 13)
 
     # File item status enum
     (
@@ -68,6 +70,12 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             ":/tk-multi-breakdown2/icons/main-outofdate.png"
         ),
         STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/icons/main-override.png"),
+    }
+
+    FILE_ITEM_STATUS_NAMES = {
+        STATUS_UP_TO_DATE: "Up to Date",
+        STATUS_OUT_OF_SYNC: "Out of Date",
+        STATUS_LOCKED: "Locked",
     }
 
     # signal emitted once all the files have been processed
@@ -137,6 +145,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
 
             if role in (
+                FileModel.STATUS_FILTER_DATA_ROLE,
                 FileModel.REFERENCE_LOADED,
                 FileModel.FILE_ITEM_ROLE,
                 FileModel.FILE_ITEM_NODE_NAME_ROLE,
@@ -256,6 +265,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                         return FileModel.STATUS_OUT_OF_SYNC
 
                     return FileModel.STATUS_UP_TO_DATE
+
+                if role == FileModel.STATUS_FILTER_DATA_ROLE:
+                    status_value = self.data(FileModel.STATUS_ROLE)
+                    return {
+                        "status": {
+                            "name": FileModel.FILE_ITEM_STATUS_NAMES.get(status_value),
+                            "value": status_value,
+                            "icon": FileModel.FILE_ITEM_STATUS_ICONS.get(status_value),
+                        }
+                    }
 
                 if role == FileModel.VIEW_ITEM_LOADING_ROLE:
                     # Check the model is loading this item or not.
