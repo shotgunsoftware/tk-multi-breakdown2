@@ -26,13 +26,13 @@ class FileItem(object):
         :param extra_data: Dictionary containing additional information about this file
         """
 
-        self.node_name = node_name
-        self.node_type = node_type
-        self.path = path
-        self.sg_data = sg_data
-        self.extra_data = extra_data
-        self.latest_published_file = None
-        self.locked = False
+        self._node_name = node_name
+        self._node_type = node_type
+        self._path = path
+        self._sg_data = sg_data
+        self._extra_data = extra_data
+        self._latest_published_file = None
+        self._locked = False
 
     @property
     def highest_version_number(self):
@@ -40,10 +40,70 @@ class FileItem(object):
         :return: The highest version number available in the Shotgun database for this file
         """
 
-        if self.latest_published_file:
-            return self.latest_published_file.get("version_number")
-        else:
-            return None
+        if self._latest_published_file:
+            return self._latest_published_file.get("version_number")
+
+        return None
+
+    @property
+    def node_name(self):
+        """
+        Get the name of the file node.
+        """
+
+        return self._node_name
+
+    @node_name.setter
+    def node_name(self, value):
+        self._node_name = value
+
+    @property
+    def node_type(self):
+        """
+        Get the type of the file node.
+        """
+
+        return self._node_type
+
+    @node_type.setter
+    def node_type(self, value):
+        self._node_type = value
+
+    @property
+    def path(self):
+        """
+        Get the path on disk for this file item.
+        """
+
+        return self._path
+
+    @path.setter
+    def path(self, value):
+        self._path = value
+
+    @property
+    def locked(self):
+        """
+        Get whether or not this file item is locked.
+        """
+
+        return self._locked
+
+    @locked.setter
+    def locked(self, value):
+        self._locked = value
+
+    @property
+    def latest_published_file(self):
+        """
+        Get the latest published file for this file item.
+        """
+
+        return self._latest_published_file
+
+    @latest_published_file.setter
+    def latest_published_file(self, value):
+        self._latest_published_file = value
 
     def to_dict(self):
         """
