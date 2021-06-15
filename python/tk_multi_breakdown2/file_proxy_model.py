@@ -12,12 +12,12 @@ import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 
 from .file_model import FileModel
-from .framework_qtwidgets import TreeProxyModel
+from .framework_qtwidgets import FilterItemTreeProxyModel
 
 
-class FileProxyModel(TreeProxyModel):
+class FileProxyModel(FilterItemTreeProxyModel):
     """
-    A proxy model for the FileModel. Subclasses the TreeProxyModel that implements
+    A proxy model for the FileModel. Subclasses the FilterItemTreeProxyModel that implements
     generic filtering.
     """
 

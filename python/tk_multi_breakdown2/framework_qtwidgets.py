@@ -44,9 +44,9 @@ SearchWidget = search_widget.SearchWidget
 
 models = sgtk.platform.import_framework("tk-framework-qtwidgets", "models")
 HierarchicalFilteringProxyModel = models.HierarchicalFilteringProxyModel
+FilterItemTreeProxyModel = models.FilterItemTreeProxyModel
 
 filtering = sgtk.platform.import_framework("tk-framework-qtwidgets", "filtering")
 FilterItem = filtering.FilterItem
 FilterMenu = filtering.FilterMenu
 FilterMenuButton = filtering.FilterMenuButton
-TreeProxyModel = filtering.TreeProxyModel
