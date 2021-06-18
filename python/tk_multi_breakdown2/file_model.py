@@ -64,12 +64,19 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         STATUS_LOCKED,
     ) = range(4)
 
+    FILE_ITEM_STATUS_ICON_PATHS = {
+        STATUS_UP_TO_DATE: ":/tk-multi-breakdown2/icons/main-uptodate.png",
+        STATUS_OUT_OF_SYNC: ":/tk-multi-breakdown2/icons/main-outofdate.png",
+        STATUS_LOCKED: ":/tk-multi-breakdown2/icons/main-override.png",
+    }
     FILE_ITEM_STATUS_ICONS = {
-        STATUS_UP_TO_DATE: QtGui.QIcon(":/tk-multi-breakdown2/icons/main-uptodate.png"),
-        STATUS_OUT_OF_SYNC: QtGui.QIcon(
-            ":/tk-multi-breakdown2/icons/main-outofdate.png"
+        STATUS_UP_TO_DATE: QtGui.QIcon(
+            FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE)
         ),
-        STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/icons/main-override.png"),
+        STATUS_OUT_OF_SYNC: QtGui.QIcon(
+            FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_OUT_OF_SYNC)
+        ),
+        STATUS_LOCKED: QtGui.QIcon(FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_LOCKED)),
     }
 
     FILE_ITEM_STATUS_NAMES = {
@@ -272,7 +279,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                         "status": {
                             "name": FileModel.FILE_ITEM_STATUS_NAMES.get(status_value),
                             "value": status_value,
-                            "icon": FileModel.FILE_ITEM_STATUS_ICONS.get(status_value),
+                            "icon": FileModel.FILE_ITEM_STATUS_ICON_PATHS.get(
+                                status_value
+                            ),
                         }
                     }
 

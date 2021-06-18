@@ -121,8 +121,9 @@ class AppDialog(QtGui.QWidget):
 
         # Filtering
         self._display_text_filter = FilterItem(
-            FilterItem.TYPE_STR,
-            FilterItem.OP_IN,
+            None,  # Don't really need an ID for this filter.
+            FilterItem.FilterType.STR,
+            FilterItem.FilterOp.IN,
             data_func=list_item_delegate.get_displayed_text,
         )
         self._filter_menu = FilterMenu(self)
