@@ -275,9 +275,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
                 if role == FileModel.STATUS_FILTER_DATA_ROLE:
                     status_value = self.data(FileModel.STATUS_ROLE)
+                    status_name = FileModel.FILE_ITEM_STATUS_NAMES.get(status_value)
                     return {
                         "status": {
-                            "name": FileModel.FILE_ITEM_STATUS_NAMES.get(status_value),
+                            "name": status_name,
                             "value": status_value,
                             "icon": FileModel.FILE_ITEM_STATUS_ICON_PATHS.get(
                                 status_value
