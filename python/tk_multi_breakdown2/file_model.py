@@ -13,7 +13,6 @@ from sgtk import TankError
 from sgtk.platform.qt import QtGui, QtCore
 
 from .utils import get_ui_published_file_fields
-from .framework_qtwidgets import FilterItem
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
