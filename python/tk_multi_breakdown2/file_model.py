@@ -85,6 +85,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         STATUS_LOCKED: "Locked",
     }
 
+    # The group identifier for background tasks created when processing files.
+    TASK_GROUP_PROCESSED_FILES = "process_files"
+
     # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
     # signal emitted specifically when the data changed for the FILE_ITEM_ROLE
@@ -346,6 +349,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self._bg_task_manager = bg_task_manager
         self._bg_task_manager.task_completed.connect(self._on_background_task_completed)
         self._bg_task_manager.task_failed.connect(self._on_background_task_failed)
+        self._bg_task_manager.task_group_finished.connect(
+            self._on_background_task_group_finished
+        )
 
         # sg data retriever is used to download thumbnails in the background
         self._sg_data_retriever = ShotgunDataRetriever(bg_task_manager=bg_task_manager)
@@ -418,6 +424,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         build a model item and a data structure to represent them.
         """
 
+        self.beginResetModel()
+        self.clear()
+
         # scan the current scene
         file_items = self._manager.scan_scene(extra_fields=self._published_file_fields)
 
@@ -451,10 +460,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             task_id = self._bg_task_manager.add_task(
                 self._manager.get_latest_published_file,
                 task_kwargs={"item": file_item},
+                group=self.TASK_GROUP_PROCESSED_FILES,
             )
             self._pending_version_requests[task_id] = file_model_item
 
-        self.files_processed.emit()
+        self.endResetModel()
 
     def is_loading(self, model_item):
         """
@@ -565,3 +575,15 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             "File Model: Failed to find the latest published file for id %s: %s"
             % (uid, msg)
         )
+
+    def _on_background_task_group_finished(self, group_id):
+        """
+        Slot triggered when the background manager finishes all tasks within a group.
+
+        :param group_id: The group that has finished
+        :type group_id: This will be whatever the group_id was set as on 'add_task'.
+        """
+
+        if group_id == self.TASK_GROUP_PROCESSED_FILES:
+            # Emit signal now that all files have been processed.
+            self.files_processed.emit()
