@@ -87,7 +87,7 @@ class AppDialog(QtGui.QWidget):
         # since the settings manager converts QByteArray objects to str, which causes an error when retrieving it and trying
         # to set the splitter state with a str instead of QByteArray object.
         self._raw_values_settings = QtCore.QSettings(
-            "Shotgun Software", "{app}_raw_values".format(app=self._bundle.name)
+            "ShotGrid Software", "{app}_raw_values".format(app=self._bundle.name)
         )
 
         # -----------------------------------------------------
@@ -231,10 +231,10 @@ class AppDialog(QtGui.QWidget):
         # now use the proxy model to sort the data to ensure
         # higher version numbers appear earlier in the list
         # the history model is set up so that the default display
-        # role contains the version number field in shotgun.
+        # role contains the version number field in ShotGrid.
         # This field is what the proxy model sorts by default
         # We set the dynamic filter to true, meaning QT will keep
-        # continously sorting. And then tell it to use column 0
+        # continuously sorting. And then tell it to use column 0
         # (we only have one column in our models) and descending order.
         self._file_history_proxy_model.setDynamicSortFilter(True)
         self._file_history_proxy_model.sort(0, QtCore.Qt.DescendingOrder)
