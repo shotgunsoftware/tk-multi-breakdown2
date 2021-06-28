@@ -20,7 +20,7 @@ def get_ui_published_file_fields(app):
     :returns: A list of Shotgun Published File fields
     """
 
-    fields = ["tags"]
+    fields = []
 
     # in order to be able to return all the needed Shotgun fields, we need to look for the way the UI is configured
     file_item_config = app.execute_hook_method("hook_ui_config", "file_item_details")

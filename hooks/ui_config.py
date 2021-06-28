@@ -111,6 +111,7 @@ class UIConfig(HookBaseClass):
                     "<b style='color:#18A7E3;'>Version</b> {version_number}",
                     "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}",
                     "<b style='color:#18A7E3;'>Status</b> {sg_status_list::displaytext}",
+                    "<b style='color:#18A7E3;'>Tags</b> {tags}",
                 ]
             ),
             "thumbnail": True,
