@@ -52,6 +52,7 @@ class AppDialog(QtGui.QWidget):
     THUMBNAIL_SIZE_SCALE_VALUE = "view_item_thumb_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
     SPLITTER_STATE = "splitter_state"
+    FILTER_MENU_STATE = "filter_menu_state"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -107,8 +108,10 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
-        self._file_model_overlay.start_spin()
-        self._file_model.files_processed.connect(self._file_model_overlay.hide)
+        self._file_model.modelAboutToBeReset.connect(
+            self._file_model_overlay.start_spin
+        )
+        self._file_model.modelReset.connect(self._file_model_overlay.hide)
 
         # Enable mouse tracking to allow the delegate to receive mouse events
         self._ui.file_view.setMouseTracking(True)
@@ -127,21 +130,32 @@ class AppDialog(QtGui.QWidget):
             data_func=list_item_delegate.get_displayed_text,
         )
         self._filter_menu = FilterMenu(self)
-        self._filter_menu.visible_fields = [
-            "{role}.status".format(role=self._file_model.STATUS_FILTER_DATA_ROLE),
-            "PublishedFile.tags",
-            "PublishedFile.published_file_type",
-            "PublishedFile.version_number",
-        ]
-        self._filter_menu.ignore_fields = ["PublishedFile.Id"]
+        self._filter_menu.set_ignore_fields(
+            [
+                "PublishedFile.Id",
+                "PublishedFile.path",
+                "PublishedFile.published_file_type",
+                "{}.latest_published_file".format(self._file_model.FILE_ITEM_ROLE),
+            ]
+        )
         self._filter_menu.set_filter_model(self._file_proxy_model)
-        self._filter_menu.filter_roles = [
-            self._file_model.STATUS_FILTER_DATA_ROLE,
-            self._file_model.FILE_ITEM_ROLE,
-            self._file_model.FILE_ITEM_SG_DATA_ROLE,
-        ]
-        self._filter_menu.build_menu()
+        self._filter_menu.set_filter_roles(
+            [
+                self._file_model.STATUS_FILTER_DATA_ROLE,
+                self._file_model.FILE_ITEM_ROLE,
+                self._file_model.FILE_ITEM_SG_DATA_ROLE,
+            ]
+        )
+        self._filter_menu_restored = False
+        self._filter_menu.initialize_menu()
         self._ui.filter_btn.setMenu(self._filter_menu)
+        self._file_model.modelAboutToBeReset.connect(
+            lambda: self._ui.filter_btn.setEnabled(False)
+        )
+        self._file_model.files_processed.connect(
+            lambda: self._ui.filter_btn.setEnabled(True)
+        )
+        self._file_model.files_processed.connect(self._refresh_filter_menu)
 
         # Set up the view modes
         self.view_modes = [
@@ -272,6 +286,72 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
         # Log metric for app usage
         self._bundle._log_metric_viewed_app()
+
+    ######################################################################################################
+    # Override Qt methods
+
+    def closeEvent(self, event):
+        """
+        Overriden method triggered when the widget is closed.  Cleans up as much as possible
+        to help the GC.
+
+        :param event: Close event
+        """
+
+        # clear the selection in the main views.
+        # this is to avoid re-triggering selection
+        # as items are being removed in the models
+        #
+        # note that we pull out a fresh handle to the selection model
+        # as these objects sometimes are deleted internally in the view
+        # and therefore persisting python handles may not be valid
+        self._ui.file_view.selectionModel().clear()
+        self._ui.file_history_view.selectionModel().clear()
+
+        # clear up the various data models
+        if self._file_model:
+            self._file_model.destroy()
+
+        if self._file_history_model:
+            self._file_history_model.clear()
+
+        self._ui.file_view.setItemDelegate(None)
+        for view_mode in self.view_modes:
+            delegate = view_mode.get("delegate")
+            if delegate:
+                delegate.setParent(None)
+                delegate.deleteLater()
+                delegate = None
+
+        file_history_delegate = self._ui.file_history_view.itemDelegate()
+        self._ui.file_history_view.setItemDelegate(None)
+        file_history_delegate.setParent(None)
+        file_history_delegate.deleteLater()
+        file_history_delegate = None
+
+        # and shut down the task manager
+        if self._bg_task_manager:
+            shotgun_globals.unregister_bg_task_manager(self._bg_task_manager)
+            self._bg_task_manager.shut_down()
+            self._bg_task_manager = None
+
+        # Save the splitter state
+        state = self._ui.details_splitter.saveState()
+        if six.PY2:
+            self._settings_manager.store(self.SPLITTER_STATE, state)
+        else:
+            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+            # will convert QByteArray objects to str when storing).
+            self._raw_values_settings.setValue(self.SPLITTER_STATE, state)
+
+        # Save the filter menu state
+        menu_state = self._filter_menu.save_state()
+        self._settings_manager.store(self.FILTER_MENU_STATE, menu_state)
+
+        return QtGui.QWidget.closeEvent(self, event)
+
+    ######################################################################################################
+    # Private methods
 
     def _create_file_item_delegate(self, thumbnail=False):
         """
@@ -417,68 +497,6 @@ class AppDialog(QtGui.QWidget):
         )
 
         return delegate
-
-    ######################################################################################################
-    # Override Qt methods
-
-    def closeEvent(self, event):
-        """
-        Overriden method triggered when the widget is closed.  Cleans up as much as possible
-        to help the GC.
-
-        :param event: Close event
-        """
-
-        # clear the selection in the main views.
-        # this is to avoid re-triggering selection
-        # as items are being removed in the models
-        #
-        # note that we pull out a fresh handle to the selection model
-        # as these objects sometimes are deleted internally in the view
-        # and therefore persisting python handles may not be valid
-        self._ui.file_view.selectionModel().clear()
-        self._ui.file_history_view.selectionModel().clear()
-
-        # clear up the various data models
-        if self._file_model:
-            self._file_model.destroy()
-
-        if self._file_history_model:
-            self._file_history_model.clear()
-
-        self._ui.file_view.setItemDelegate(None)
-        for view_mode in self.view_modes:
-            delegate = view_mode.get("delegate")
-            if delegate:
-                delegate.setParent(None)
-                delegate.deleteLater()
-                delegate = None
-
-        file_history_delegate = self._ui.file_history_view.itemDelegate()
-        self._ui.file_history_view.setItemDelegate(None)
-        file_history_delegate.setParent(None)
-        file_history_delegate.deleteLater()
-        file_history_delegate = None
-
-        # and shut down the task manager
-        if self._bg_task_manager:
-            shotgun_globals.unregister_bg_task_manager(self._bg_task_manager)
-            self._bg_task_manager.shut_down()
-            self._bg_task_manager = None
-
-        # Save the splitter state
-        state = self._ui.details_splitter.saveState()
-        if six.PY2:
-            self._settings_manager.store(self.SPLITTER_STATE, state)
-        else:
-            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
-            # will convert QByteArray objects to str when storing).
-            self._raw_values_settings.setValue(self.SPLITTER_STATE, state)
-
-        return QtGui.QWidget.closeEvent(self, event)
-
-    ######################################################################################################
-    # Private methods
 
     def _show_context_menu(self, widget, pnt):
         """
@@ -664,6 +682,27 @@ class AppDialog(QtGui.QWidget):
         self._ui.size_slider.setValue(slider_value)
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
+
+    def _refresh_filter_menu(self):
+        """
+        Restore the filter menu. Restore the menu state the first time the menu is refreshed.
+        """
+
+        self._filter_menu.refresh()
+
+        if not self._filter_menu_restored:
+            menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
+
+            if menu_state is None:
+                menu_state = {
+                    "{role}.status".format(
+                        role=self._file_model.STATUS_FILTER_DATA_ROLE
+                    ): {},
+                    "PublishedFile.published_file_type.PublishedFileType.code": {},
+                }
+
+            self._filter_menu.restore_state(menu_state)
+            self._filter_menu_restored = True
 
     ################################################################################################
     # UI/Widget callbacks
