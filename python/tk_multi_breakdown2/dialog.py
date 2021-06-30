@@ -688,7 +688,7 @@ class AppDialog(QtGui.QWidget):
         Restore the filter menu. Restore the menu state the first time the menu is refreshed.
         """
 
-        self._filter_menu.refresh()
+        self._filter_menu.refresh(force=True)
 
         if not self._filter_menu_restored:
             menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
