@@ -478,9 +478,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :rtype: bool
         """
 
-        items_loading = (
-            self._pending_version_requests.values()
-            + self._pending_thumbnail_requests.values()
+        items_loading = list(self._pending_version_requests.values()) + list(
+            self._pending_thumbnail_requests.values()
         )
         return model_item in items_loading
 
