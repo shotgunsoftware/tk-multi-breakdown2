@@ -105,6 +105,32 @@ class FileItem(object):
     def latest_published_file(self, value):
         self._latest_published_file = value
 
+    @property
+    def extra_data(self):
+        """
+        Get or set the extra data associated with this item.
+        """
+
+        return self._extra_data
+
+    @extra_data.setter
+    def extra_data(self, value):
+
+        self._extra_data = value
+
+    @property
+    def sg_data(self):
+        """
+        Get or set the ShotGrid data associated with this item.
+        """
+
+        return self._sg_data
+
+    @sg_data.setter
+    def sg_data(self, value):
+
+        self._sg_data = value
+
     def to_dict(self):
         """
         Return the FileItem as a dictionary. Only include the properties needed by the
