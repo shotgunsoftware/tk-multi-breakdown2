@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,13 +6,13 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 
 class FileItem(object):
     """
-    Encapsulate details about a single version of a file. Each instance represents a single "version" but will contain
-    details about the latest available version of the file.
+    Encapsulate details about a single version of a file. Each instance represents a single "version"
+    but will contain details about the latest available version of the file.
     """
 
     def __init__(self, node_name, node_type, path, sg_data=None, extra_data=None):
@@ -34,6 +34,8 @@ class FileItem(object):
         self._latest_published_file = None
         self._locked = False
 
+    ########################################## ####################################################
+    ########################################## ####################################################
     @property
     def highest_version_number(self):
         """
