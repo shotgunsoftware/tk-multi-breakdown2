@@ -111,7 +111,7 @@ class AppDialog(QtGui.QWidget):
         self._file_model.modelAboutToBeReset.connect(
             self._file_model_overlay.start_spin
         )
-        self._file_model.modelReset.connect(self._file_model_overlay.hide)
+        self._file_model.modelReset.connect(self._on_file_model_reset_end)
 
         # Enable mouse tracking to allow the delegate to receive mouse events
         self._ui.file_view.setMouseTracking(True)
@@ -715,6 +715,17 @@ class AppDialog(QtGui.QWidget):
             self._set_details_panel_visibility(False)
         else:
             self._set_details_panel_visibility(True)
+
+    def _on_file_model_reset_end(self):
+        """
+        Slot triggered once the main file model has finished resetting and has emitted
+        the `modelRest` signal.
+        """
+
+        if self._file_model.rowCount() <= 0:
+            self._file_model_overlay.show_message("No items found.")
+        else:
+            self._file_model_overlay.hide()
 
     def _on_context_menu_requested(self, pnt):
         """
