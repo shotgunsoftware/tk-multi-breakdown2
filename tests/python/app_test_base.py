@@ -59,7 +59,7 @@ class AppTestBase(TankTestBase):
         # Full App test environment
         engine_name = os.environ.get("TEST_ENGINE", "tk-testengine")
         self._engine = sgtk.platform.start_engine(engine_name, self.tk, context)
-        self._app = self._engine.apps["tk-multi-breakdown2"]
+        self._app = self._engine.apps["tk-multi-breakdown"]
         self.published_file_type = sgtk.util.get_published_file_entity_type(
             self._app.sgtk
         )
