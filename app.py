@@ -31,7 +31,7 @@ class SceneBreakdown2(sgtk.platform.Application):
 
         cb = lambda: tk_multi_breakdown2.show_dialog(self)
         self.engine.register_command(
-            "Scene Breakdown2...", cb, {"short_name": "breakdown2"}
+            "Scene Breakdown...", cb, {"short_name": "breakdown"}
         )
 
     def create_breakdown_manager(self):
