@@ -43,23 +43,23 @@ configuration:
         description: List of Published File fields returned when querying ShotGrid for published file history.
                      These fields will also be used when scanning the scene to get the current scene elements.
 
-# the Shotgun fields that this app needs in order to operate correctly
-requires_shotgun_fields: # TODO: Is linked_projects.Asset required?
+# The ShotGrid fields that this app needs in order to operate correctly
+requires_shotgun_fields:
+# linked_projects.Asset is required for references in multiple ShotGrid rojects
 
 # More verbose description of this item
-display_name: "Scene Breakdown2"
+display_name: "Scene Breakdown"
 description: "Tools to manage referenced PublishedFiles in your scene."
 
 # Required minimum versions for this item to run
-requires_shotgun_version: # TODO: Find when linked_projects was released
-requires_core_version: "v0.19.19" # TODO: waiting for release of v0.19.20
+requires_shotgun_version: "v8.20.0"
+requires_core_version: "v0.20.6"
 requires_engine_version:
 
-# this app works in all engines - it does not contain
-# any host application specific commands
+# Supported Engines
 supported_engines:
 
 # the frameworks required to run this app
 frameworks:
-    - {"name": "tk-framework-shotgunutils", "version": "v5.x.x", "minimum_version": "v5.7.9"}
-    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.9.4"} # TODO: waiting for release
+    - {"name": "tk-framework-shotgunutils", "version": "v5.x.x", "minimum_version": "v5.8.2"}
+    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.10.1"}
