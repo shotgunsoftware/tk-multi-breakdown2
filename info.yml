@@ -57,7 +57,7 @@ requires_core_version: "v0.20.6"
 requires_engine_version:
 
 # Supported Engines
-supported_engines: (tk-alias, tk-vred)
+supported_engines:
 
 # the frameworks required to run this app
 frameworks:
