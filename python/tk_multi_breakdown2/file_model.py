@@ -202,13 +202,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         Model item that represents a single FileItem in the model.
         """
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self):
             """
             Constructor. Initialize the file item data to None, the file item data will be
             set in the setData method using the FileModel.FILE_ITEM_ROLE.
             """
 
-            super(FileModel.FileModelItem, self).__init__(*args, **kwargs)
+            # Call the base QStandardItem constructor
+            super(FileModel.FileModelItem, self).__init__()
+
+            # Initialize our file mode item data
             self._file_item = None
 
         def data(self, role):
@@ -478,12 +481,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :rtype: bool
         """
 
-        # items_loading = list(self._pending_version_requests.values()) + list(
-        # self._pending_thumbnail_requests.values()
-        # )
-        items_loading = (
-            self._pending_version_requests.values()
-            + self._pending_thumbnail_requests.values()
+        items_loading = list(self._pending_version_requests.values()) + list(
+            self._pending_thumbnail_requests.values()
         )
         return model_item in items_loading
 
