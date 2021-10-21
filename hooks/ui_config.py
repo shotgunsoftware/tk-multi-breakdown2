@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,7 +6,7 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 import sgtk
 
@@ -111,6 +111,7 @@ class UIConfig(HookBaseClass):
                     "<b style='color:#18A7E3;'>Version</b> {version_number}",
                     "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}",
                     "<b style='color:#18A7E3;'>Status</b> {sg_status_list::displaytext}",
+                    "<b style='color:#18A7E3;'>Tags</b> {tags}",
                 ]
             ),
             "thumbnail": True,

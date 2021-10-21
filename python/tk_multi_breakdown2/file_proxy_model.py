@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,18 +6,18 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 
 from .file_model import FileModel
-from .tree_proxy_model import TreeProxyModel
+from .framework_qtwidgets import FilterItemTreeProxyModel
 
 
-class FileProxyModel(TreeProxyModel):
+class FileProxyModel(FilterItemTreeProxyModel):
     """
-    A proxy model for the FileModel. Subclasses the TreeProxyModel that implements
+    A proxy model for the FileModel. Subclasses the FilterItemTreeProxyModel that implements
     generic filtering.
     """
 
@@ -35,7 +35,23 @@ class FileProxyModel(TreeProxyModel):
             ui_config_adv_hook_path
         )
 
+        self._search_text_filter_item = None
+
         super(FileProxyModel, self).__init__(*args, **kwargs)
+
+    @property
+    def search_text_filter_item(self):
+        """
+        Get or set the search text filter item.
+        """
+        return self._search_text_filter_item
+
+    @search_text_filter_item.setter
+    def search_text_filter_item(self, filter_item):
+        self._search_text_filter_item = filter_item
+        self.layoutAboutToBeChanged.emit()
+        self.invalidateFilter()
+        self.layoutChanged.emit()
 
     def data(self, index, role):
         """
@@ -61,3 +77,26 @@ class FileProxyModel(TreeProxyModel):
 
         source_index = self.mapToSource(index)
         return self.sourceModel().data(source_index, role)
+
+    def _is_row_accepted(self, src_row, src_parent_idx, parent_accepted):
+        """
+        Override the base method.
+
+        Go through the list of filters and check whether or not the src_row
+        is accepted based on the filters.
+        """
+
+        base_model_accepts = super(FileProxyModel, self)._is_row_accepted(
+            src_row, src_parent_idx, parent_accepted
+        )
+        if not base_model_accepts:
+            return False
+
+        src_idx = self.sourceModel().index(src_row, 0, src_parent_idx)
+        if not src_idx.isValid():
+            return False
+
+        if not self.search_text_filter_item:
+            return True  # No filters set, accept everything
+
+        return self.search_text_filter_item.accepts(src_idx)

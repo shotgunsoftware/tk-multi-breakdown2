@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,7 +6,7 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
@@ -19,12 +19,14 @@ from .file_model import FileModel
 from .file_history_model import FileHistoryModel
 from .actions import ActionManager
 from .framework_qtwidgets import (
+    FilterItem,
+    FilterMenu,
+    FilterMenuButton,
     ShotgunOverlayWidget,
     ViewItemDelegate,
     ThumbnailViewItemDelegate,
     utils,
 )
-from .filter_item import FilterItem
 from .file_proxy_model import FileProxyModel
 
 task_manager = sgtk.platform.import_framework(
@@ -35,9 +37,6 @@ BackgroundTaskManager = task_manager.BackgroundTaskManager
 settings = sgtk.platform.import_framework("tk-framework-shotgunutils", "settings")
 shotgun_globals = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_globals"
-)
-shotgun_menus = sgtk.platform.import_framework(
-    "tk-framework-qtwidgets", "shotgun_menus"
 )
 
 
@@ -53,6 +52,7 @@ class AppDialog(QtGui.QWidget):
     THUMBNAIL_SIZE_SCALE_VALUE = "view_item_thumb_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
     SPLITTER_STATE = "splitter_state"
+    FILTER_MENU_STATE = "filter_menu_state"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -108,8 +108,10 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
-        self._file_model_overlay.start_spin()
-        self._file_model.files_processed.connect(self._file_model_overlay.hide)
+        self._file_model.modelAboutToBeReset.connect(
+            self._file_model_overlay.start_spin
+        )
+        self._file_model.modelReset.connect(self._on_file_model_reset_end)
 
         # Enable mouse tracking to allow the delegate to receive mouse events
         self._ui.file_view.setMouseTracking(True)
@@ -121,62 +123,39 @@ class AppDialog(QtGui.QWidget):
         list_item_delegate = self._create_file_item_delegate()
 
         # Filtering
-        # TODO: create a filtering widget that will handle all the filter items for us.
         self._display_text_filter = FilterItem(
-            FilterItem.TYPE_STR,
-            FilterItem.OP_IN,
+            None,  # Don't really need an ID for this filter.
+            FilterItem.FilterType.STR,
+            FilterItem.FilterOp.IN,
             data_func=list_item_delegate.get_displayed_text,
         )
-        self._group_status_filter = FilterItem(
-            FilterItem.TYPE_GROUP, FilterItem.OP_OR, filters=[]
+        self._filter_menu = FilterMenu(self)
+        self._filter_menu.set_ignore_fields(
+            [
+                "PublishedFile.Id",
+                "PublishedFile.path",
+                "PublishedFile.published_file_type",
+                "{}.latest_published_file".format(self._file_model.FILE_ITEM_ROLE),
+            ]
         )
-        up_to_date_status_filter = FilterItem(
-            FilterItem.TYPE_NUMBER,
-            FilterItem.OP_EQUAL,
-            filter_role=FileModel.STATUS_ROLE,
-            filter_value=FileModel.STATUS_UP_TO_DATE,
+        self._filter_menu.set_filter_model(self._file_proxy_model)
+        self._filter_menu.set_filter_roles(
+            [
+                self._file_model.STATUS_FILTER_DATA_ROLE,
+                self._file_model.FILE_ITEM_ROLE,
+                self._file_model.FILE_ITEM_SG_DATA_ROLE,
+            ]
         )
-        out_of_date_status_filter = FilterItem(
-            FilterItem.TYPE_NUMBER,
-            FilterItem.OP_EQUAL,
-            filter_role=FileModel.STATUS_ROLE,
-            filter_value=FileModel.STATUS_OUT_OF_SYNC,
+        self._filter_menu_restored = False
+        self._filter_menu.initialize_menu()
+        self._ui.filter_btn.setMenu(self._filter_menu)
+        self._file_model.modelAboutToBeReset.connect(
+            lambda: self._ui.filter_btn.setEnabled(False)
         )
-        # TODO uncomment this implement file "locking" functionality
-        # locked_filter = FilterItem(
-        #     FilterItem.TYPE_NUMBER,
-        #     FilterItem.OP_EQUAL,
-        #     filter_role=FileModel.STATUS_ROLE,
-        #     filter_value=FileModel.STATUS_LOCKED,
-        # )
-        # locked_action = QtGui.QAction("Reference Overrides", self)
-        out_of_date_action = QtGui.QAction(
-            # FIXME can't show both icon and checkbox with QAction
-            # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-outofdate.png"),
-            "Out of Date",
-            self,
+        self._file_model.files_processed.connect(
+            lambda: self._ui.filter_btn.setEnabled(True)
         )
-        up_to_date_action = QtGui.QAction(
-            # FIXME can't show both icon and checkbox wtih QAction
-            # QtGui.QIcon(":/tk-multi-breakdown2/icons/main-uptodate.png"),
-            "Up to Date",
-            self,
-        )
-        self._status_actions = {
-            out_of_date_action: out_of_date_status_filter,
-            # TODO uncomment this implement file "locking" functionality
-            # locked_action: locked_filter,
-            up_to_date_action: up_to_date_status_filter,
-        }
-
-        for action in self._status_actions:
-            action.setCheckable(True)
-            action.triggered.connect(lambda checked: self._update_filters())
-
-        sorted_actions = sorted(self._status_actions, key=lambda item: item.text())
-        filter_menu = shotgun_menus.ShotgunMenu(self)
-        filter_menu.add_group(sorted_actions, "STATUS")
-        self._ui.filter_btn.setMenu(filter_menu)
+        self._file_model.files_processed.connect(self._refresh_filter_menu)
 
         # Set up the view modes
         self.view_modes = [
@@ -216,7 +195,7 @@ class AppDialog(QtGui.QWidget):
 
         self._ui.search_widget.set_placeholder_text("Search Files")
         self._ui.search_widget.search_edited.connect(
-            lambda text: self._update_filters()
+            lambda text: self._update_search_text_filter()
         )
 
         # Get the last view mode used from the settings manager, default to the first view if
@@ -307,6 +286,72 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
         # Log metric for app usage
         self._bundle._log_metric_viewed_app()
+
+    ######################################################################################################
+    # Override Qt methods
+
+    def closeEvent(self, event):
+        """
+        Overriden method triggered when the widget is closed.  Cleans up as much as possible
+        to help the GC.
+
+        :param event: Close event
+        """
+
+        # clear the selection in the main views.
+        # this is to avoid re-triggering selection
+        # as items are being removed in the models
+        #
+        # note that we pull out a fresh handle to the selection model
+        # as these objects sometimes are deleted internally in the view
+        # and therefore persisting python handles may not be valid
+        self._ui.file_view.selectionModel().clear()
+        self._ui.file_history_view.selectionModel().clear()
+
+        # clear up the various data models
+        if self._file_model:
+            self._file_model.destroy()
+
+        if self._file_history_model:
+            self._file_history_model.clear()
+
+        self._ui.file_view.setItemDelegate(None)
+        for view_mode in self.view_modes:
+            delegate = view_mode.get("delegate")
+            if delegate:
+                delegate.setParent(None)
+                delegate.deleteLater()
+                delegate = None
+
+        file_history_delegate = self._ui.file_history_view.itemDelegate()
+        self._ui.file_history_view.setItemDelegate(None)
+        file_history_delegate.setParent(None)
+        file_history_delegate.deleteLater()
+        file_history_delegate = None
+
+        # and shut down the task manager
+        if self._bg_task_manager:
+            shotgun_globals.unregister_bg_task_manager(self._bg_task_manager)
+            self._bg_task_manager.shut_down()
+            self._bg_task_manager = None
+
+        # Save the splitter state
+        state = self._ui.details_splitter.saveState()
+        if six.PY2:
+            self._settings_manager.store(self.SPLITTER_STATE, state)
+        else:
+            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+            # will convert QByteArray objects to str when storing).
+            self._raw_values_settings.setValue(self.SPLITTER_STATE, state)
+
+        # Save the filter menu state
+        menu_state = self._filter_menu.save_state()
+        self._settings_manager.store(self.FILTER_MENU_STATE, menu_state)
+
+        return QtGui.QWidget.closeEvent(self, event)
+
+    ######################################################################################################
+    # Private methods
 
     def _create_file_item_delegate(self, thumbnail=False):
         """
@@ -452,68 +497,6 @@ class AppDialog(QtGui.QWidget):
         )
 
         return delegate
-
-    ######################################################################################################
-    # Override Qt methods
-
-    def closeEvent(self, event):
-        """
-        Overriden method triggered when the widget is closed.  Cleans up as much as possible
-        to help the GC.
-
-        :param event: Close event
-        """
-
-        # clear the selection in the main views.
-        # this is to avoid re-triggering selection
-        # as items are being removed in the models
-        #
-        # note that we pull out a fresh handle to the selection model
-        # as these objects sometimes are deleted internally in the view
-        # and therefore persisting python handles may not be valid
-        self._ui.file_view.selectionModel().clear()
-        self._ui.file_history_view.selectionModel().clear()
-
-        # clear up the various data models
-        if self._file_model:
-            self._file_model.destroy()
-
-        if self._file_history_model:
-            self._file_history_model.clear()
-
-        self._ui.file_view.setItemDelegate(None)
-        for view_mode in self.view_modes:
-            delegate = view_mode.get("delegate")
-            if delegate:
-                delegate.setParent(None)
-                delegate.deleteLater()
-                delegate = None
-
-        file_history_delegate = self._ui.file_history_view.itemDelegate()
-        self._ui.file_history_view.setItemDelegate(None)
-        file_history_delegate.setParent(None)
-        file_history_delegate.deleteLater()
-        file_history_delegate = None
-
-        # and shut down the task manager
-        if self._bg_task_manager:
-            shotgun_globals.unregister_bg_task_manager(self._bg_task_manager)
-            self._bg_task_manager.shut_down()
-            self._bg_task_manager = None
-
-        # Save the splitter state
-        state = self._ui.details_splitter.saveState()
-        if six.PY2:
-            self._settings_manager.store(self.SPLITTER_STATE, state)
-        else:
-            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
-            # will convert QByteArray objects to str when storing).
-            self._raw_values_settings.setValue(self.SPLITTER_STATE, state)
-
-        return QtGui.QWidget.closeEvent(self, event)
-
-    ######################################################################################################
-    # Private methods
 
     def _show_context_menu(self, widget, pnt):
         """
@@ -700,6 +683,27 @@ class AppDialog(QtGui.QWidget):
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
+    def _refresh_filter_menu(self):
+        """
+        Restore the filter menu. Restore the menu state the first time the menu is refreshed.
+        """
+
+        self._filter_menu.refresh(force=True)
+
+        if not self._filter_menu_restored:
+            menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
+
+            if menu_state is None:
+                menu_state = {
+                    "{role}.status".format(
+                        role=self._file_model.STATUS_FILTER_DATA_ROLE
+                    ): {},
+                    "PublishedFile.published_file_type.PublishedFileType.code": {},
+                }
+
+            self._filter_menu.restore_state(menu_state)
+            self._filter_menu_restored = True
+
     ################################################################################################
     # UI/Widget callbacks
 
@@ -711,6 +715,17 @@ class AppDialog(QtGui.QWidget):
             self._set_details_panel_visibility(False)
         else:
             self._set_details_panel_visibility(True)
+
+    def _on_file_model_reset_end(self):
+        """
+        Slot triggered once the main file model has finished resetting and has emitted
+        the `modelRest` signal.
+        """
+
+        if self._file_model.rowCount() <= 0:
+            self._file_model_overlay.show_message("No items found.")
+        else:
+            self._file_model_overlay.hide()
 
     def _on_context_menu_requested(self, pnt):
         """
@@ -844,17 +859,7 @@ class AppDialog(QtGui.QWidget):
 
         ActionManager.execute_update_to_latest_action(file_items)
 
-    def _on_search_widget_edited(self, search_text):
-        """
-        Slot triggered when the search text has been changed.
-
-        :param search_text: The new search text
-        """
-
-        self._display_text_filter.filter_value = search_text
-        self._update_filters()
-
-    def _update_filters(self):
+    def _update_search_text_filter(self):
         """
         Slot triggered when the up to date filter button is checked.
         """
@@ -862,21 +867,9 @@ class AppDialog(QtGui.QWidget):
         self._display_text_filter.filter_value = (
             self._ui.search_widget._get_search_text()
         )
-        self._group_status_filter.filters = [
-            f for a, f in self._status_actions.items() if a.isChecked()
-        ]
 
-        if self._group_status_filter.filters:
-            # Set the filter button active to indicate there are filters currently applied from this filter menu
-            self._ui.filter_btn.setChecked(True)
-        else:
-            self._ui.filter_btn.setChecked(False)
-
-        # Set the updated filters to trigger the filter model to re-validate the data.
-        self._file_proxy_model.filter_items = [
-            self._display_text_filter,
-            self._group_status_filter,
-        ]
+        # Set the search text filter to trigger the filter model to re-validate the data.
+        self._file_proxy_model.search_text_filter_item = self._display_text_filter
 
     ################################################################################################
     # ViewItemDelegate action method callbacks item's action is clicked
