@@ -79,7 +79,11 @@ class BreakdownSceneOperations(HookBaseClass):
 
             # here, we've imported a file as reference and we need to use the source path to get the next
             # available version
-            if reference_template and reference_template.validate(r.path):
+            # Line below commented out
+            # if reference_template and reference_template.validate(r.path):
+            # SHOT-3884 Alias not showing the files
+            # Due to naming of the sidecar WREF files, we can't validate the template here
+            if reference_template:
                 refs.append(
                     {
                         "node_name": r.name,
