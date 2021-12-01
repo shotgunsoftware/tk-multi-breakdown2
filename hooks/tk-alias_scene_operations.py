@@ -52,7 +52,7 @@ class BreakdownSceneOperations(HookBaseClass):
         alias_refs = alias_api.get_references()
         sg_data = self._get_sg_publish_data(alias_refs)
 
-        # only deal with references matching a template
+        # Find PublishedFiles associated with the references
         for r in alias_refs:
 
             if r.source_path in sg_data.keys():
@@ -79,10 +79,6 @@ class BreakdownSceneOperations(HookBaseClass):
 
             # here, we've imported a file as reference and we need to use the source path to get the next
             # available version
-            # Line below commented out
-            # if reference_template and reference_template.validate(r.path):
-            # SHOT-3884 Alias not showing the files
-            # Due to naming of the sidecar WREF files, we can't validate the template here
             if reference_template:
                 refs.append(
                     {
