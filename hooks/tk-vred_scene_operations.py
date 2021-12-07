@@ -14,12 +14,10 @@ import sgtk
 try:
     import builtins
 except ImportError:
-    import __builtins__ as builtins
-
-import vrScenegraph
-import vrFieldAccess
-import vrFileIO
-import vrNodePtr
+    try:
+        import __builtins__ as builtins
+    except ImportError:
+        import __builtin__ as builtins
 
 builtins.vrNodeService = vrNodeService
 builtins.vrReferenceService = vrReferenceService
