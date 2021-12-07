@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,7 +6,7 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 import sgtk
 from sgtk import TankError
@@ -29,8 +29,8 @@ ViewItemRolesMixin = delegates.ViewItemRolesMixin
 
 class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     """
-    The FileModel maintains a model of all the files found when parsing the current scene. Details of each file are
-    contained in a FileItem instance and presented as a single model item.
+    The FileModel maintains a model of all the files found when parsing the current scene. Details
+    of each file are contained in a FileItem instance and presented as a single model item.
 
     File items are grouped into groups defined by the app configuration.
     """
@@ -41,6 +41,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     _BASE_ROLE = QtCore.Qt.UserRole + 32
     (
         STATUS_ROLE,  # The item status
+        STATUS_FILTER_DATA_ROLE,  # The item status data used for filtering
         REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
         FILE_ITEM_ROLE,  # The file item object
         FILE_ITEM_NODE_NAME_ROLE,  # Convenience role for the file item node_name field
@@ -50,8 +51,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         FILE_ITEM_EXTRA_DATA_ROLE,  # Convenience role for the file item extra_data field
         FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,  # Convenience role for the file item latest_published_file field
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
+        FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 11)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 13)
 
     # File item status enum
     (
@@ -61,13 +63,29 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         STATUS_LOCKED,
     ) = range(4)
 
-    FILE_ITEM_STATUS_ICONS = {
-        STATUS_UP_TO_DATE: QtGui.QIcon(":/tk-multi-breakdown2/icons/main-uptodate.png"),
-        STATUS_OUT_OF_SYNC: QtGui.QIcon(
-            ":/tk-multi-breakdown2/icons/main-outofdate.png"
-        ),
-        STATUS_LOCKED: QtGui.QIcon(":/tk-multi-breakdown2/icons/main-override.png"),
+    FILE_ITEM_STATUS_ICON_PATHS = {
+        STATUS_UP_TO_DATE: ":/tk-multi-breakdown2/icons/main-uptodate.png",
+        STATUS_OUT_OF_SYNC: ":/tk-multi-breakdown2/icons/main-outofdate.png",
+        STATUS_LOCKED: ":/tk-multi-breakdown2/icons/main-override.png",
     }
+    FILE_ITEM_STATUS_ICONS = {
+        STATUS_UP_TO_DATE: QtGui.QIcon(
+            FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE)
+        ),
+        STATUS_OUT_OF_SYNC: QtGui.QIcon(
+            FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_OUT_OF_SYNC)
+        ),
+        STATUS_LOCKED: QtGui.QIcon(FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_LOCKED)),
+    }
+
+    FILE_ITEM_STATUS_NAMES = {
+        STATUS_UP_TO_DATE: "Up to Date",
+        STATUS_OUT_OF_SYNC: "Out of Date",
+        STATUS_LOCKED: "Locked",
+    }
+
+    # The group identifier for background tasks created when processing files.
+    TASK_GROUP_PROCESSED_FILES = "process_files"
 
     # signal emitted once all the files have been processed
     files_processed = QtCore.Signal()
@@ -78,16 +96,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         """
         The base model item class for the FileModel.
         """
-
-        def __init__(self, *args, **kwargs):
-            """
-            Constructor
-
-            :param args: The positional arguments to pass to the :class:`sgtk.platform.qt.QtGui.QStandardItem` constructor.
-            :pram kwargs: The keyword arguments to the pass to the :class:`sgtk.platform.qt.QtGui.QStandardItem` constructor.
-            """
-
-            QtGui.QStandardItem.__init__(self, *args, **kwargs)
 
         def __eq__(self, other):
             """
@@ -135,12 +143,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         Model item that represents a group in the model.
         """
 
-        def __init__(self, text):
-            """
-            :param text: String used for the label/display role for this item
-            """
-            QtGui.QStandardItem.__init__(self, text)
-
         def data(self, role):
             """
             Override the :class:`sgtk.platform.qt.QtGui.QStandardItem` method.
@@ -152,6 +154,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
 
             if role in (
+                FileModel.STATUS_FILTER_DATA_ROLE,
                 FileModel.REFERENCE_LOADED,
                 FileModel.FILE_ITEM_ROLE,
                 FileModel.FILE_ITEM_NODE_NAME_ROLE,
@@ -160,6 +163,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 FileModel.FILE_ITEM_SG_DATA_ROLE,
                 FileModel.FILE_ITEM_EXTRA_DATA_ROLE,
                 FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,
+                FileModel.FILE_ITEM_CREATED_AT_ROLE,
+                FileModel.FILE_ITEM_TAGS_ROLE,
             ):
                 # File item specific roles, just return None.
                 return None
@@ -197,15 +202,17 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         Model item that represents a single FileItem in the model.
         """
 
-        def __init__(self, text, file_item=None):
+        def __init__(self):
             """
-            :param text: String used for the label/display role for this item
-            :param file_item: The file item data for this item
+            Constructor. Initialize the file item data to None, the file item data will be
+            set in the setData method using the FileModel.FILE_ITEM_ROLE.
             """
 
-            QtGui.QStandardItem.__init__(self, text)
+            # Call the base QStandardItem constructor
+            super(FileModel.FileModelItem, self).__init__()
 
-            self._file_item = file_item
+            # Initialize our file mode item data
+            self._file_item = None
 
         def data(self, role):
             """
@@ -245,6 +252,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 if role == FileModel.FILE_ITEM_CREATED_AT_ROLE:
                     return self._file_item.sg_data.get("created_at")
 
+                if role == FileModel.FILE_ITEM_TAGS_ROLE:
+                    return self._file_item.sg_data.get(
+                        "tags"
+                    ) or self._file_item.sg_data.get("tag_list")
+
                 if role == FileModel.STATUS_ROLE:
                     # NOTE if we ever need to know if the file is up to date or not, while
                     # it is also locked, we would need to create a separate role to determine
@@ -265,6 +277,19 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                         return FileModel.STATUS_OUT_OF_SYNC
 
                     return FileModel.STATUS_UP_TO_DATE
+
+                if role == FileModel.STATUS_FILTER_DATA_ROLE:
+                    status_value = self.data(FileModel.STATUS_ROLE)
+                    status_name = FileModel.FILE_ITEM_STATUS_NAMES.get(status_value)
+                    return {
+                        "status": {
+                            "name": status_name,
+                            "value": status_value,
+                            "icon": FileModel.FILE_ITEM_STATUS_ICON_PATHS.get(
+                                status_value
+                            ),
+                        }
+                    }
 
                 if role == FileModel.VIEW_ITEM_LOADING_ROLE:
                     # Check the model is loading this item or not.
@@ -326,6 +351,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self._bg_task_manager = bg_task_manager
         self._bg_task_manager.task_completed.connect(self._on_background_task_completed)
         self._bg_task_manager.task_failed.connect(self._on_background_task_failed)
+        self._bg_task_manager.task_group_finished.connect(
+            self._on_background_task_group_finished
+        )
 
         # sg data retriever is used to download thumbnails in the background
         self._sg_data_retriever = ShotgunDataRetriever(bg_task_manager=bg_task_manager)
@@ -335,6 +363,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self._sg_data_retriever.work_failure.connect(
             self._on_data_retriever_work_failed
         )
+
+        # Get all the required fields when querying for published files. Call the hook to get
+        # them once and store them, since they are not expected to not change within this session.
+        self._published_file_fields = get_ui_published_file_fields(self._app)
 
         # Add additional roles defined by the ViewItemRolesMixin class.
         self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
@@ -390,18 +422,19 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
     def process_files(self):
         """
-        Scan the current scene to get all the items we could perform actions on and for each item, build a model item
-        and a data structure to represent them.
+        Scan the current scene to get all the items we could perform actions on and for each item,
+        build a model item and a data structure to represent them.
         """
 
+        self.beginResetModel()
+        self.clear()
+
         # scan the current scene
-        extra_fields = get_ui_published_file_fields(self._app)
-        file_items = self._manager.scan_scene(extra_fields=extra_fields)
+        file_items = self._manager.scan_scene(extra_fields=self._published_file_fields)
 
         for file_item in file_items:
-
-            # if the item doesn't have any associated ShotGrid data, it means that the file is not a Published File so
-            # skip it
+            # if the item doesn't have any associated shotgun data, it means that the file is not a
+            # Published File so skip it
             if not file_item.sg_data:
                 continue
 
@@ -415,28 +448,31 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             else:
                 group_item = self._group_items[project["id"]]
 
-            file_model_item = FileModel.FileModelItem("", file_item)
+            file_model_item = FileModel.FileModelItem()
+            # Add the model item to the group before setting and data on the item, to ensure it has
+            # a model associated with it.
+            group_item.appendRow(file_model_item)
             # Set a placeholder icon, until the thumbnail is loaded.
             file_model_item.setIcon(QtGui.QIcon())
+            # Set the file item data, an async request will be made to get the thumbnail.
+            file_model_item.setData(file_item, FileModel.FILE_ITEM_ROLE)
 
-            group_item.appendRow(file_model_item)
-
-            # for each item, we need to determine the latest version in order to know if the file is up-to-date or not
+            # for each item, we need to determine the latest version in order to know if the file
+            # is up-to-date or not
             task_id = self._bg_task_manager.add_task(
                 self._manager.get_latest_published_file,
                 task_kwargs={"item": file_item},
+                group=self.TASK_GROUP_PROCESSED_FILES,
             )
             self._pending_version_requests[task_id] = file_model_item
 
-            # finally, download the file thumbnail
-            self.request_thumbnail(file_model_item, file_item)
-
-        self.files_processed.emit()
+        self.endResetModel()
 
     def is_loading(self, model_item):
         """
-        Return True if the item in the model is in a loading state. An item is considered to be loading if
-        the model item is found in the `_pending_version_requests`.
+        Return True if the item in the model is in a loading state. An item is considered to be
+        loading if the model item is found in the `_pending_version_requests` or
+        `_pending_thumbnail_requests`.
 
         :param model_item: The item in the model.
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
@@ -445,11 +481,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :rtype: bool
         """
 
-        for item in self._pending_version_requests.values():
-            if item == model_item:
-                return True
-
-        return False
+        items_loading = list(self._pending_version_requests.values()) + list(
+            self._pending_thumbnail_requests.values()
+        )
+        return model_item in items_loading
 
     def request_thumbnail(self, model_item, file_item):
         """
@@ -541,3 +576,15 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             "File Model: Failed to find the latest published file for id %s: %s"
             % (uid, msg)
         )
+
+    def _on_background_task_group_finished(self, group_id):
+        """
+        Slot triggered when the background manager finishes all tasks within a group.
+
+        :param group_id: The group that has finished
+        :type group_id: This will be whatever the group_id was set as on 'add_task'.
+        """
+
+        if group_id == self.TASK_GROUP_PROCESSED_FILES:
+            # Emit signal now that all files have been processed.
+            self.files_processed.emit()

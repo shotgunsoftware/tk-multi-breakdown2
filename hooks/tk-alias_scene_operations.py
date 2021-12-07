@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,7 +6,7 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 import os
 
@@ -52,7 +52,7 @@ class BreakdownSceneOperations(HookBaseClass):
         alias_refs = alias_api.get_references()
         sg_data = self._get_sg_publish_data(alias_refs)
 
-        # only deal with references matching a template
+        # Find PublishedFiles associated with the references
         for r in alias_refs:
 
             if r.source_path in sg_data.keys():
@@ -79,7 +79,7 @@ class BreakdownSceneOperations(HookBaseClass):
 
             # here, we've imported a file as reference and we need to use the source path to get the next
             # available version
-            if reference_template and reference_template.validate(r.path):
+            if reference_template:
                 refs.append(
                     {
                         "node_name": r.name,

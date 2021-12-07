@@ -106,14 +106,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="filter_btn">
+      <widget class="FilterMenuButton" name="filter_btn">
        <property name="text">
         <string>Filter</string>
-       </property>
-       <property name="icon">
-        <iconset resource="resources.qrc">
-         <normaloff>:/tk-multi-breakdown2/icons/filter-inactive.png</normaloff>
-         <normalon>:/tk-multi-breakdown2/icons/filter-active.png</normalon>:/tk-multi-breakdown2/icons/filter-inactive.png</iconset>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -317,6 +312,11 @@
    <extends>QWidget</extends>
    <header>..framework_qtwidgets</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FilterMenuButton</class>
+   <extends>QToolButton</extends>
+   <header>..framework_qtwidgets</header>
   </customwidget>
  </customwidgets>
  <resources>

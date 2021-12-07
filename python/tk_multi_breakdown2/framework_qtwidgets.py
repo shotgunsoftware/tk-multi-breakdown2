@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Shotgun Software Inc.
+# Copyright (c) 2021 Autodesk, Inc.
 #
 # CONFIDENTIAL AND PROPRIETARY
 #
@@ -6,7 +6,7 @@
 # Source Code License included in this distribution package. See LICENSE.
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
-# not expressly granted therein are reserved by Shotgun Software Inc.
+# not expressly granted therein are reserved by Autodesk, Inc.
 
 """
 Wrapper for the various widgets used from frameworks so that they can be used
@@ -44,3 +44,9 @@ SearchWidget = search_widget.SearchWidget
 
 models = sgtk.platform.import_framework("tk-framework-qtwidgets", "models")
 HierarchicalFilteringProxyModel = models.HierarchicalFilteringProxyModel
+
+filtering = sgtk.platform.import_framework("tk-framework-qtwidgets", "filtering")
+FilterItem = filtering.FilterItem
+FilterMenu = filtering.FilterMenu
+FilterMenuButton = filtering.FilterMenuButton
+FilterItemTreeProxyModel = filtering.FilterItemTreeProxyModel

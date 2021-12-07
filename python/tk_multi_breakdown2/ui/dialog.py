@@ -56,11 +56,7 @@ class Ui_Dialog(object):
         self.search_widget.setMaximumSize(QtCore.QSize(150, 16777215))
         self.search_widget.setObjectName("search_widget")
         self.header_layout.addWidget(self.search_widget)
-        self.filter_btn = QtGui.QToolButton(Dialog)
-        icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/icons/filter-inactive.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon3.addPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/icons/filter-active.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        self.filter_btn.setIcon(icon3)
+        self.filter_btn = FilterMenuButton(Dialog)
         self.filter_btn.setCheckable(True)
         self.filter_btn.setPopupMode(QtGui.QToolButton.InstantPopup)
         self.filter_btn.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
@@ -69,10 +65,10 @@ class Ui_Dialog(object):
         self.details_button = QtGui.QToolButton(Dialog)
         self.details_button.setFocusPolicy(QtCore.Qt.TabFocus)
         self.details_button.setText("")
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/icons/info-inactive.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        icon4.addPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/icons/info-active.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
-        self.details_button.setIcon(icon4)
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/icons/info-inactive.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(":/tk-multi-breakdown2/icons/info-active.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+        self.details_button.setIcon(icon3)
         self.details_button.setCheckable(True)
         self.details_button.setChecked(False)
         self.details_button.setAutoRaise(False)
@@ -171,5 +167,5 @@ class Ui_Dialog(object):
         self.select_all_outdated_button.setText(QtGui.QApplication.translate("Dialog", "Select all Outdated", None, QtGui.QApplication.UnicodeUTF8))
         self.update_selected_button.setText(QtGui.QApplication.translate("Dialog", "Update Selected", None, QtGui.QApplication.UnicodeUTF8))
 
-from ..framework_qtwidgets import ShotgunFolderWidget, GroupedItemView, SearchWidget
+from ..framework_qtwidgets import ShotgunFolderWidget, FilterMenuButton, SearchWidget, GroupedItemView
 from . import resources_rc
