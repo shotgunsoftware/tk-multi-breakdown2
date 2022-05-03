@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Breakdown Hooks &mdash; tk-multi-breakdown2 v0.1.0-docs-update documentation</title>
+  <title>Breakdown Hooks &mdash; tk-multi-breakdown2 v0.2.4 documentation</title>
   
 
   
@@ -23,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -51,7 +51,7 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
-    <a href='http://developer.shotgunsoftware.com'>
+    <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -100,7 +100,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#hook-get-published-files">hook_get_published_files:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hook-ui-config">hook_ui_config:</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#basic-examples">Basic Examples:</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#shotgun-token-resolution-and-formatting">Shotgun Token Resolution and Formatting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shotgrid-token-resolution-and-formatting">ShotGrid Token Resolution and Formatting</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#hook-ui-config-advanced">hook_ui_config_advanced:</a><ul>
@@ -136,12 +136,12 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.1.0-docs-update.<br>
+    <b>tk-multi-breakdown2</b> v0.2.4.<br>
     
         This documentation is part of the Shotgun Pipeline Toolkit.
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>Shotgun Support</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
@@ -221,17 +221,20 @@
 <h2>hook_ui_config:<a class="headerlink" href="#hook-ui-config" title="Permalink to this headline">¶</a></h2>
 <p>A simple hook to customize the display of the view and details widget. When the application displays the items in the main file view, the right-hand panel details widget and history view, it will call this hook to determine which data to display for that particular widget and how it should be formatted.</p>
 <p><strong>Methods:</strong></p>
-<dl class="simple">
-<dt>file_item_details</dt><dd><ul class="simple">
-<li><p>Set the data shown in the file list items, and define how that data is formatted</p></li>
+<dl class="docutils">
+<dt>file_item_details</dt>
+<dd><ul class="first last simple">
+<li>Set the data shown in the file list items, and define how that data is formatted</li>
 </ul>
 </dd>
-<dt>main_file_history_details</dt><dd><ul class="simple">
-<li><p>Set the data shown in right-hand side panel widget, and define how that data is formatted</p></li>
+<dt>main_file_history_details</dt>
+<dd><ul class="first last simple">
+<li>Set the data shown in right-hand side panel widget, and define how that data is formatted</li>
 </ul>
 </dd>
-<dt>file_history_details</dt><dd><ul class="simple">
-<li><p>Set the data shown in the right-hand side panel, file history list items, and define how that data is formattted</p></li>
+<dt>file_history_details</dt>
+<dd><ul class="first last simple">
+<li>Set the data shown in the right-hand side panel, file history list items, and define how that data is formattted</li>
 </ul>
 </dd>
 </dl>
@@ -244,42 +247,47 @@
 <p>What this templated string does:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li><p>Uses HTML tags to make the text, <em>“By:”</em>, bolded</p></li>
-<li><p>Uses Shotgun token resolution to display and format the entity’s description field</p></li>
+<li>Uses HTML tags to make the text, <em>“By:”</em>, bolded</li>
+<li>Uses ShotGrid token resolution to display and format the entity’s description field</li>
 </ol>
 </div></blockquote>
 </div>
-<div class="section" id="shotgun-token-resolution-and-formatting">
-<span id="sg-token-res"></span><h3>Shotgun Token Resolution and Formatting<a class="headerlink" href="#shotgun-token-resolution-and-formatting" title="Permalink to this headline">¶</a></h3>
-<p>The Shogun token resolution will convert the values defined like, <code class="docutils literal notranslate"><span class="pre">{token}</span></code>, into formatted strings using Shotgun data. These token values can be defined using the following format:</p>
+<div class="section" id="shotgrid-token-resolution-and-formatting">
+<span id="sg-token-res"></span><h3>ShotGrid Token Resolution and Formatting<a class="headerlink" href="#shotgrid-token-resolution-and-formatting" title="Permalink to this headline">¶</a></h3>
+<p>The ShotGrid token resolution will convert the values defined like, <code class="docutils literal notranslate"><span class="pre">{token}</span></code>, into formatted strings using ShotGrid data. These token values can be defined using the following format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{[</span><span class="n">preroll</span><span class="p">]</span><span class="n">shotgun</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="o">|</span><span class="n">sg_field_name_fallback</span><span class="p">::</span><span class="n">directive</span><span class="p">[</span><span class="n">postroll</span><span class="p">]}</span>
 </pre></div>
 </div>
 <p><strong>Formatting Options:</strong></p>
 <blockquote>
-<div><dl class="simple">
-<dt>Simple format: {field}</dt><dd><ul class="simple">
-<li><p>Example, <code class="docutils literal notranslate"><span class="pre">{code}</span></code> will be substituted with the entity’s code value</p></li>
+<div><dl class="docutils">
+<dt>Simple format: {field}</dt>
+<dd><ul class="first last simple">
+<li>Example, <code class="docutils literal notranslate"><span class="pre">{code}</span></code> will be substituted with the entity’s code value</li>
 </ul>
 </dd>
-<dt>Deep links: {field1.field1_type.field_of_field1}</dt><dd><ul class="simple">
-<li><p>Example, <code class="docutils literal notranslate"><span class="pre">{sg_sequence.Sequence.code}</span></code> will be substituted with the entity’s Sequence code value</p></li>
+<dt>Deep links: {field1.field1_type.field_of_field1}</dt>
+<dd><ul class="first last simple">
+<li>Example, <code class="docutils literal notranslate"><span class="pre">{sg_sequence.Sequence.code}</span></code> will be substituted with the entity’s Sequence code value</li>
 </ul>
 </dd>
-<dt>Fallback options: {field | field2}</dt><dd><ul class="simple">
-<li><p>Example, <code class="docutils literal notranslate"><span class="pre">{artist|created_by}</span></code> will be substituted with the entity’s artist, if it does not exist, then it will substitute with the created by user</p></li>
+<dt>Fallback options: {field | field2}</dt>
+<dd><ul class="first last simple">
+<li>Example, <code class="docutils literal notranslate"><span class="pre">{artist|created_by}</span></code> will be substituted with the entity’s artist, if it does not exist, then it will substitute with the created by user</li>
 </ul>
 </dd>
-<dt>Directives: {…::directive1::directive2}</dt><dd><ul class="simple">
-<li><p>Directives can be chained to apply multiple directives</p></li>
-<li><p>Example, <code class="docutils literal notranslate"><span class="pre">{sg_sequence::showtype}</span></code> - This will generate a link saying ‘Sequence ABC123’ instead of the default, ‘ABC123’</p></li>
-<li><p>Example, <code class="docutils literal notranslate"><span class="pre">{sg_sequence::nolink}</span></code> - No url link will be created or shown</p></li>
+<dt>Directives: {…::directive1::directive2}</dt>
+<dd><ul class="first last simple">
+<li>Directives can be chained to apply multiple directives</li>
+<li>Example, <code class="docutils literal notranslate"><span class="pre">{sg_sequence::showtype}</span></code> - This will generate a link saying ‘Sequence ABC123’ instead of the default, ‘ABC123’</li>
+<li>Example, <code class="docutils literal notranslate"><span class="pre">{sg_sequence::nolink}</span></code> - No url link will be created or shown</li>
 </ul>
 </dd>
-<dt>Pre/Post Rolls: {[pre_roll]…[post_roll]}</dt><dd><ul class="simple">
-<li><p>If a value is null, pre- and post-strings are omitted from the final result.</p></li>
-<li><p>Pre roll example, <code class="docutils literal notranslate"><span class="pre">{[Name:</span> <span class="pre">]code}</span></code> - If code is set, ‘Name: xxx’ will be printed out, otherwise nothing.</p></li>
-<li><p>Pre and Post roll example, <code class="docutils literal notranslate"><span class="pre">{[Name:</span> <span class="pre">]code[&lt;br&gt;]}</span></code> - Same as above but with a post line break</p></li>
+<dt>Pre/Post Rolls: {[pre_roll]…[post_roll]}</dt>
+<dd><ul class="first last simple">
+<li>If a value is null, pre- and post-strings are omitted from the final result.</li>
+<li>Pre roll example, <code class="docutils literal notranslate"><span class="pre">{[Name:</span> <span class="pre">]code}</span></code> - If code is set, ‘Name: xxx’ will be printed out, otherwise nothing.</li>
+<li>Pre and Post roll example, <code class="docutils literal notranslate"><span class="pre">{[Name:</span> <span class="pre">]code[&lt;br&gt;]}</span></code> - Same as above but with a post line break</li>
 </ul>
 </dd>
 </dl>
@@ -293,41 +301,50 @@
 <p>The default hook implementation will call the hook_ui_config under the hood, to retrieve the data and formatting that should be displayed. Then, any further processing of the data can be applied in this hook. The template strings returned from the hook_ui_config, are stored as class attributes in this hook, so that each hook method to access.</p>
 <div class="section" id="class-attributes">
 <h3>Class Attributes:<a class="headerlink" href="#class-attributes" title="Permalink to this headline">¶</a></h3>
-<dl class="simple">
-<dt>_title_template_string</dt><dd><ul class="simple">
-<li><p>This is the <cite>“top-left”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></p></li>
+<dl class="docutils">
+<dt>_title_template_string</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“top-left”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></li>
 </ul>
 </dd>
-<dt>_subtitle_template_string</dt><dd><ul class="simple">
-<li><p>This is the <cite>“top-right”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></p></li>
+<dt>_subtitle_template_string</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“top-right”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></li>
 </ul>
 </dd>
-<dt>_details_template_string</dt><dd><ul class="simple">
-<li><p>This is the <cite>“body”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></p></li>
+<dt>_details_template_string</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“body”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></li>
 </ul>
 </dd>
-<dt>_short_text_template_string</dt><dd><ul class="simple">
-<li><p>This is the <cite>“thumbnail-body”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></p></li>
+<dt>_short_text_template_string</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“thumbnail-body”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></li>
 </ul>
 </dd>
-<dt>_show_thumbnail</dt><dd><ul class="simple">
-<li><p>This is the <cite>“thumbnail”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></p></li>
+<dt>_show_thumbnail</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“thumbnail”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_item_details</cite></li>
 </ul>
 </dd>
-<dt>_history_title_template_string</dt><dd><ul class="simple">
-<li><p>This is the <cite>“top-left”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></p></li>
+<dt>_history_title_template_string</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“top-left”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></li>
 </ul>
 </dd>
-<dt>_history_subtitle_template_string</dt><dd><ul class="simple">
-<li><p>This is the <cite>“top-right”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></p></li>
+<dt>_history_subtitle_template_string</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“top-right”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></li>
 </ul>
 </dd>
-<dt>_history_details_template_string</dt><dd><ul class="simple">
-<li><p>This is the <cite>“body”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></p></li>
+<dt>_history_details_template_string</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“body”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></li>
 </ul>
 </dd>
-<dt>_history_show_thumbnail</dt><dd><ul class="simple">
-<li><p>This is the <cite>“thumbnail”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></p></li>
+<dt>_history_show_thumbnail</dt>
+<dd><ul class="first last simple">
+<li>This is the <cite>“thumbnail”</cite> value of the dictionary returned by the hook_ui_config method <cite>file_history_details</cite></li>
 </ul>
 </dd>
 </dl>
@@ -335,72 +352,86 @@
 </div>
 <div class="section" id="class-methods">
 <h3>Class Methods:<a class="headerlink" href="#class-methods" title="Permalink to this headline">¶</a></h3>
-<dl class="simple">
-<dt>get_item_title</dt><dd><ul class="simple">
-<li><p>The return value will decide the text displayed in the item’s top left text area.</p></li>
+<dl class="docutils">
+<dt>get_item_title</dt>
+<dd><ul class="first last simple">
+<li>The return value will decide the text displayed in the item’s top left text area.</li>
 </ul>
 </dd>
-<dt>get_item_subtitle</dt><dd><ul class="simple">
-<li><p>The return value will decide the text displayed in the item’s top right text area.</p></li>
+<dt>get_item_subtitle</dt>
+<dd><ul class="first last simple">
+<li>The return value will decide the text displayed in the item’s top right text area.</li>
 </ul>
 </dd>
-<dt>get_item_details</dt><dd><ul class="simple">
-<li><p>The return value will decide the item’s main text body.</p></li>
+<dt>get_item_details</dt>
+<dd><ul class="first last simple">
+<li>The return value will decide the item’s main text body.</li>
 </ul>
 </dd>
-<dt>get_item_short_text</dt><dd><ul class="simple">
-<li><p>The return value will decide the text displayed for the item’s condensed text. This value is used for the Thumbnail view.</p></li>
+<dt>get_item_short_text</dt>
+<dd><ul class="first last simple">
+<li>The return value will decide the text displayed for the item’s condensed text. This value is used for the Thumbnail view.</li>
 </ul>
 </dd>
-<dt>get_item_thumbnail</dt><dd><ul class="simple">
-<li><p>The return value will decide the image displayed for the item.</p></li>
+<dt>get_item_thumbnail</dt>
+<dd><ul class="first last simple">
+<li>The return value will decide the image displayed for the item.</li>
 </ul>
 </dd>
-<dt>get_item_icons</dt><dd><ul class="simple">
-<li><p>The return value will decide if any icons are displayed over the thumbnail; e.g: status icons.</p></li>
+<dt>get_item_icons</dt>
+<dd><ul class="first last simple">
+<li>The return value will decide if any icons are displayed over the thumbnail; e.g: status icons.</li>
 </ul>
 </dd>
-<dt>get_item_separator</dt><dd><ul class="simple">
-<li><p>The return value will decide if a separator line wil lbe drawn for the item.</p></li>
+<dt>get_item_separator</dt>
+<dd><ul class="first last simple">
+<li>The return value will decide if a separator line wil lbe drawn for the item.</li>
 </ul>
 </dd>
-<dt>get_history_item_title</dt><dd><ul class="simple">
-<li><p>Similar to the <cite>get_item_title</cite> method, but this acts on the file history view.</p></li>
-<li><p>The return value will decide the text displayed in the history item’s top left text area.</p></li>
+<dt>get_history_item_title</dt>
+<dd><ul class="first last simple">
+<li>Similar to the <cite>get_item_title</cite> method, but this acts on the file history view.</li>
+<li>The return value will decide the text displayed in the history item’s top left text area.</li>
 </ul>
 </dd>
-<dt>get_history_item_subtitle</dt><dd><ul class="simple">
-<li><p>Similar to the <cite>get_item_subtitle</cite> method, but this acts on the file history view.</p></li>
-<li><p>The return value will decide the text displayed in the history item’s top right text area.</p></li>
+<dt>get_history_item_subtitle</dt>
+<dd><ul class="first last simple">
+<li>Similar to the <cite>get_item_subtitle</cite> method, but this acts on the file history view.</li>
+<li>The return value will decide the text displayed in the history item’s top right text area.</li>
 </ul>
 </dd>
-<dt>get_history_item_details</dt><dd><ul class="simple">
-<li><p>Similar to the <cite>get_item_details</cite> method, but this acts on the file history view.</p></li>
-<li><p>The return value will decide the history item’s main text body.</p></li>
+<dt>get_history_item_details</dt>
+<dd><ul class="first last simple">
+<li>Similar to the <cite>get_item_details</cite> method, but this acts on the file history view.</li>
+<li>The return value will decide the history item’s main text body.</li>
 </ul>
 </dd>
-<dt>get_history_item_thumbnail</dt><dd><ul class="simple">
-<li><p>Similar to the <cite>get_item_thumbnail</cite> method, but this acts on the file history view.</p></li>
-<li><p>The return value will decide the image displayed for the item.</p></li>
+<dt>get_history_item_thumbnail</dt>
+<dd><ul class="first last simple">
+<li>Similar to the <cite>get_item_thumbnail</cite> method, but this acts on the file history view.</li>
+<li>The return value will decide the image displayed for the item.</li>
 </ul>
 </dd>
-<dt>get_history_item_icons</dt><dd><ul class="simple">
-<li><p>Similar to the <cite>get_item_icons</cite> method, but this acts on the file history view.</p></li>
-<li><p>The return value will decide if any icons are displayed over the thumbnail; e.g: status icons.</p></li>
+<dt>get_history_item_icons</dt>
+<dd><ul class="first last simple">
+<li>Similar to the <cite>get_item_icons</cite> method, but this acts on the file history view.</li>
+<li>The return value will decide if any icons are displayed over the thumbnail; e.g: status icons.</li>
 </ul>
 </dd>
-<dt>get_history_item_separator</dt><dd><ul class="simple">
-<li><p>Similar to the <cite>get_item_separator</cite> method, but this acts on the file history view.</p></li>
-<li><p>The return value will decide if a separator line wil lbe drawn for the item.</p></li>
+<dt>get_history_item_separator</dt>
+<dd><ul class="first last simple">
+<li>Similar to the <cite>get_item_separator</cite> method, but this acts on the file history view.</li>
+<li>The return value will decide if a separator line wil lbe drawn for the item.</li>
 </ul>
 </dd>
 </dl>
 </div>
 <div class="section" id="static-methods">
 <h3>Static Methods<a class="headerlink" href="#static-methods" title="Permalink to this headline">¶</a></h3>
-<dl class="simple">
-<dt>get_file_item(index)</dt><dd><ul class="simple">
-<li><p>This is a helper method to extract the <code class="docutils literal notranslate"><span class="pre">FileItem</span></code> data from the given index. The <cite>FileItem</cite> object will hold the Shotgun data associated with this index, that can be displayed in the view.</p></li>
+<dl class="docutils">
+<dt>get_file_item(index)</dt>
+<dd><ul class="first last simple">
+<li>This is a helper method to extract the <code class="docutils literal notranslate"><span class="pre">FileItem</span></code> data from the given index. The <cite>FileItem</cite> object will hold the ShotGrid data associated with this index, that can be displayed in the view.</li>
 </ul>
 </dd>
 </dl>
@@ -412,7 +443,7 @@
     <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We can extend this example to use the hook’s static method <code class="docutils literal notranslate"><span class="pre">get_file_item</span></code>, to get the Shotgun data for this index to display certain Shotgun data:</p>
+<p>We can extend this example to use the hook’s static method <code class="docutils literal notranslate"><span class="pre">get_file_item</span></code>, to get the ShotGrid data for this index to display certain ShotGrid data:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
     <span class="n">file_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_item</span><span class="p">:</span>
@@ -421,7 +452,7 @@
     <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>If the <code class="docutils literal notranslate"><span class="pre">FileItem</span></code> object is retrieved for this index, display the user who created this Shotgun entity that the item is associated with. Notice that if a FileItem object was not found, we default to display the indexes DisplayRole data.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">FileItem</span></code> object is retrieved for this index, display the user who created this ShotGrid entity that the item is associated with. Notice that if a FileItem object was not found, we default to display the indexes DisplayRole data.</p>
 <p>We can take this example one step further by using the hook attribute <code class="docutils literal notranslate"><span class="pre">_title_template_string</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
     <span class="n">file_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
@@ -434,7 +465,7 @@
     <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here, we are returning a tuple containing the template string defined in the simple hook_ui_config and the FileItem object’s Shotgun data dictionary. The returned tuple will then be passed to the <code class="docutils literal notranslate"><span class="pre">ViewItemDelegate</span></code> class, which will process the template string with the provided Shotgun data and replace any <code class="docutils literal notranslate"><span class="pre">{token}</span></code> values in the template string with the Shotgun data. See <a class="reference internal" href="#sg-token-res"><span class="std std-ref">Shotgun Token Resolution and Formatting</span></a> for more details.</p>
+<p>Here, we are returning a tuple containing the template string defined in the simple hook_ui_config and the FileItem object’s ShotGrid data dictionary. The returned tuple will then be passed to the <code class="docutils literal notranslate"><span class="pre">ViewItemDelegate</span></code> class, which will process the template string with the provided ShotGrid data and replace any <code class="docutils literal notranslate"><span class="pre">{token}</span></code> values in the template string with the ShotGrid data. See <a class="reference internal" href="#sg-token-res"><span class="std std-ref">ShotGrid Token Resolution and Formatting</span></a> for more details.</p>
 </div>
 </div>
 </div>
@@ -459,7 +490,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2021, Autodesk
+        &copy; Copyright 2022, Autodesk
 
     </p>
   </div> 

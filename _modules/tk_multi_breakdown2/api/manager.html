@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.1.0-docs-update documentation</title>
+  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.4 documentation</title>
   
 
   
@@ -23,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -49,7 +49,7 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
-    <a href='http://developer.shotgunsoftware.com'>
+    <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -118,12 +118,12 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.1.0-docs-update.<br>
+    <b>tk-multi-breakdown2</b> v0.2.4.<br>
     
         This documentation is part of the Shotgun Pipeline Toolkit.
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>Shotgun Support</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
@@ -190,7 +190,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for tk_multi_breakdown2.api.manager</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2020 Shotgun Software Inc.</span>
+<span></span><span class="c1"># Copyright (c) 2021 Autodesk, Inc.</span>
 <span class="c1">#</span>
 <span class="c1"># CONFIDENTIAL AND PROPRIETARY</span>
 <span class="c1">#</span>
@@ -198,7 +198,7 @@
 <span class="c1"># Source Code License included in this distribution package. See LICENSE.</span>
 <span class="c1"># By accessing, using, copying or modifying this work you indicate your</span>
 <span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
-<span class="c1"># not expressly granted therein are reserved by Shotgun Software Inc.</span>
+<span class="c1"># not expressly granted therein are reserved by Autodesk, Inc.</span>
 
 <span class="kn">import</span> <span class="nn">sgtk</span>
 
@@ -222,7 +222,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Scan the current scene to return a list of object we could perform actions on.</span>
 
-<span class="sd">        :param extra_fields: A list of Shotgun fields to append to the Shotgun query</span>
+<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query</span>
 <span class="sd">                             for published files.</span>
 <span class="sd">        :return: A list of :class`FileItem` objects containing the file data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -262,7 +262,7 @@
 <span class="sd">        Get the latest available published file according to the current item context.</span>
 
 <span class="sd">        :param item: :class`FileItem` object we want to get the latest published file</span>
-<span class="sd">        :return:  The latest published file as a Shotgun entity dictionary</span>
+<span class="sd">        :return:  The latest published file as a ShotGrid entity dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">:</span>
@@ -280,12 +280,12 @@
 <span class="sd">        Get the published history for the selected item. It will gather all the published files with the same context</span>
 <span class="sd">        than the current item (project, name, task, ...)</span>
 
-<span class="sd">        :param extra_fields: A list of Shotgun fields to append to the Shotgun query fields.</span>
+<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query fields.</span>
 <span class="sd">        :param item: :class`FileItem` object we want to get the published file history</span>
-<span class="sd">        :param extra_fields: A list of Shotgun fields to append to the Shotgun query</span>
+<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query</span>
 <span class="sd">                             for published files.</span>
 
-<span class="sd">        :returns: A list of Shotgun published file dictionary</span>
+<span class="sd">        :returns: A list of ShotGrid published file dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">:</span>
@@ -336,7 +336,7 @@
 <span class="sd">        Update the item to a specific version.</span>
 
 <span class="sd">        :param item: Item to update</span>
-<span class="sd">        :param sg_data: Dictionary of Shotgun data representing the published file we want to update the item to</span>
+<span class="sd">        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;local_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
@@ -365,7 +365,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2021, Autodesk
+        &copy; Copyright 2022, Autodesk
 
     </p>
   </div> 

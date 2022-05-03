@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.1.0-docs-update documentation</title>
+  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.2.4 documentation</title>
   
 
   
@@ -23,10 +23,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -49,7 +49,7 @@
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
           
-    <a href='http://developer.shotgunsoftware.com'>
+    <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -118,12 +118,12 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.1.0-docs-update.<br>
+    <b>tk-multi-breakdown2</b> v0.2.4.<br>
     
         This documentation is part of the Shotgun Pipeline Toolkit.
     
     For more information, please visit
-    <a class=custom_post_menu href='https://support.shotgunsoftware.com/home'>Shotgun Support</a>.
+    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>Shotgun Support</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
@@ -190,7 +190,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for tk_multi_breakdown2.api.item</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2020 Shotgun Software Inc.</span>
+<span></span><span class="c1"># Copyright (c) 2021 Autodesk, Inc.</span>
 <span class="c1">#</span>
 <span class="c1"># CONFIDENTIAL AND PROPRIETARY</span>
 <span class="c1">#</span>
@@ -198,13 +198,13 @@
 <span class="c1"># Source Code License included in this distribution package. See LICENSE.</span>
 <span class="c1"># By accessing, using, copying or modifying this work you indicate your</span>
 <span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
-<span class="c1"># not expressly granted therein are reserved by Shotgun Software Inc.</span>
+<span class="c1"># not expressly granted therein are reserved by Autodesk, Inc.</span>
 
 
 <div class="viewcode-block" id="FileItem"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.FileItem">[docs]</a><span class="k">class</span> <span class="nc">FileItem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Encapsulate details about a single version of a file. Each instance represents a single &quot;version&quot; but will contain</span>
-<span class="sd">    details about the latest available version of the file.</span>
+<span class="sd">    Encapsulate details about a single version of a file. Each instance represents a single &quot;version&quot;</span>
+<span class="sd">    but will contain details about the latest available version of the file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">sg_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -214,28 +214,116 @@
 <span class="sd">        :param node_name:  Name of the file node</span>
 <span class="sd">        :param node_type:  Type of the file node</span>
 <span class="sd">        :param path:       Path on disk of this file</span>
-<span class="sd">        :param sg_data:    Dictionary of Shotgun data representing this file in the database</span>
+<span class="sd">        :param sg_data:    Dictionary of ShotGrid data representing this file in the database</span>
 <span class="sd">        :param extra_data: Dictionary containing additional information about this file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">node_name</span> <span class="o">=</span> <span class="n">node_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span> <span class="o">=</span> <span class="n">node_type</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">sg_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">extra_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">latest_published_file</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">locked</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_name</span> <span class="o">=</span> <span class="n">node_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_type</span> <span class="o">=</span> <span class="n">node_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sg_data</span> <span class="o">=</span> <span class="n">sg_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_data</span> <span class="o">=</span> <span class="n">extra_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_locked</span> <span class="o">=</span> <span class="kc">False</span>
 
+    <span class="c1">########################################## ####################################################</span>
+    <span class="c1">########################################## ####################################################</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">highest_version_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :return: The highest version number available in the Shotgun database for this file</span>
+<span class="sd">        :return: The highest version number available in the ShotGrid database for this file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latest_published_file</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">latest_published_file</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version_number&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version_number&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">node_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the name of the file node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_name</span>
+
+    <span class="nd">@node_name</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">node_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_name</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">node_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the type of the file node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_type</span>
+
+    <span class="nd">@node_type</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">node_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_node_type</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the path on disk for this file item.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+
+    <span class="nd">@path</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">locked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get whether or not this file item is locked.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locked</span>
+
+    <span class="nd">@locked</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">locked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_locked</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the latest published file for this file item.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span>
+
+    <span class="nd">@latest_published_file</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extra_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get or set the extra data associated with this item.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_data</span>
+
+    <span class="nd">@extra_data</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">extra_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_data</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sg_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get or set the ShotGrid data associated with this item.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_data</span>
+
+    <span class="nd">@sg_data</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">sg_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sg_data</span> <span class="o">=</span> <span class="n">value</span>
 
 <div class="viewcode-block" id="FileItem.to_dict"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.FileItem.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -263,7 +351,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2021, Autodesk
+        &copy; Copyright 2022, Autodesk
 
     </p>
   </div> 

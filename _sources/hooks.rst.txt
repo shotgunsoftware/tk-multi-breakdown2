@@ -40,14 +40,15 @@ Each of the hook methods will return the formatted data in the form of a templat
 What this templated string does:
 
     1. Uses HTML tags to make the text, *"By:"*, bolded
-    2. Uses Shotgun token resolution to display and format the entity's description field
+    2. Uses ShotGrid token resolution to display and format the entity's description field
 
 .. _sg_token_res:
 
-Shotgun Token Resolution and Formatting
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ShotGrid Token Resolution and Formatting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Shogun token resolution will convert the values defined like, ``{token}``, into formatted strings using Shotgun data. These token values can be defined using the following format::
+
+The ShotGrid token resolution will convert the values defined like, ``{token}``, into formatted strings using ShotGrid data. These token values can be defined using the following format::
 
     {[preroll]shotgun.field.name|sg_field_name_fallback::directive[postroll]}
 
@@ -166,7 +167,7 @@ Static Methods
 ^^^^^^^^^^^^^^
 
 get_file_item(index)
-    - This is a helper method to extract the ``FileItem`` data from the given index. The `FileItem` object will hold the Shotgun data associated with this index, that can be displayed in the view.
+    - This is a helper method to extract the ``FileItem`` data from the given index. The `FileItem` object will hold the ShotGrid data associated with this index, that can be displayed in the view.
 
 Basic Examples
 ^^^^^^^^^^^^^^
@@ -178,7 +179,7 @@ This example demonstrates how to get the index data from a model role, to displa
   def get_item_title(self, index):
       return index.data(Qt.DisplayRole)
 
-We can extend this example to use the hook's static method ``get_file_item``, to get the Shotgun data for this index to display certain Shotgun data:
+We can extend this example to use the hook's static method ``get_file_item``, to get the ShotGrid data for this index to display certain ShotGrid data:
 
 .. code-block:: python
 
@@ -189,7 +190,7 @@ We can extend this example to use the hook's static method ``get_file_item``, to
 
       return index.data(Qt.DisplayRole)
 
-If the ``FileItem`` object is retrieved for this index, display the user who created this Shotgun entity that the item is associated with. Notice that if a FileItem object was not found, we default to display the indexes DisplayRole data.
+If the ``FileItem`` object is retrieved for this index, display the user who created this ShotGrid entity that the item is associated with. Notice that if a FileItem object was not found, we default to display the indexes DisplayRole data.
 
 We can take this example one step further by using the hook attribute ``_title_template_string``:
 
@@ -205,4 +206,4 @@ We can take this example one step further by using the hook attribute ``_title_t
 
       return index.data(Qt.DisplayRole)
 
-Here, we are returning a tuple containing the template string defined in the simple hook_ui_config and the FileItem object's Shotgun data dictionary. The returned tuple will then be passed to the ``ViewItemDelegate`` class, which will process the template string with the provided Shotgun data and replace any ``{token}`` values in the template string with the Shotgun data. See :ref:`sg_token_res` for more details.
+Here, we are returning a tuple containing the template string defined in the simple hook_ui_config and the FileItem object's ShotGrid data dictionary. The returned tuple will then be passed to the ``ViewItemDelegate`` class, which will process the template string with the provided ShotGrid data and replace any ``{token}`` values in the template string with the ShotGrid data. See :ref:`sg_token_res` for more details.
