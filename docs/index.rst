@@ -10,9 +10,9 @@ Improvements beyond the original Breakdown App
 ==============================================
 
 .. important::
-    We now use Shotgun instead of the filesystem to determine the versions of PublishedFiles available.
+    We now use ShotGrid instead of the filesystem to determine the versions of PublishedFiles available.
 
-* Ability to manage references in multiple Shotgun Projects
+* Ability to manage references in multiple ShotGrid Projects
 * Ability to override to a version of a PublishedFile that is not the latest
 * Get version history file information
 * Multiple configurable and scalable viewing styles available

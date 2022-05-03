@@ -18,10 +18,10 @@ class GetPublishedFiles(HookBaseClass):
 
     def get_latest_published_file(self, item, **kwargs):
         """
-        Query Shotgun to get the latest published file for the given item.
+        Query ShotGrid to get the latest published file for the given item.
 
         :param item: :class`FileItem` object we want to get the latest published file for
-        :return: The published file as a Shotgun dictionary
+        :return: The published file as a ShotGrid dictionary
         """
 
         filters = [

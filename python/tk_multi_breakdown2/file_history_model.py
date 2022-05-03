@@ -114,7 +114,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     @property
     def parent_entity(self):
         """
-        Get the Shotgun entity data dictionary that the parent file item represents.
+        Get the ShotGrid entity data dictionary that the parent file item represents.
         """
         if not self.parent_file:
             return None
@@ -155,7 +155,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
     def load_data(self, parent_file):
         """
-        Load the history details for the parent file item. The file item contains the Shotgun data
+        Load the history details for the parent file item. The file item contains the ShotGrid data
         dictionary used to load the history data.
 
         :param sg_data: The parent file item to load history data for.
@@ -201,7 +201,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         :param item: QStandardItem that is about to be added to the model. This has been primed
                      with the standard settings that the ShotgunModel handles.
-        :param sg_data: Shotgun data dictionary that was received from Shotgun given the fields
+        :param sg_data: ShotGrid data dictionary that was received from ShotGrid given the fields
                         and other settings specified in load_data()
         """
 
@@ -237,7 +237,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         Sets a tooltip for this model item.
 
         :param item: ShotgunStandardItem associated with the publish.
-        :param sg_item: Publish information from Shotgun.
+        :param sg_item: Publish information from ShotGrid.
         """
 
         # Do nothing, let the delegate show the tooltip.

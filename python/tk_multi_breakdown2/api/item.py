@@ -22,7 +22,7 @@ class FileItem(object):
         :param node_name:  Name of the file node
         :param node_type:  Type of the file node
         :param path:       Path on disk of this file
-        :param sg_data:    Dictionary of Shotgun data representing this file in the database
+        :param sg_data:    Dictionary of ShotGrid data representing this file in the database
         :param extra_data: Dictionary containing additional information about this file
         """
 
@@ -39,7 +39,7 @@ class FileItem(object):
     @property
     def highest_version_number(self):
         """
-        :return: The highest version number available in the Shotgun database for this file
+        :return: The highest version number available in the ShotGrid database for this file
         """
 
         if self._latest_published_file:

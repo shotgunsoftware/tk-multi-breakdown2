@@ -153,13 +153,13 @@ class UIConfigAdvanced(HookClass):
         Returns the data to display for this model index item's title.
 
         If a title template string is defined, return a tuple where the first item is the
-        template string and the second item is the Shotgun data to format the template
+        template string and the second item is the ShotGrid data to format the template
         string with. This tuple return value may be consumed by the :class:`ViewItemDelegate`
         that will search and replace the tempalte string with the specified values from
-        the Shotgun data provided.
+        the ShotGrid data provided.
 
         See the UIConfiguration class (ui_configuartion.py) for more details on how to
-        construct a template string that can be processed and replaced with Shotgun data.
+        construct a template string that can be processed and replaced with ShotGrid data.
 
         :param index: The model item index
         :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
@@ -188,13 +188,13 @@ class UIConfigAdvanced(HookClass):
         Returns the data to display for this model index item's subtitle.
 
         If a subtitle template string is defined, return a tuple where the first item is the
-        template string and the second item is the Shotgun data to format the template
+        template string and the second item is the ShotGrid data to format the template
         string with. This tuple return value may be consumed by the :class:`ViewItemDelegate`
         that will search and replace the tempalte string with the specified values from
-        the Shotgun data provided.
+        the ShotGrid data provided.
 
         See the UIConfiguration class (ui_configuartion.py) for more details on how to
-        construct a template string that can be processed and replaced with Shotgun data.
+        construct a template string that can be processed and replaced with ShotGrid data.
 
         :param index: The model item index
         :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
@@ -318,13 +318,13 @@ class UIConfigAdvanced(HookClass):
         Returns the data to display for this model index item's detailed text.
 
         If a details template string is defined, return a tuple where the first item is the
-        template string and the second item is the Shotgun data to format the template
+        template string and the second item is the ShotGrid data to format the template
         string with. This tuple return value may be consumed by the :class:`ViewItemDelegate`
         that will search and replace the tempalte string with the specified values from
-        the Shotgun data provided.
+        the ShotGrid data provided.
 
         See the UIConfiguration class (ui_configuartion.py) for more details on how to
-        construct a template string that can be processed and replaced with Shotgun data.
+        construct a template string that can be processed and replaced with ShotGrid data.
 
         :param index: The model item index
         :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
@@ -438,13 +438,13 @@ class UIConfigAdvanced(HookClass):
         """
         Returns the data to display for this model index item's title. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
-        Shotgun data to format the template string with. This tuple return value may be
+        ShotGrid data to format the template string with. This tuple return value may be
         consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the Shotgun data provided.
+        string with the specified values from the ShotGrid data provided.
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
+        :param sg_data: The ShotGrid data associated with this item.
         :type sg_data: dict
 
         :return: The title data to display.
@@ -460,13 +460,13 @@ class UIConfigAdvanced(HookClass):
         """
         Returns the data to display for this model index item's subtitle. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
-        Shotgun data to format the template string with. This tuple return value may be
+        ShotGrid data to format the template string with. This tuple return value may be
         consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the Shotgun data provided.
+        string with the specified values from the ShotGrid data provided.
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
+        :param sg_data: The ShotGrid data associated with this item.
         :type sg_data: dict
 
         :return: The subtitle data to display.
@@ -482,13 +482,13 @@ class UIConfigAdvanced(HookClass):
         """
         Returns the data to display for this model index item's details. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
-        Shotgun data to format the template string with. This tuple return value may be
+        ShotGrid data to format the template string with. This tuple return value may be
         consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the Shotgun data provided.
+        string with the specified values from the ShotGrid data provided.
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
+        :param sg_data: The ShotGrid data associated with this item.
         :type sg_data: dict
 
         :return: The details data to display.
@@ -506,7 +506,7 @@ class UIConfigAdvanced(HookClass):
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The Shotgun data associated with this item.
+        :param sg_data: The ShotGrid data associated with this item.
         :type sg_data: dict
 
         :return: The item thumbnail.
