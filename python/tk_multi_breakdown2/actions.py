@@ -40,7 +40,7 @@ class ActionManager(object):
         Build a QAction for the "Update to vxx" menu item.
 
         :param item: Item to update to a specific version
-        :param sg_data: Dictionary of Shotgun data representing the published file we want to update the item to
+        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to
         :param parent: Parent widget
         :returns: The QAction representing the menu item
         """
@@ -138,7 +138,7 @@ class UpdateToSpecificVersionAction(Action):
 
         :param label: Name of the action.
         :param item: Item to perform the action on
-        :param sg_data: Dictionary of Shotgun data representing the Published File we want to update the item to
+        :param sg_data: Dictionary of ShotGrid data representing the Published File we want to update the item to
         """
         Action.__init__(self, label, item)
         self._sg_data = sg_data

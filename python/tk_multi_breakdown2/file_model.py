@@ -439,7 +439,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 continue
 
             # group scene object by project
-            # todo: use an app setting to be able to group scene object by another Shotgun field
+            # todo: use an app setting to be able to group scene object by another ShotGrid field
             project = file_item.sg_data["project"]
             if project["id"] not in self._group_items.keys():
                 group_item = FileModel.GroupModelItem(project["name"])

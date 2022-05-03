@@ -30,7 +30,7 @@ class BreakdownManager(object):
         """
         Scan the current scene to return a list of object we could perform actions on.
 
-        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query
                              for published files.
         :return: A list of :class`FileItem` objects containing the file data.
         """
@@ -70,7 +70,7 @@ class BreakdownManager(object):
         Get the latest available published file according to the current item context.
 
         :param item: :class`FileItem` object we want to get the latest published file
-        :return:  The latest published file as a Shotgun entity dictionary
+        :return:  The latest published file as a ShotGrid entity dictionary
         """
 
         if not item.sg_data:
@@ -88,12 +88,12 @@ class BreakdownManager(object):
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
 
-        :param extra_fields: A list of Shotgun fields to append to the Shotgun query fields.
+        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query fields.
         :param item: :class`FileItem` object we want to get the published file history
-        :param extra_fields: A list of Shotgun fields to append to the Shotgun query
+        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query
                              for published files.
 
-        :returns: A list of Shotgun published file dictionary
+        :returns: A list of ShotGrid published file dictionary
         """
 
         if not item.sg_data:
@@ -144,7 +144,7 @@ class BreakdownManager(object):
         Update the item to a specific version.
 
         :param item: Item to update
-        :param sg_data: Dictionary of Shotgun data representing the published file we want to update the item to
+        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to
         """
 
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):

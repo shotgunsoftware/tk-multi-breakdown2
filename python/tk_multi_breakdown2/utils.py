@@ -13,16 +13,16 @@ from .framework_qtwidgets import utils
 
 def get_ui_published_file_fields(app):
     """
-    Returns a list of Shotgun fields we want to retrieve when querying Shotgun. We're going through each widget
+    Returns a list of ShotGrid fields we want to retrieve when querying ShotGrid. We're going through each widget
     configuration in order to be sure to have all the necessary data to fill the fields.
 
     :param app: The app we're running the command from
-    :returns: A list of Shotgun Published File fields
+    :returns: A list of ShotGrid Published File fields
     """
 
     fields = []
 
-    # in order to be able to return all the needed Shotgun fields, we need to look for the way the UI is configured
+    # in order to be able to return all the needed ShotGrid fields, we need to look for the way the UI is configured
     file_item_config = app.execute_hook_method("hook_ui_config", "file_item_details")
 
     fields += utils.resolve_sg_fields(file_item_config.get("top_left"))

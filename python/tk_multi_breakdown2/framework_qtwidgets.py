@@ -23,7 +23,7 @@ delegates = sgtk.platform.import_framework("tk-framework-qtwidgets", "delegates"
 ViewItemDelegate = delegates.ViewItemDelegate
 ThumbnailViewItemDelegate = delegates.ThumbnailViewItemDelegate
 
-# Shotgun formatted widget
+# ShotGrid formatted widget
 shotgun_widget = sgtk.platform.import_framework(
     "tk-framework-qtwidgets", "shotgun_widget"
 )
