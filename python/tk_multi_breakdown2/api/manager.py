@@ -26,6 +26,7 @@ class BreakdownManager(object):
 
         self._bundle = bundle
 
+    @sgtk.LogManager.log_timing
     def scan_scene(self, extra_fields=None):
         """
         Scan the current scene to return a list of object we could perform actions on.
