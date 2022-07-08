@@ -343,6 +343,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self._app = sgtk.platform.current_bundle()
 
         self._group_items = {}
+        self._pending_files_request = None
         self._pending_thumbnail_requests = {}
         self._pending_version_requests = {}
 
@@ -420,17 +421,59 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 self._on_background_task_failed
             )
 
-    def process_files(self):
+    def clear(self):
         """
-        Scan the current scene to get all the items we could perform actions on and for each item,
-        build a model item and a data structure to represent them.
+        Override the base method.
+
+        Clean up the data that this model owns and call the base class method to finish the
+        clean up.
+        """
+
+        self._group_items = {}
+
+        super(FileModel, self).clear()
+
+    def reload(self):
+        """
+        Reload the data in the model.
+
+        Fire off a background task that scans the current scene to get all the file items. Once
+        the background task is complete, the file items will be processed to rebuild the model.
+
+        This method will emit the signal that the model is resetting but does not call the
+        signal to end the model reset. The slot called when the scan scene task is complete
+        is responsible for emitting the end model reset signal.
         """
 
         self.beginResetModel()
-        self.clear()
 
-        # scan the current scene
-        file_items = self._manager.scan_scene(extra_fields=self._published_file_fields)
+        try:
+            restore_state = self.blockSignals(True)
+            self.clear()
+
+            # Fire off a background task to scan the current scene
+            task_id = self._bg_task_manager.add_task(
+                self._manager.scan_scene,
+                task_kwargs={"extra_fields": self._published_file_fields},
+            )
+            self._pending_files_request = task_id
+
+        finally:
+            self.blockSignals(restore_state)
+
+    def _process_files(self, file_items):
+        """
+        Process the file items given to add to the model.
+
+        A model item will be created for each of the given file items, and will be added to
+        the model.
+
+        Note that this method does not clear the current model items, it just appends them to
+        the current model.
+
+        :param file_items: The file item data to create items in the model.
+        :type file_items: list<FileItem>
+        """
 
         for file_item in file_items:
             # if the item doesn't have any associated shotgun data, it means that the file is not a
@@ -466,21 +509,29 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             )
             self._pending_version_requests[task_id] = file_model_item
 
-        self.endResetModel()
-
-    def is_loading(self, model_item):
+    def is_loading(self, model_item=None):
         """
-        Return True if the item in the model is in a loading state. An item is considered to be
-        loading if the model item is found in the `_pending_version_requests` or
-        `_pending_thumbnail_requests`.
+        Return True if the whole model, or the individual model item is in a loading state.
 
-        :param model_item: The item in the model.
-        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
+        The model is loading when the current scene is being scanned and the model is
+        waiting for the file items to be returned to create the items in the model. The
+        model loading state will be returned if the `model_item` is not specified.
 
-        :return: True if model is loading the item, else False.
+        A model item is loading when its data is being fetched. The model item loading state
+        will be returned for the `model_item` specified.
+
+        :param model_item: The item in the model, or None to check the loading status of the
+            model as a whole.
+        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem` | None
+
+        :return: True if model or model item is loading the item, else False.
         :rtype: bool
         """
 
+        if model_item is None:
+            return self._pending_files_request is not None
+
+        # Else return the loading state of the model item specified.
         items_loading = list(self._pending_version_requests.values()) + list(
             self._pending_thumbnail_requests.values()
         )
@@ -522,15 +573,18 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :param request_type:    A string representing the type of request that has been completed
         :param data:            The result from completing the work
         """
-        if uid not in self._pending_thumbnail_requests:
-            return
 
-        file_model_item = self._pending_thumbnail_requests[uid]
-        del self._pending_thumbnail_requests[uid]
+        if uid in self._pending_thumbnail_requests:
+            # Get the model item pertaining to this thumbnail request
+            file_model_item = self._pending_thumbnail_requests[uid]
 
-        thumb_path = data.get("thumb_path")
-        if thumb_path:
-            file_model_item.setIcon(QtGui.QPixmap(thumb_path))
+            # Remove the request id from the pending list
+            del self._pending_thumbnail_requests[uid]
+
+            # Update the model item's thumbnail from the data returned by the request
+            thumb_path = data.get("thumb_path")
+            if thumb_path:
+                file_model_item.setIcon(QtGui.QPixmap(thumb_path))
 
     def _on_data_retriever_work_failed(self, uid, error_msg):
         """
@@ -539,8 +593,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :param uid:         The unique id representing the task that the data retriever failed on
         :param error_msg:   The error message for the failed task
         """
+
         if uid in self._pending_thumbnail_requests:
             del self._pending_thumbnail_requests[uid]
+
         self._app.logger.debug(
             "File Model: Failed to find thumbnail for id %s: %s" % (uid, error_msg)
         )
@@ -554,12 +610,17 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :param group_id: The group the task is associated with
         :param result:   The data returned by the task
         """
-        if uid not in self._pending_version_requests:
-            return
-        file_model_item = self._pending_version_requests[uid]
-        del self._pending_version_requests[uid]
 
-        file_model_item.emitDataChanged()
+        if uid == self._pending_files_request:
+            self._pending_files_request = None
+            self._process_files(result)
+            self.endResetModel()
+
+        elif uid in self._pending_version_requests:
+            file_model_item = self._pending_version_requests[uid]
+            del self._pending_version_requests[uid]
+
+            file_model_item.emitDataChanged()
 
     def _on_background_task_failed(self, uid, group_id, msg, stack_trace):
         """
@@ -570,8 +631,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :param msg:         Short error message
         :param stack_trace: Full error traceback
         """
-        if uid in self._pending_version_requests:
+
+        if uid == self._pending_files_request:
+            self._pending_files_request = None
+            self.endResetModel()
+
+        elif uid in self._pending_version_requests:
             del self._pending_version_requests[uid]
+
         self._app.logger.error(
             "File Model: Failed to find the latest published file for id %s: %s"
             % (uid, msg)

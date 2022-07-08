@@ -275,7 +275,7 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
 
         # finally, update the UI by processing the files of the current scene
-        self._file_model.process_files()
+        self._file_model.reload()
 
         # make this slot connection once the model has started processing files otherwise the
         # selection model doesn't exist
@@ -721,6 +721,10 @@ class AppDialog(QtGui.QWidget):
         Slot triggered once the main file model has finished resetting and has emitted
         the `modelRest` signal.
         """
+
+        if self._file_model.is_loading():
+            # The model is still loading, don't do anything
+            return
 
         if self._file_model.rowCount() <= 0:
             self._file_model_overlay.show_message("No items found.")
