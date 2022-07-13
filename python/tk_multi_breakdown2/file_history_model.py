@@ -36,8 +36,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     (
         STATUS_ROLE,  # The item status, one of the status enums
         BADGE_ROLE,  # The badge to display for the item based on status
+        SORT_ROLE,  # The history data to sort the items by
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 3)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 4)
 
     (
         STATUS_UP_TO_DATE,
@@ -141,6 +142,24 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             return None
 
         return self.parent_file.highest_version_number
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        """
+        Override the base method.
+
+        Returns the data stored under the given role for the item referred to by the index.
+
+        :param index: The index to get the data for.
+        :type index: QtCore.QModelIndex
+        :param role: The role to get the data for.
+        :type role: QtCore.Qt.ItemDataRole
+        """
+
+        if role == self.SORT_ROLE:
+            sg_data = self.data(index, self.SG_DATA_ROLE)
+            return sg_data.get("version_number", -1)
+
+        return super(FileHistoryModel, self).data(index, role)
 
     def is_current(self, history_sg_data):
         """
