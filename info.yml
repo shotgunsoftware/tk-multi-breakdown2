@@ -43,6 +43,11 @@ configuration:
         description: List of Published File fields returned when querying ShotGrid for published file history.
                      These fields will also be used when scanning the scene to get the current scene elements.
 
+    group_by:
+        type: str
+        default_value: project
+        description: Define the field which the published files are grouped by in the main view.
+
 # The ShotGrid fields that this app needs in order to operate correctly
 requires_shotgun_fields:
 # linked_projects.Asset is required for references in multiple ShotGrid rojects
