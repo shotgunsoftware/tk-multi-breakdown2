@@ -8,9 +8,13 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+import copy
+
 import sgtk
 from sgtk import TankError
 from sgtk.platform.qt import QtGui, QtCore
+
+from tank_vendor import six
 
 from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
@@ -140,9 +144,20 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             return shotgun_model.util.sanitize_qt(result)
 
     class GroupModelItem(BaseModelItem):
-        """
-        Model item that represents a group in the model.
-        """
+        """Model item that represents a group in the model."""
+
+        def __init__(self, group_id, display_value):
+            """Constructor"""
+
+            super(FileModel.GroupModelItem, self).__init__(display_value)
+
+            self._group_id = group_id
+            self._display_value = display_value
+
+        @property
+        def group_id(self):
+            """Get the unique id for this group model item."""
+            return self._group_id
 
         def data(self, role):
             """
@@ -203,17 +218,21 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         Model item that represents a single FileItem in the model.
         """
 
-        def __init__(self):
+        def __init__(self, file_item=None):
             """
             Constructor. Initialize the file item data to None, the file item data will be
             set in the setData method using the FileModel.FILE_ITEM_ROLE.
+
+            :param file_item: The file item data to initialize the model item with.
+            :type file_item: FileItem
             """
 
             # Call the base QStandardItem constructor
             super(FileModel.FileModelItem, self).__init__()
 
-            # Initialize our file mode item data
-            self._file_item = None
+            # Initialize our file mode item data. Deepcopy the data to ensure our file item
+            # data cannot be modified outside of the model, or only using the setData method.
+            self._file_item = copy.deepcopy(file_item)
 
         def data(self, role):
             """
@@ -229,7 +248,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 return QtGui.QApplication.palette().midlight()
 
             if role == FileModel.FILE_ITEM_ROLE:
-                return self._file_item
+                # Return a copy of the file item object so that the model data cannot be
+                # modified without going through the setData method, so that the model
+                # can emits the necessary signals
+                return copy.deepcopy(self._file_item)
 
             if self._file_item:
                 if role == FileModel.FILE_ITEM_NODE_NAME_ROLE:
@@ -317,9 +339,19 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
 
             if role == FileModel.FILE_ITEM_ROLE:
-                # Send a request to retrieve and update the file item's thumbnail
-                self.model().request_thumbnail(self, value)
-                self._file_item = value
+                if self.model():
+                    cur_group_value = self._file_item.sg_data.get(self.model().group_by)
+                    updated_group_value = value.sg_data.get(self.model().group_by)
+                    if cur_group_value != updated_group_value:
+                        # Update the grouping of this file item now that its data has changed
+                        # and it no longer belongs in its current group
+                        self.model().update_file_group(
+                            self.row(), self._file_item, value
+                        )
+
+                # Deepcopy the value to ensure our file item data cannot be modified outside
+                # of the model, or only using the setData method
+                self._file_item = copy.deepcopy(value)
 
                 # Emit a specific signal for the FILE_ITEM_ROLE
                 self.model().file_item_data_changed.emit(self)
@@ -327,16 +359,22 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 # Emit the standard model data changed
                 self.emitDataChanged()
 
+            elif role == FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
+                self._file_item.latest_published_file = value
+                self.emitDataChanged()
+
             else:
                 super(FileModel.FileModelItem, self).setData(value, role)
 
-    def __init__(self, parent, bg_task_manager):
+    def __init__(self, parent, bg_task_manager, group_by=None):
         """
         Class constructor
 
         :param parent:          The parent QObject for this instance
         :param bg_task_manager: A BackgroundTaskManager instance that will be used for all background/threaded
                                 work that needs undertaking
+        :param group_by:        The data defining how to create the file item grouping.
+        :type group_by: dict
         """
 
         QtGui.QStandardItemModel.__init__(self, parent)
@@ -347,6 +385,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self._pending_files_request = None
         self._pending_thumbnail_requests = {}
         self._pending_version_requests = {}
+
+        if group_by and isinstance(group_by, six.string_types):
+            self._group_by = group_by
+        else:
+            self._group_by = "project"
 
         self._manager = self._app.create_breakdown_manager()
 
@@ -398,22 +441,33 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         return cls.FILE_ITEM_STATUS_ICONS.get(status, QtGui.QIcon())
 
+    @property
+    def group_by(self):
+        """Get or set the property defining the grouping of the file items."""
+        return self._group_by
+
+    @group_by.setter
+    def group_by(self, value):
+        self._group_by = value
+
+    #########################################################################################################
+    # Public FileModel methods
+
     def destroy(self):
         """
+        Override the base method.
+
         Called to clean-up and shutdown any internal objects when the model has been finished
         with. Failure to call this may result in instability or unexpected behaviour!
         """
 
-        # clear the model
         self.clear()
 
-        # stop the data retriever
         if self._sg_data_retriever:
             self._sg_data_retriever.stop()
             self._sg_data_retriever.deleteLater()
             self._sg_data_retriever = None
 
-        # shut down the task manager
         if self._bg_task_manager:
             self._bg_task_manager.task_completed.disconnect(
                 self._on_background_task_completed
@@ -452,7 +506,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             restore_state = self.blockSignals(True)
             self.clear()
 
-            # Fire off a background task to scan the current scene
+            # Fire off a background task to scan the current scene to get the file item data
             task_id = self._bg_task_manager.add_task(
                 self._manager.scan_scene,
                 task_kwargs={"extra_fields": self._published_file_fields},
@@ -462,53 +516,37 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         finally:
             self.blockSignals(restore_state)
 
-    def _process_files(self, file_items):
+    def refresh(self):
         """
-        Process the file items given to add to the model.
+        Refresh the model internal data layout.
 
-        A model item will be created for each of the given file items, and will be added to
-        the model.
-
-        Note that this method does not clear the current model items, it just appends them to
-        the current model.
-
-        :param file_items: The file item data to create items in the model.
-        :type file_items: list<FileItem>
+        This method should be called if the model grouping (parent/child relationships) have
+        been changed.
         """
 
-        for file_item in file_items:
-            # if the item doesn't have any associated shotgun data, it means that the file is not a
-            # Published File so skip it
-            if not file_item.sg_data:
-                continue
+        self.beginResetModel()
 
-            # group scene object by project
-            # todo: use an app setting to be able to group scene object by another ShotGrid field
-            project = file_item.sg_data["project"]
-            if project["id"] not in self._group_items.keys():
-                group_item = FileModel.GroupModelItem(project["name"])
-                self.invisibleRootItem().appendRow(group_item)
-                self._group_items[project["id"]] = group_item
-            else:
-                group_item = self._group_items[project["id"]]
+        try:
+            restore_state = self.blockSignals(True)
 
-            file_model_item = FileModel.FileModelItem()
-            # Add the model item to the group before setting and data on the item, to ensure it has
-            # a model associated with it.
-            group_item.appendRow(file_model_item)
-            # Set a placeholder icon, until the thumbnail is loaded.
-            file_model_item.setIcon(QtGui.QIcon())
-            # Set the file item data, an async request will be made to get the thumbnail.
-            file_model_item.setData(file_item, FileModel.FILE_ITEM_ROLE)
+            # Get the list of file item data to rebuild the model with. This is useful when
+            # the model grouping has changed and the file model items will potentially all
+            # need to be relocated to a differnt grouping
+            file_items = []
+            for row in range(self.rowCount()):
+                group_item = self.item(row)
+                for child_row in range(group_item.rowCount()):
+                    child = group_item.child(child_row)
+                    file_item = child.data(self.FILE_ITEM_ROLE)
+                    file_items.append(file_item)
 
-            # for each item, we need to determine the latest version in order to know if the file
-            # is up-to-date or not
-            task_id = self._bg_task_manager.add_task(
-                self._manager.get_latest_published_file,
-                task_kwargs={"item": file_item},
-                group=self.TASK_GROUP_PROCESSED_FILES,
-            )
-            self._pending_version_requests[task_id] = file_model_item
+            # Clear the current model and rebuild it with our file item data
+            self.clear()
+            self._process_files(file_items)
+
+        finally:
+            self.blockSignals(restore_state)
+            self.endResetModel()
 
     def is_loading(self, model_item=None):
         """
@@ -563,6 +601,133 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # Store the model item with the request id, so that the model item can be retrieved
         # to update when the async request completes.
         self._pending_thumbnail_requests[request_id] = model_item
+
+    def get_group_by_fields(self):
+        """
+        Get the fields that are available to group the file items by.
+
+        :return: The list of group by fields.
+        :rtype: list<str>
+        """
+
+        return list(
+            set(self._manager.get_published_file_fields() + self._published_file_fields)
+        )
+
+    def update_file_group(
+        self, file_model_item_row, cur_file_item_data, new_file_item_data
+    ):
+        """
+        Update the grouping that the file item belongs to.
+
+        :param file_model_item_row: The row (relative to its grouping) that the file item is in.
+        :type file_model_item_row: int
+        :param cur_file_item_data: The current data of the file item.
+        :type cur_file_item_data: FileItem
+        :param new_file_item_data: The data that the file model item will be updated with.
+        :type new_file_item_data: FileItem
+        """
+
+        # Get the current grouping and remove the file model item from it, and remove the
+        # grouping totally if it becomes empty after removing the item.
+        cur_group_id, _ = self._get_file_group_info(cur_file_item_data)
+        cur_group_item = self._group_items.get(cur_group_id)
+        file_model_item = cur_group_item.takeRow(file_model_item_row)
+        if not cur_group_item.hasChildren():
+            self.removeRow(cur_group_item.row())
+            del self._group_items[cur_group_id]
+
+        # Get the new grouping, create the group item if it does not yet exist, and add the
+        # file model item to it
+        new_group_id, new_group_display = self._get_file_group_info(new_file_item_data)
+        new_group_item = self._group_items.get(new_group_id)
+        if new_group_item is None:
+            new_group_item = FileModel.GroupModelItem(new_group_id, new_group_display)
+            self._group_items[new_group_id] = new_group_item
+            self.appendRow(new_group_item)
+
+        new_group_item.appendRows(file_model_item)
+
+    #########################################################################################################
+    # Protected FileModel methods
+
+    def _process_files(self, file_items):
+        """
+        Process the file items given to add to the model.
+
+        A model item will be created for each of the given file items, and will be added to
+        the model.
+
+        Note that this method does not clear the current model items, it just appends them to
+        the current model.
+
+        :param file_items: The file item data to create items in the model.
+        :type file_items: list<FileItem>
+        """
+
+        for file_item in file_items:
+            # if the item doesn't have any associated shotgun data, it means that the file is not a
+            # Published File so skip it
+            if not file_item.sg_data:
+                continue
+
+            group_by_id, group_by_display = self._get_file_group_info(file_item)
+            if self._group_items.get(group_by_id) is None:
+                group_item = FileModel.GroupModelItem(group_by_id, group_by_display)
+                self.appendRow(group_item)
+                self._group_items[group_by_id] = group_item
+            else:
+                group_item = self._group_items[group_by_id]
+
+            file_model_item = FileModel.FileModelItem(file_item=file_item)
+            file_model_item.setIcon(QtGui.QIcon())
+            # Send an async request to retrieve and update the file item's thumbnail
+            self.request_thumbnail(file_model_item, file_item)
+
+            # Add the file item to the grouping
+            group_item.appendRow(file_model_item)
+
+            if not file_item.latest_published_file:
+                # Retrieve the latest version in order to know if the file is up-to-date or not
+                task_id = self._bg_task_manager.add_task(
+                    self._manager.get_latest_published_file,
+                    task_kwargs={"item": file_item},
+                    group=self.TASK_GROUP_PROCESSED_FILES,
+                )
+                self._pending_version_requests[task_id] = file_model_item
+
+    def _get_file_group_info(self, file_item):
+        """
+        Get the group by information for the given file item.
+
+        :param file_item: The file item to get the group by info from.
+        :type file_item: FileItem
+
+        :return: The group by information for the file item.
+        :rtype: tuple<str, str>
+        """
+
+        if self.group_by not in file_item.sg_data:
+            return ("", "")
+
+        # Get the group by field data
+        data = file_item.sg_data[self.group_by]
+
+        # Attempt to get the id for the grouping
+        try:
+            group_by_id = "{type}.{id}".format(
+                type=data.get("type", "NoType"), id=data["id"]
+            )
+        except:
+            group_by_id = str(data)
+
+        # Attempt to get the display value for the grouping
+        try:
+            group_by_display = data["name"]
+        except:
+            group_by_display = str(data)
+
+        return (group_by_id, group_by_display)
 
     def _on_data_retriever_work_completed(self, uid, request_type, data):
         """
@@ -621,7 +786,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             file_model_item = self._pending_version_requests[uid]
             del self._pending_version_requests[uid]
 
-            file_model_item.emitDataChanged()
+            file_model_item.setData(
+                result, FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE
+            )
 
     def _on_background_task_failed(self, uid, group_id, msg, stack_trace):
         """
