@@ -11,6 +11,7 @@
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
+from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
 from . import constants
 

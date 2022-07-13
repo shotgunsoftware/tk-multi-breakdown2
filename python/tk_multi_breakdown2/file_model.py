@@ -12,6 +12,7 @@ import sgtk
 from sgtk import TankError
 from sgtk.platform.qt import QtGui, QtCore
 
+from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
 
 shotgun_data = sgtk.platform.import_framework(
