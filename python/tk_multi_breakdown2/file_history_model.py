@@ -141,7 +141,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         if not self.parent_file:
             return None
 
-        return self.parent_file.highest_version_number
+        return self.parent_file.highest_version_number or -1
 
     def is_current(self, history_sg_data):
         """
