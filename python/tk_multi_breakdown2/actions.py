@@ -11,11 +11,11 @@
 import sgtk
 from sgtk.platform.qt import QtGui
 
+from .decorators import wait_cursor
+
 
 class ActionManager(object):
-    """
-    Class to gather all the possible actions we can run inside the Scene Breakdown 2.
-    """
+    """Class to gather all the possible actions we can run inside the Scene Breakdown 2."""
 
     @staticmethod
     def add_update_to_latest_action(items, parent=None):
@@ -75,9 +75,7 @@ class ActionManager(object):
 
 
 class Action(object):
-    """
-    Base class for Actions.
-    """
+    """Base class for Actions."""
 
     def __init__(self, label, items):
         """
@@ -103,9 +101,7 @@ class Action(object):
 
 
 class UpdateToLatestVersionAction(Action):
-    """
-    Update items to their latest version
-    """
+    """Update items to their latest version."""
 
     def __init__(self, label, items):
         """
@@ -114,12 +110,18 @@ class UpdateToLatestVersionAction(Action):
         :param label: Name of the action.
         :param items: Items to perform the action on
         """
-        Action.__init__(self, label, items)
 
+        super(UpdateToLatestVersionAction, self).__init__(label, items)
+
+    @wait_cursor
     def execute(self):
         """
         Update a list of items to their latest version.
         """
+
+        if not self._items:
+            return
+
         for file_item, file_model_item in self._items:
             # Call the manager to update the file item object to the latest version.
             self._manager.update_to_latest_version(file_item)
@@ -128,9 +130,7 @@ class UpdateToLatestVersionAction(Action):
 
 
 class UpdateToSpecificVersionAction(Action):
-    """
-    Update an item to a specific version.
-    """
+    """Update an item to a specific version."""
 
     def __init__(self, label, item, sg_data):
         """
@@ -140,16 +140,19 @@ class UpdateToSpecificVersionAction(Action):
         :param item: Item to perform the action on
         :param sg_data: Dictionary of ShotGrid data representing the Published File we want to update the item to
         """
-        Action.__init__(self, label, item)
+
+        super(UpdateToSpecificVersionAction, self).__init__(label, item)
         self._sg_data = sg_data
 
+    @wait_cursor
     def execute(self):
-        """
-        Update an item to a specific version.
-        """
+        """Update an item to a specific version."""
+
         file_item = self._items[0]
         file_model_item = self._items[1]
+
         # Call the manager to update the file item to the specific version.
         self._manager.update_to_specific_version(file_item, self._sg_data)
+
         # Update the model item with the updated file item
         file_model_item.setData(file_item, file_model_item.model().FILE_ITEM_ROLE)
