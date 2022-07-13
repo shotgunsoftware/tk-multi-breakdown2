@@ -10,6 +10,11 @@
 
 from .api import BreakdownManager
 
+# For unit tests to access the app modules
+from .file_model import FileModel
+from .file_proxy_model import FileProxyModel
+from .file_history_model import FileHistoryModel
+
 
 def show_dialog(app):
     """
