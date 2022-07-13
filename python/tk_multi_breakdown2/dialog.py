@@ -28,6 +28,7 @@ from .framework_qtwidgets import (
     utils,
 )
 from .file_proxy_model import FileProxyModel
+from .decorators import wait_cursor
 
 task_manager = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "task_manager"
@@ -53,6 +54,7 @@ class AppDialog(QtGui.QWidget):
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
     SPLITTER_STATE = "splitter_state"
     FILTER_MENU_STATE = "filter_menu_state"
+    GROUP_BY_SETTING = "group_by"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -100,7 +102,10 @@ class AppDialog(QtGui.QWidget):
             self._on_context_menu_requested
         )
 
-        self._file_model = FileModel(self, self._bg_task_manager)
+        group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
+        if group_by is None:
+            group_by = self._bundle.get_setting("group_by", None)
+        self._file_model = FileModel(self, self._bg_task_manager, group_by)
         self._file_model.file_item_data_changed.connect(self._on_file_item_data_changed)
 
         self._file_proxy_model = FileProxyModel(self)
@@ -108,10 +113,43 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
-        self._file_model.modelAboutToBeReset.connect(
-            self._file_model_overlay.start_spin
-        )
+        self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
+
+        # Set up group combobox
+        fields = sorted(self._file_model.get_group_by_fields())
+        added_groups = []
+        group_by_index = 0
+        for field in fields:
+            # Do not allow grouping by these special fields
+            if field.startswith("<") and field.endswith(">"):
+                continue
+
+            # For linked fields, just take the first part of the linked field
+            first_field = field.split(".")[0]
+            friendly_field_name = " ".join(
+                text.title() for text in first_field.split("_")
+            )
+
+            # Make sure this field has not already been added
+            if friendly_field_name in added_groups:
+                continue
+
+            # As we add the items, check if this group by field should be the current index,
+            # so that the combo box current index can be set after it has been init
+            if field == self._file_model.group_by:
+                group_by_index = self._ui.group_by_combo_box.count()
+
+            field_data = field
+            self._ui.group_by_combo_box.addItem(friendly_field_name, field_data)
+
+            # Keep track of what fields we've added so that there are no duplicates
+            added_groups.append(friendly_field_name)
+
+        self._ui.group_by_combo_box.setCurrentIndex(group_by_index)
+        self._ui.group_by_combo_box.currentTextChanged.connect(
+            self._on_group_by_changed
+        )
 
         # Enable mouse tracking to allow the delegate to receive mouse events
         self._ui.file_view.setMouseTracking(True)
@@ -347,6 +385,9 @@ class AppDialog(QtGui.QWidget):
         # Save the filter menu state
         menu_state = self._filter_menu.save_state()
         self._settings_manager.store(self.FILTER_MENU_STATE, menu_state)
+
+        # Save the file model group by field
+        self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
 
         return QtGui.QWidget.closeEvent(self, event)
 
@@ -707,6 +748,19 @@ class AppDialog(QtGui.QWidget):
     ################################################################################################
     # UI/Widget callbacks
 
+    def _on_group_by_changed(self, text):
+        """
+        Slot triggered when the group by combo box text has changed.
+
+        Update the file model grouping and refresh it to reflect the new grouping.
+
+        :param text: The current text of the combo box
+        :type text: str
+        """
+
+        self._file_model.group_by = self._ui.group_by_combo_box.currentData()
+        self._file_model.refresh()
+
     def _toggle_details_panel(self):
         """
         Slot triggered when someone clicks the show/hide details button
@@ -715,6 +769,17 @@ class AppDialog(QtGui.QWidget):
             self._set_details_panel_visibility(False)
         else:
             self._set_details_panel_visibility(True)
+
+    def _on_file_model_reset_begin(self):
+        """
+        Slot triggered when the file model signal 'modelAboutToBeReset' has been fired.
+
+        Show the file model overlay spinner and disable UI components while the model is
+        loading
+        """
+
+        self._file_model_overlay.start_spin()
+        self._ui.group_by_combo_box.setEnabled(False)
 
     def _on_file_model_reset_end(self):
         """
@@ -730,6 +795,8 @@ class AppDialog(QtGui.QWidget):
             self._file_model_overlay.show_message("No items found.")
         else:
             self._file_model_overlay.hide()
+
+        self._ui.group_by_combo_box.setEnabled(True)
 
     def _on_context_menu_requested(self, pnt):
         """
@@ -773,9 +840,7 @@ class AppDialog(QtGui.QWidget):
 
         if selected_index == changed_index:
             # The item that changed was the currently selected on, update the details panel.
-            self._file_history_model.parent_file = model_item.data(
-                FileModel.FILE_ITEM_ROLE
-            )
+            self._setup_details_panel([selected_index])
 
     def _on_view_item_size_slider_change(self, value):
         """
@@ -809,6 +874,7 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view._update_all_item_info = True
         self._ui.file_view.viewport().update()
 
+    @wait_cursor
     def _on_select_all_outdated(self):
         """
         Callback triggered when the "Select all Outdated" button is clicked. This will
