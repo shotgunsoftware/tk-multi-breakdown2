@@ -151,7 +151,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         :param index: The index to get the data for.
         :type index: QtCore.QModelIndex
-        :param role: The role to get the dat a for.
+        :param role: The role to get the data for.
         :type role: QtCore.Qt.ItemDataRole
         """
 
