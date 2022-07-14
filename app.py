@@ -34,6 +34,12 @@ class SceneBreakdown2(sgtk.platform.Application):
             "Scene Breakdown...", cb, {"short_name": "breakdown"}
         )
 
+    def show_dialog(self):
+        """Show the Scene Breakdown 2 App dialog."""
+
+        tk_multi_breakdown2 = self.import_module("tk_multi_breakdown2")
+        tk_multi_breakdown2.show_dialog(self)
+
     def create_breakdown_manager(self):
         """
         Create and return a :class:`tk_multi_breakdown2.BreakdownManager` instance.

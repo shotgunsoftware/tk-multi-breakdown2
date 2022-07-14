@@ -79,7 +79,7 @@ class UIConfig(HookBaseClass):
                     "<span style='color:#18A7E3;'>Version</span> {version_number}",
                     "<span style='color:#18A7E3;'>Entity</span> {entity::showtype}",
                     "<span style='color:#18A7E3;'>Type</span> {published_file_type.PublishedFileType.code}",
-                    "<span style='color:#18A7E3;'>Status</span> {sg_status_list::displaytext}",
+                    "<span style='color:#18A7E3;'>Task Status</span> {task.Task.sg_status_list::displaytext}",
                 ]
             ),
             "thumbnail_body": "<br/>".join(
@@ -110,7 +110,7 @@ class UIConfig(HookBaseClass):
                     "<b style='color:#18A7E3;'>Type</b> {published_file_type.PublishedFileType.code}",
                     "<b style='color:#18A7E3;'>Version</b> {version_number}",
                     "<b style='color:#18A7E3;'>Entity</b> {entity::showtype}",
-                    "<b style='color:#18A7E3;'>Status</b> {sg_status_list::displaytext}",
+                    "<b style='color:#18A7E3;'>Task Status</b> {task.Task.sg_status_list}",
                     "<b style='color:#18A7E3;'>Tags</b> {tags}",
                 ]
             ),
