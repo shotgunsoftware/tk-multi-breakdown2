@@ -760,6 +760,15 @@ class AppDialog(QtGui.QWidget):
         self._file_model.group_by = self._ui.group_by_combo_box.currentData()
         self._file_model.refresh()
 
+        # To ensure that all the groupings are expanded on group change, the view needs to
+        # first update its item info to get the new model indexes, and then call expand
+        # on each of the indxes. TODO ideally the view would handle this for us - look into
+        # updating the GroupedItemView in qtwidgets framework
+        self._ui.file_view._update_item_info()
+        for row in range(self._file_model.rowCount()):
+            index = self._file_model.index(row, 0)
+            self._ui.file_view.expand(index)
+
     def _toggle_details_panel(self):
         """
         Slot triggered when someone clicks the show/hide details button
