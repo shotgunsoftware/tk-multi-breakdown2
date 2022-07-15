@@ -21,6 +21,7 @@ from .actions import ActionManager
 from .framework_qtwidgets import (
     FilterItem,
     FilterMenu,
+    FilterMenuButton,
     ShotgunOverlayWidget,
     ViewItemDelegate,
     ThumbnailViewItemDelegate,
