@@ -16,7 +16,8 @@ QToolButton#out_of_date_filter_btn,
 QToolButton#details_button,
 QToolButton#thumbnail_view_btn,
 QToolButton#grid_view_btn,
-QToolButton#list_view_btn
+QToolButton#list_view_btn,
+QToolButton#refresh_button
 {
   border: none;
   outline: none;
@@ -35,7 +36,8 @@ QToolButton#out_of_date_filter_btn:hover,
 QToolButton#details_button:hover,
 QToolButton#thumbnail_view_btn:hover,
 QToolButton#grid_view_btn:hover,
-QToolButton#list_view_btn:hover
+QToolButton#list_view_btn:hover,
+QToolButton#refresh_button
 {
   background-color: palette(light);
   border-radius: 4px;

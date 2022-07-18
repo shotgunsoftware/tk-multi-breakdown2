@@ -21,6 +21,7 @@ except ImportError:
 
 builtins.vrNodeService = vrNodeService
 builtins.vrReferenceService = vrReferenceService
+builtins.vrFileIOService = vrFileIOService
 
 
 HookBaseClass = sgtk.get_hook_baseclass()
@@ -113,6 +114,46 @@ class BreakdownSceneOperations(HookBaseClass):
         elif node_type == "smart_reference":
             ref_node.setSmartPath(path)
             vrReferenceService.reimportSmartReferences([ref_node])
+
+    def register_scene_change_callback(self, callback):
+        """
+        Register the callback such that it is executed on a scene change event.
+
+        This hook method is useful to reload the breakdown data when the data in the scene has
+        changed.
+
+        For Alias, the callback is registered with the AliasEngine event watcher to be
+        triggered on a PostRetrieve event (e.g. when a file is opened).
+
+        :param callback: The callback to register and execute on scene chagnes.
+        :type callback: function
+        """
+
+        # vrFileIOService.fileLoadingFinished.connect(lambda job_id, file, node: callback())
+        vrFileIOService.projectLoadFinished.connect(
+            lambda filename, success: callback()
+        )
+        vrFileIOService.newScene.connect(callback)
+
+        # -----------------------------------------------------
+        # Testing vred signals
+
+        def file_loading_finished(job, file, state):
+            print(job, file, state)
+
+        def imported_file(filename):
+            print(filename)
+
+        def project_load_finished(filename, success):
+            print(filename, success)
+
+        def new_scene():
+            print("New scene")
+
+        vrFileIOService.fileLoadingFinished.connect(file_loading_finished)
+        vrFileIOService.importedFile.connect(imported_file)
+        vrFileIOService.newScene.connect(new_scene)
+        # vrFileIOService.projectLoadFinished.connect(project_load_finished)
 
 
 def get_reference_by_id(ref_id):

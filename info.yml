@@ -48,6 +48,15 @@ configuration:
         default_value: project
         description: Define the field which the published files are grouped by in the main view.
 
+    file_status_check_interval:
+        type: int
+        default_value: 30000
+        description: The timeout interval (in milliseconds) to poll the statuses of the file items. A
+                     background task will be executed to query the file item statuses at each interval
+                     timeout. The default interval length is 30 seconds. Set a negative valeu to not
+                     perform the background file item status checks.
+
+
 # The ShotGrid fields that this app needs in order to operate correctly
 requires_shotgun_fields:
 # linked_projects.Asset is required for references in multiple ShotGrid rojects

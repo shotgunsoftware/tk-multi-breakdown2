@@ -10,6 +10,7 @@
 
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
+from tank.errors import TankHookMethodDoesNotExistError
 from tank_vendor import six
 
 from .ui.dialog import Ui_Dialog
@@ -116,8 +117,8 @@ class AppDialog(QtGui.QWidget):
         # Connect file model signals
         self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
+        self._file_model.itemChanged.connect(self._on_file_model_item_changed)
         self._file_model.files_processed.connect(self._on_files_processed)
-        self._file_model.file_item_data_changed.connect(self._on_file_item_data_changed)
 
         # Set up group combobox
         fields = sorted(self._file_model.get_group_by_fields())
@@ -226,6 +227,7 @@ class AppDialog(QtGui.QWidget):
             self._on_select_all_outdated
         )
         self._ui.update_selected_button.clicked.connect(self._on_update_selected)
+        self._ui.refresh_button.clicked.connect(self._file_model.reload)
 
         self._ui.search_widget.set_placeholder_text("Search Files")
         self._ui.search_widget.search_edited.connect(
@@ -321,6 +323,23 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
         # Log metric for app usage
         self._bundle._log_metric_viewed_app()
+
+        # -----------------------------------------------------
+        # Register the a callback to reload the model when the scene chagnes (e.g. file open)
+
+        # def reload_on_scene_change(result):
+        def reload_on_scene_change():
+            self._file_model.reload()
+
+        try:
+            self._bundle.execute_hook_method(
+                "hook_scene_operations",
+                "register_scene_change_callback",
+                callback=reload_on_scene_change,
+            )
+        except TankHookMethodDoesNotExistError:
+            # The hook does not define the methdo to register a scene chagne callback
+            pass
 
     ######################################################################################################
     # Override Qt methods
@@ -839,9 +858,9 @@ class AppDialog(QtGui.QWidget):
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
         self._setup_details_panel(selected_indexes)
 
-    def _on_file_item_data_changed(self, model_item):
+    def _on_file_model_item_changed(self, model_item):
         """
-        Slot triggered when an item in the _file_model has changed.
+        Slot triggered when an item in the file_model has changed.
 
         Update the history details based if the changed item, is also the currently
         selected item.

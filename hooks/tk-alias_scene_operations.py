@@ -202,3 +202,30 @@ class BreakdownSceneOperations(HookBaseClass):
             fields=["project", "task"],
             only_current_project=False,
         )
+
+    def register_scene_change_callback(self, callback):
+        """
+        Register the callback such that it is executed on a scene change event.
+
+        This hook method is useful to reload the breakdown data when the data in the scene has
+        changed.
+
+        For Alias, the callback is registered with the AliasEngine event watcher to be
+        triggered on a PostRetrieve event (e.g. when a file is opened).
+
+        :param callback: The callback to register and execute on scene chagnes.
+        :type callback: function
+        """
+
+        # Trigger the scene change callback for these event messages
+        events = [
+            alias_api.AlMessageType.PostRetrieve,
+            alias_api.AlMessageType.ReferenceFileDeleted,
+        ]
+        # Alias event messages that are only available in version >= 2023.0
+        if hasattr(alias_api.AlMessageType, "ReferenceFileAdded"):
+            events.append(alias_api.AlMessageType.ReferenceFileAdded)
+
+        self.parent.engine.event_watcher.register_alias_callback(
+            lambda result: callback(), events
+        )

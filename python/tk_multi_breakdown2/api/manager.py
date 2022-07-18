@@ -15,14 +15,10 @@ from .. import constants
 
 
 class BreakdownManager(object):
-    """
-    This class is used for managing and executing file updates.
-    """
+    """This class is used for managing and executing file updates."""
 
     def __init__(self, bundle):
-        """
-        Initialize the manager.
-        """
+        """Initialize the manager."""
 
         self._bundle = bundle
 
