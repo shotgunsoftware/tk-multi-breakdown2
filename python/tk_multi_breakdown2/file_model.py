@@ -548,6 +548,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.blockSignals(restore_state)
             self.endResetModel()
 
+            # Since the files are processed immediately (and not in background task), emit the
+            # signal that they have bene fully processed - this must be emitted after signals
+            # become unblocked
+            self.files_processed.emit()
+
     def is_loading(self, model_item=None):
         """
         Return True if the whole model, or the individual model item is in a loading state.

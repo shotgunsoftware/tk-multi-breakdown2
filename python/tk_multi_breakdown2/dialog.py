@@ -190,6 +190,9 @@ class AppDialog(QtGui.QWidget):
         self._file_model.modelAboutToBeReset.connect(
             lambda: self._ui.filter_btn.setEnabled(False)
         )
+        # Only re-enable filter menu button once all the files have been processed (and not
+        # when the model reset ends) so that the filters have access to all the necessary
+        # file item data
         self._file_model.files_processed.connect(
             lambda: self._ui.filter_btn.setEnabled(True)
         )
