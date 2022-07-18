@@ -288,18 +288,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                     if self._file_item.locked:
                         return FileModel.STATUS_LOCKED
 
-                    if self.data(FileModel.VIEW_ITEM_LOADING_ROLE):
-                        # Item is still loading, too early to determine the status.
-                        return FileModel.STATUS_NONE
+                    if self._file_item.highest_version_number:
+                        if (
+                            self._file_item.sg_data["version_number"]
+                            < self._file_item.highest_version_number
+                        ):
+                            return FileModel.STATUS_OUT_OF_SYNC
+                        return FileModel.STATUS_UP_TO_DATE
 
-                    if (
-                        not self._file_item.highest_version_number
-                        or self._file_item.sg_data["version_number"]
-                        < self._file_item.highest_version_number
-                    ):
-                        return FileModel.STATUS_OUT_OF_SYNC
-
-                    return FileModel.STATUS_UP_TO_DATE
+                    # Item may still loading, too early to determine the status.
+                    return FileModel.STATUS_NONE
 
                 if role == FileModel.STATUS_FILTER_DATA_ROLE:
                     status_value = self.data(FileModel.STATUS_ROLE)

@@ -106,15 +106,18 @@ class AppDialog(QtGui.QWidget):
         if group_by is None:
             group_by = self._bundle.get_setting("group_by", None)
         self._file_model = FileModel(self, self._bg_task_manager, group_by)
-        self._file_model.file_item_data_changed.connect(self._on_file_item_data_changed)
 
         self._file_proxy_model = FileProxyModel(self)
         self._file_proxy_model.setSourceModel(self._file_model)
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
+
+        # Connect file model signals
         self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
+        self._file_model.files_processed.connect(self._on_files_processed)
+        self._file_model.file_item_data_changed.connect(self._on_file_item_data_changed)
 
         # Set up group combobox
         fields = sorted(self._file_model.get_group_by_fields())
@@ -187,16 +190,6 @@ class AppDialog(QtGui.QWidget):
         self._filter_menu_restored = False
         self._filter_menu.initialize_menu()
         self._ui.filter_btn.setMenu(self._filter_menu)
-        self._file_model.modelAboutToBeReset.connect(
-            lambda: self._ui.filter_btn.setEnabled(False)
-        )
-        # Only re-enable filter menu button once all the files have been processed (and not
-        # when the model reset ends) so that the filters have access to all the necessary
-        # file item data
-        self._file_model.files_processed.connect(
-            lambda: self._ui.filter_btn.setEnabled(True)
-        )
-        self._file_model.files_processed.connect(self._refresh_filter_menu)
 
         # Set up the view modes
         self.view_modes = [
@@ -313,9 +306,10 @@ class AppDialog(QtGui.QWidget):
             # Splitter state was not restored, default to set details size to 1 (the min value
             # to show the details, but will be at a minimal size)
             self._ui.details_splitter.setSizes([800, 1])
-        # -----------------------------------------------------
 
+        # -----------------------------------------------------
         # finally, update the UI by processing the files of the current scene
+
         self._file_model.reload()
 
         # make this slot connection once the model has started processing files otherwise the
@@ -730,7 +724,12 @@ class AppDialog(QtGui.QWidget):
     def _refresh_filter_menu(self):
         """
         Restore the filter menu. Restore the menu state the first time the menu is refreshed.
+
+        Ensure that the filter menu button is not enabled while refreshing, and then
+        re-enabled once done refreshing.
         """
+
+        self._ui.filter_btn.setEnabled(False)
 
         self._filter_menu.refresh(force=True)
 
@@ -747,6 +746,8 @@ class AppDialog(QtGui.QWidget):
 
             self._filter_menu.restore_state(menu_state)
             self._filter_menu_restored = True
+
+        self._ui.filter_btn.setEnabled(True)
 
     ################################################################################################
     # UI/Widget callbacks
@@ -792,6 +793,10 @@ class AppDialog(QtGui.QWidget):
 
         self._file_model_overlay.start_spin()
         self._ui.group_by_combo_box.setEnabled(False)
+        # Turn off the filter button while model is reloading, but only turn it back on once
+        # the files have been processed (and not the model reset end) - there is a specific
+        # signal for files processing finished
+        self._ui.filter_btn.setEnabled(False)
 
     def _on_file_model_reset_end(self):
         """
@@ -809,6 +814,11 @@ class AppDialog(QtGui.QWidget):
             self._file_model_overlay.hide()
 
         self._ui.group_by_combo_box.setEnabled(True)
+
+    def _on_files_processed(self):
+        """Slot triggered when the file model has finished processed the files."""
+
+        self._refresh_filter_menu()
 
     def _on_context_menu_requested(self, pnt):
         """
