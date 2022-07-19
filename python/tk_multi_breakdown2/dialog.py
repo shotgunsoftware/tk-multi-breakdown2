@@ -327,19 +327,28 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
         # Register the a callback to reload the model when the scene chagnes (e.g. file open)
 
-        # def reload_on_scene_change(result):
-        def reload_on_scene_change():
-            self._file_model.reload()
+        # First store the scene operations hook
+        scene_operations_hook_path = self._bundle.get_setting("hook_scene_operations")
+        self._scene_operations_hook = self._bundle.create_hook_instance(
+            scene_operations_hook_path
+        )
 
-        try:
-            self._bundle.execute_hook_method(
-                "hook_scene_operations",
-                "register_scene_change_callback",
-                callback=reload_on_scene_change,
+        if hasattr(self.scene_operations_hook, "register_scene_change_callback"):
+
+            def reload_on_scene_change():
+                self._file_model.reload()
+
+            self.scene_operations_hook.register_scene_change_callback(
+                scene_change_callback=reload_on_scene_change
             )
-        except TankHookMethodDoesNotExistError:
-            # The hook does not define the methdo to register a scene chagne callback
-            pass
+
+    ######################################################################################################
+    # Proeprties
+
+    @property
+    def scene_operations_hook(self):
+        """Get the scene operations hook instance."""
+        return self._scene_operations_hook
 
     ######################################################################################################
     # Override Qt methods
@@ -351,6 +360,12 @@ class AppDialog(QtGui.QWidget):
 
         :param event: Close event
         """
+
+        # NOTE this does not execute when the app is a panel...
+
+        # Disconnect any signals that were set up for handlding scene changes
+        if hasattr(self.scene_operations_hook, "unregister_scene_change_callback"):
+            self.scene_operations_hook.unregister_scene_change_callback()
 
         # clear the selection in the main views.
         # this is to avoid re-triggering selection

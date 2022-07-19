@@ -28,7 +28,21 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 
 class BreakdownSceneOperations(HookBaseClass):
-    """"""
+    """A hook to perform scene operations in VRED necessary for Breakdown 2 App."""
+
+    def __init__(self, *args, **kwargs):
+        """Class constructor."""
+
+        super(BreakdownSceneOperations, self).__init__(*args, **kwargs)
+
+        # Keep track of the number of references in the scene, so that the scene can be
+        # updated when the number of references changes (reference added or removed),
+        # since there is no VRED API signal for reference removed (only created).
+        self._num_refs = 0
+        # Keep track of the scene change callbacks that are registered, so that they can be
+        # disconnected at a later time.
+        self._scene_change_callback = None
+        self._on_references_changed_cb = None
 
     def scan_scene(self):
         """
@@ -115,7 +129,7 @@ class BreakdownSceneOperations(HookBaseClass):
             ref_node.setSmartPath(path)
             vrReferenceService.reimportSmartReferences([ref_node])
 
-    def register_scene_change_callback(self, callback):
+    def register_scene_change_callback(self, scene_change_callback):
         """
         Register the callback such that it is executed on a scene change event.
 
@@ -125,35 +139,53 @@ class BreakdownSceneOperations(HookBaseClass):
         For Alias, the callback is registered with the AliasEngine event watcher to be
         triggered on a PostRetrieve event (e.g. when a file is opened).
 
-        :param callback: The callback to register and execute on scene chagnes.
+        :param scene_change_callback: The callback to register and execute on scene chagnes.
+        :type scene_change_callback: function
+        """
+
+        # Keep track of the callback so that it can be disconnected later
+        self._scene_change_callback = scene_change_callback
+
+        # Reload scene on reference file changes
+        self._on_references_changed_cb = lambda nodes, self=self, cb=self._scene_change_callback: self._on_references_changed(
+            nodes, cb
+        )
+        vrReferenceService.referencesChanged.connect(self._on_references_changed_cb)
+
+    def unregister_scene_change_callback(self):
+        """Unregister the scene change callbacks by disconnecting any signals."""
+
+        if self._scene_change_callback:
+            vrFileIOService.newScene.disconnect(self._scene_change_callback)
+            vrFileIOService.projectLoadFinished.disconnect(self._scene_change_callback)
+
+        if self._on_references_changed_cb:
+            vrReferenceService.referencesChanged.disconnect(
+                self._on_references_changed_cb
+            )
+
+    def _on_references_changed(self, nodes, callback):
+        """
+        Slot called on receiving VRED API signal 'referencesChanged'.
+
+        Since there is no VRED API signal for when references are removed, listen for the
+        references changed signals and manually check if the number of references has changed.
+        If so, then execute the callback function that the number of references has been
+        updated, indicating that a reference has been added or removed.
+
+        :param nodes: The list of changed reference nodes passed from the 'referencesChanged'
+            signal. When empty, all nodes should be considered to be changed. NOTE: seems like
+            a VRED API bug but the list of nodes seems to always be empty..
+        :type nodes: list
+        :param callback: The function to execute on reference changes.
         :type callback: function
         """
 
-        # vrFileIOService.fileLoadingFinished.connect(lambda job_id, file, node: callback())
-        vrFileIOService.projectLoadFinished.connect(
-            lambda filename, success: callback()
-        )
-        vrFileIOService.newScene.connect(callback)
+        new_num_refs = len(vrReferenceService.getSceneReferences())
 
-        # -----------------------------------------------------
-        # Testing vred signals
-
-        def file_loading_finished(job, file, state):
-            print(job, file, state)
-
-        def imported_file(filename):
-            print(filename)
-
-        def project_load_finished(filename, success):
-            print(filename, success)
-
-        def new_scene():
-            print("New scene")
-
-        vrFileIOService.fileLoadingFinished.connect(file_loading_finished)
-        vrFileIOService.importedFile.connect(imported_file)
-        vrFileIOService.newScene.connect(new_scene)
-        # vrFileIOService.projectLoadFinished.connect(project_load_finished)
+        if new_num_refs != self._num_refs:
+            callback()
+            self._num_refs = new_num_refs
 
 
 def get_reference_by_id(ref_id):

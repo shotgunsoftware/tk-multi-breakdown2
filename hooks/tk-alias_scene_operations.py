@@ -203,7 +203,7 @@ class BreakdownSceneOperations(HookBaseClass):
             only_current_project=False,
         )
 
-    def register_scene_change_callback(self, callback):
+    def register_scene_change_callback(self, scene_change_callback):
         """
         Register the callback such that it is executed on a scene change event.
 
@@ -227,5 +227,5 @@ class BreakdownSceneOperations(HookBaseClass):
             events.append(alias_api.AlMessageType.ReferenceFileAdded)
 
         self.parent.engine.event_watcher.register_alias_callback(
-            lambda result: callback(), events
+            lambda result: scene_change_callback(), events
         )
