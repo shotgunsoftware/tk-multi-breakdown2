@@ -22,10 +22,11 @@ from .actions import ActionManager
 from .framework_qtwidgets import (
     FilterItem,
     FilterMenu,
-    FilterMenuButton,
+    FilterMenuButton,  # Keep this import even if the linter says its unused
     ShotgunOverlayWidget,
     ViewItemDelegate,
     ThumbnailViewItemDelegate,
+    SGQIcon,
     utils,
 )
 from .file_proxy_model import FileProxyModel
@@ -79,10 +80,6 @@ class AppDialog(QtGui.QWidget):
 
         shotgun_globals.register_bg_task_manager(self._bg_task_manager)
 
-        # now load in the UI that was created in the UI designer
-        self._ui = Ui_Dialog()
-        self._ui.setupUi(self)
-
         # create a settings manager where we can pull and push prefs later
         # prefs in this manager are shared
         self._settings_manager = settings.UserSettings(self._bundle)
@@ -92,6 +89,17 @@ class AppDialog(QtGui.QWidget):
         self._raw_values_settings = QtCore.QSettings(
             "ShotGrid Software", "{app}_raw_values".format(app=self._bundle.name)
         )
+
+        # -----------------------------------------------------
+        # Load in the UI from the design file
+
+        self._ui = Ui_Dialog()
+        self._ui.setupUi(self)
+
+        # -----------------------------------------------------
+        # Set up icons
+
+        self._ui.refresh_button.setIcon(SGQIcon.refresh_grey())
 
         # -----------------------------------------------------
         # main file view

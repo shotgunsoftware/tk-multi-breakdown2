@@ -73,17 +73,6 @@
          </spacer>
         </item>
         <item>
-         <widget class="QToolButton" name="refresh_button">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="resources.qrc">
-            <normaloff>:/tk-multi-breakdown2/icons/main-outofdate@2x.png</normaloff>:/tk-multi-breakdown2/icons/main-outofdate@2x.png</iconset>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QToolButton" name="thumbnail_view_btn">
           <property name="focusPolicy">
            <enum>Qt::TabFocus</enum>
@@ -172,6 +161,13 @@
           </property>
           <property name="toolButtonStyle">
            <enum>Qt::ToolButtonTextBesideIcon</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="refresh_button">
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </item>
@@ -309,7 +305,7 @@
             <property name="minimumSize">
              <size>
               <width>250</width>
-              <height>250</height>
+              <height>0</height>
              </size>
             </property>
            </widget>

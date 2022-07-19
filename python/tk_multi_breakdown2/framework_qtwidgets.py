@@ -48,3 +48,6 @@ FilterItem = filtering.FilterItem
 FilterMenu = filtering.FilterMenu
 FilterMenuButton = filtering.FilterMenuButton
 FilterItemTreeProxyModel = filtering.FilterItemTreeProxyModel
+
+sg_qicons = sgtk.platform.import_framework("tk-framework-qtwidgets", "sg_qicons")
+SGQIcon = sg_qicons.SGQIcon
