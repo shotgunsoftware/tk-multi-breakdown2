@@ -41,7 +41,6 @@ class BreakdownSceneOperations(HookBaseClass):
         self._num_refs = 0
         # Keep track of the scene change callbacks that are registered, so that they can be
         # disconnected at a later time.
-        self._scene_change_callback = None
         self._on_references_changed_cb = None
 
     def scan_scene(self):
@@ -144,20 +143,15 @@ class BreakdownSceneOperations(HookBaseClass):
         """
 
         # Keep track of the callback so that it can be disconnected later
-        self._scene_change_callback = scene_change_callback
-
-        # Reload scene on reference file changes
-        self._on_references_changed_cb = lambda nodes, self=self, cb=self._scene_change_callback: self._on_references_changed(
+        self._on_references_changed_cb = lambda nodes, self=self, cb=scene_change_callback: self._on_references_changed(
             nodes, cb
         )
+        # Set up the signal/slot connection to potentially call the scene change callback
+        # based on how the references have cahnged
         vrReferenceService.referencesChanged.connect(self._on_references_changed_cb)
 
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
-
-        if self._scene_change_callback:
-            vrFileIOService.newScene.disconnect(self._scene_change_callback)
-            vrFileIOService.projectLoadFinished.disconnect(self._scene_change_callback)
 
         if self._on_references_changed_cb:
             vrReferenceService.referencesChanged.disconnect(

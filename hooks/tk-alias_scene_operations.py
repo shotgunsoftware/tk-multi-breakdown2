@@ -226,6 +226,8 @@ class BreakdownSceneOperations(HookBaseClass):
         if hasattr(alias_api.AlMessageType, "ReferenceFileAdded"):
             events.append(alias_api.AlMessageType.ReferenceFileAdded)
 
+        # No need to set up the unregister_scene_change_callback method since the
+        # AliasEventWatcher will take care of disconnecting the callbacks
         self.parent.engine.event_watcher.register_alias_callback(
             lambda result: scene_change_callback(), events
         )

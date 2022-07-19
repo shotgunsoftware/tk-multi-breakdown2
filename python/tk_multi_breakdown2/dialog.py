@@ -369,8 +369,6 @@ class AppDialog(QtGui.QWidget):
         :param event: Close event
         """
 
-        # NOTE this does not execute when the app is a panel...
-
         # Disconnect any signals that were set up for handlding scene changes
         if hasattr(self.scene_operations_hook, "unregister_scene_change_callback"):
             self.scene_operations_hook.unregister_scene_change_callback()
