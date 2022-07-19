@@ -581,6 +581,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         been changed.
         """
 
+        # Do not refresh if the model is in the middle of a reload already
+        if self._pending_files_request:
+            return
+
         self.beginResetModel()
 
         try:
