@@ -105,17 +105,15 @@ class AppDialog(QtGui.QWidget):
         self._ui.list_view_btn.setToolTip("List view mode")
         self._ui.thumbnail_view_btn.setToolTip("Thumbnail view mode")
         self._ui.grid_view_btn.setToolTip("Grid view mode")
+
+        self._ui.details_button.setIcon(SGQIcon.info(size=SGQIcon.SIZE_40x40))
         self._ui.details_button.setToolTip("Show/Hide details")
 
         # -----------------------------------------------------
         # main file view
 
         self._ui.file_view.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-
         self._ui.file_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._ui.file_view.customContextMenuRequested.connect(
-            self._on_context_menu_requested
-        )
 
         group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
         if group_by is None:
@@ -127,12 +125,6 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
-
-        # Connect file model signals
-        self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
-        self._file_model.modelReset.connect(self._on_file_model_reset_end)
-        self._file_model.itemChanged.connect(self._on_file_model_item_changed)
-        self._file_model.files_processed.connect(self._on_files_processed)
 
         # Set up group combobox
         group_by_fields = self._bundle.get_setting("group_by_fields")
@@ -174,10 +166,8 @@ class AppDialog(QtGui.QWidget):
             # Keep track of what fields we've added so that there are no duplicates
             added_fields.append(field_display_name)
 
+        # Set the intiial group by value
         self._ui.group_by_combo_box.setCurrentIndex(group_by_index)
-        self._ui.group_by_combo_box.currentTextChanged.connect(
-            self._on_group_by_changed
-        )
 
         # Enable mouse tracking to allow the delegate to receive mouse events
         self._ui.file_view.setMouseTracking(True)
@@ -240,23 +230,8 @@ class AppDialog(QtGui.QWidget):
                 "size_settings_key": self.GRID_SIZE_SCALE_VALUE,
             },
         ]
-        for i, view_mode in enumerate(self.view_modes):
-            view_mode["button"].clicked.connect(
-                lambda checked=False, mode=i: self._set_view_mode(mode)
-            )
-
-        self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
-
-        self._ui.select_all_outdated_button.clicked.connect(
-            self._on_select_all_outdated
-        )
-        self._ui.update_selected_button.clicked.connect(self._on_update_selected)
-        self._ui.refresh_button.clicked.connect(self._file_model.reload)
 
         self._ui.search_widget.set_placeholder_text("Search Files")
-        self._ui.search_widget.search_edited.connect(
-            lambda text: self._update_search_text_filter()
-        )
 
         # Get the last view mode used from the settings manager, default to the first view if
         # no settings found
@@ -305,15 +280,6 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_history_view.setItemDelegate(history_delegate)
         self._ui.file_history_view.setMouseTracking(True)
 
-        details_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/info-inactive@2x.png")
-        details_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/icons/info-active@2x.png"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.On,
-        )
-        self._ui.details_button.setIcon(details_icon)
-        self._ui.details_button.clicked.connect(self._toggle_details_panel)
-
         details_panel_visibility = self._settings_manager.retrieve(
             self.DETAILS_PANEL_VISIBILITY_SETTING, False
         )
@@ -334,37 +300,65 @@ class AppDialog(QtGui.QWidget):
             self._ui.details_splitter.setSizes([800, 1])
 
         # -----------------------------------------------------
-        # finally, update the UI by processing the files of the current scene
+        # Connect signals
 
-        self._file_model.reload()
+        # Model & Views
+        self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
+        self._file_model.modelReset.connect(self._on_file_model_reset_end)
+        self._file_model.itemChanged.connect(self._on_file_model_item_changed)
+        self._file_model.files_processed.connect(self._on_files_processed)
 
-        # make this slot connection once the model has started processing files otherwise the
-        # selection model doesn't exist
-        file_view_selection_model = self._ui.file_view.selectionModel()
-        if file_view_selection_model:
-            file_view_selection_model.selectionChanged.connect(self._on_file_selection)
+        self._ui.file_view.selectionModel().selectionChanged.connect(
+            self._on_file_selection
+        )
 
-        # -----------------------------------------------------
-        # Log metric for app usage
-        self._bundle._log_metric_viewed_app()
+        # Views
+        self._ui.file_view.customContextMenuRequested.connect(
+            self._on_context_menu_requested
+        )
 
-        # -----------------------------------------------------
-        # Register the a callback to reload the model when the scene chagnes (e.g. file open)
+        # Widgets
+        self._ui.refresh_button.clicked.connect(self._file_model.reload)
+        self._ui.details_button.clicked.connect(self._toggle_details_panel)
+        self._ui.select_all_outdated_button.clicked.connect(
+            self._on_select_all_outdated
+        )
+        self._ui.update_selected_button.clicked.connect(self._on_update_selected)
 
-        # First store the scene operations hook
+        for i, view_mode in enumerate(self.view_modes):
+            view_mode["button"].clicked.connect(
+                lambda checked=False, mode=i: self._set_view_mode(mode)
+            )
+
+        self._ui.group_by_combo_box.currentTextChanged.connect(
+            self._on_group_by_changed
+        )
+
+        self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
+        self._ui.search_widget.search_edited.connect(
+            lambda text: self._update_search_text_filter()
+        )
+
+        # Create the scene operations hook instance and connect the scene change callback if
+        # the hook defines the necessary method
         scene_operations_hook_path = self._bundle.get_setting("hook_scene_operations")
         self._scene_operations_hook = self._bundle.create_hook_instance(
             scene_operations_hook_path
         )
-
         if hasattr(self.scene_operations_hook, "register_scene_change_callback"):
-
-            def reload_on_scene_change():
-                self._file_model.reload()
-
             self.scene_operations_hook.register_scene_change_callback(
-                scene_change_callback=reload_on_scene_change
+                scene_change_callback=lambda: self._file_model.reload()
             )
+
+        # -----------------------------------------------------
+        # finally, update the UI by processing the files of the current scene
+
+        self._file_model.reload()
+
+        # -----------------------------------------------------
+        # Log metric for app usage
+
+        self._bundle._log_metric_viewed_app()
 
     ######################################################################################################
     # Proeprties
