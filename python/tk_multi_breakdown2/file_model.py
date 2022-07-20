@@ -382,8 +382,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 self.emitDataChanged()
 
             elif role == FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
-                self._file_item.latest_published_file = value
-                self.emitDataChanged()
+                if (
+                    not self._file_item.latest_published_file
+                    or not value
+                    or self._file_item.latest_published_file.get("id")
+                    != value.get("id")
+                ):
+                    self._file_item.latest_published_file = value
+                    self.emitDataChanged()
 
             else:
                 super(FileModel.FileModelItem, self).setData(value, role)
