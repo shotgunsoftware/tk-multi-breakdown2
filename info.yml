@@ -48,6 +48,15 @@ configuration:
         default_value: project
         description: Define the field which the published files are grouped by in the main view.
 
+    group_by_fields:
+        type: list
+        values: {type: str}
+        default_value: [project, entity, task, published_file_type, created_by.HumanUser.name]
+        allows_empty: True
+        description: List of Published File fields that the file items can be grouped by using the "Group By"
+                     drop down menu. Leave empty to show all available Published File fields or specify a
+                     specific set of fields to show.
+
     file_status_check_interval:
         type: int
         default_value: 30000

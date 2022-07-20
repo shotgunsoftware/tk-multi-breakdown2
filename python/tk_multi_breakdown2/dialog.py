@@ -97,9 +97,15 @@ class AppDialog(QtGui.QWidget):
         self._ui.setupUi(self)
 
         # -----------------------------------------------------
-        # Set up icons
+        # Set up buttons
 
-        self._ui.refresh_button.setIcon(SGQIcon.refresh_grey())
+        self._ui.refresh_button.setIcon(SGQIcon.refresh_grey(size=SGQIcon.SIZE_40x40))
+        self._ui.refresh_button.setToolTip("Force refresh")
+
+        self._ui.list_view_btn.setToolTip("List view mode")
+        self._ui.thumbnail_view_btn.setToolTip("Thumbnail view mode")
+        self._ui.grid_view_btn.setToolTip("Grid view mode")
+        self._ui.details_button.setToolTip("Show/Hide details")
 
         # -----------------------------------------------------
         # main file view
@@ -129,34 +135,44 @@ class AppDialog(QtGui.QWidget):
         self._file_model.files_processed.connect(self._on_files_processed)
 
         # Set up group combobox
+        group_by_fields = self._bundle.get_setting("group_by_fields")
         fields = sorted(self._file_model.get_group_by_fields())
-        added_groups = []
+        added_fields = []
         group_by_index = 0
         for field in fields:
             # Do not allow grouping by these special fields
             if field.startswith("<") and field.endswith(">"):
                 continue
 
-            # For linked fields, just take the first part of the linked field
-            first_field = field.split(".")[0]
-            friendly_field_name = " ".join(
-                text.title() for text in first_field.split("_")
-            )
+            # Only use the specified group by fields, if any specified
+            if group_by_fields and field not in group_by_fields:
+                continue
 
             # Make sure this field has not already been added
-            if friendly_field_name in added_groups:
+            if field in added_fields:
                 continue
+
+            field_display_name = shotgun_globals.get_field_display_name(
+                "PublishedFile", field
+            )
+
+            # For linked fields, just take the first part of the linked field
+            field_parts = field.split(".")
+            if len(field_parts) > 1:
+                # Check if this is a linked field, if so, add prefix to the field name to more
+                # accurately describe what the field is
+                prefix = " ".join([f.title() for f in field_parts[0].split("_")])
+                field_display_name = "{} {}".format(prefix, field_display_name)
 
             # As we add the items, check if this group by field should be the current index,
             # so that the combo box current index can be set after it has been init
             if field == self._file_model.group_by:
                 group_by_index = self._ui.group_by_combo_box.count()
 
-            field_data = field
-            self._ui.group_by_combo_box.addItem(friendly_field_name, field_data)
+            self._ui.group_by_combo_box.addItem(field_display_name, field)
 
             # Keep track of what fields we've added so that there are no duplicates
-            added_groups.append(friendly_field_name)
+            added_fields.append(field_display_name)
 
         self._ui.group_by_combo_box.setCurrentIndex(group_by_index)
         self._ui.group_by_combo_box.currentTextChanged.connect(
