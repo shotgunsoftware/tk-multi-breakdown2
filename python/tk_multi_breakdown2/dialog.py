@@ -622,6 +622,13 @@ class AppDialog(QtGui.QWidget):
         q_action = ActionManager.add_update_to_latest_action(items, context_menu)
         context_menu.addAction(q_action)
 
+        # Add action to show details for the item that the context menu is shown for.
+        show_details_action = QtGui.QAction("Show Details")
+        show_details_action.triggered.connect(
+            lambda: self._set_details_panel_visibility(True)
+        )
+        context_menu.addAction(show_details_action)
+
         context_menu.exec_(pnt)
 
     def _show_history_item_context_menu(self, view, index, pos):
