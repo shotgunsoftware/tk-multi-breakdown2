@@ -29,14 +29,6 @@ except:
     sgtk.platform.qt.QtGui = importer.QtGui
     from sgtk.platform.qt import QtCore, QtGui
 
-# import sys
-
-# sys.path.append("/Users/oues/python_libs")
-# import ptvsd
-
-# ptvsd.enable_attach()
-# ptvsd.wait_for_attach()
-
 
 class TestFileModels(AppTestBase):
     """
