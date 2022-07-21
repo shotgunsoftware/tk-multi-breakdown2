@@ -96,6 +96,16 @@ class FileProxyModel(FilterItemTreeProxyModel):
         if not src_idx.isValid():
             return False
 
+        # Do not accept any of the file groupings. File groups are only accepted if it has a
+        # child index that is accepted. NOTE this is a bit of a work around to how filter
+        # values of "None" is handled - the group indexes will return None when checking for
+        # acceptance, but if the filter value is None, then the group will be accepted even
+        # if it has no children, which then causes the view to show empty groupings. TODO
+        # modify the filtering functionality to handle filter values of "None" better.
+        is_grouping = src_idx.data(self.sourceModel().FILE_ITEM_ROLE) is None
+        if is_grouping:
+            return False
+
         if not self.search_text_filter_item:
             return True  # No filters set, accept everything
 

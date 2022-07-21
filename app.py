@@ -36,7 +36,7 @@ class SceneBreakdown2(sgtk.platform.Application):
         self.engine.register_command(
             "Scene Breakdown...",
             self.create_panel,
-            {"type": "context_menu", "short_name": "breakdown"},
+            {"type": "panel", "short_name": "breakdown"},
         )
 
     def show_dialog(self):
