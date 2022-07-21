@@ -272,6 +272,7 @@ class AppDialog(QtGui.QWidget):
         # continuously sorting. And then tell it to use column 0
         # (we only have one column in our models) and descending order.
         self._file_history_proxy_model.setDynamicSortFilter(True)
+        self._file_history_proxy_model.setSortRole(FileHistoryModel.SORT_ROLE)
         self._file_history_proxy_model.sort(0, QtCore.Qt.DescendingOrder)
 
         self._ui.file_history_view.setModel(self._file_history_proxy_model)
