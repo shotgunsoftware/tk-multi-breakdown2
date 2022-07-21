@@ -837,18 +837,32 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # Get the group by field data
         data = file_item.sg_data[self.group_by]
 
-        # Attempt to get the id for the grouping
+        # Attempt to construct the id for the grouping
         try:
             group_by_id = "{type}.{id}".format(
                 type=data.get("type", "NoType"), id=data["id"]
             )
         except:
+            # Fall back to just using the data itself as the id
             group_by_id = str(data)
 
-        # Attempt to get the display value for the grouping
-        try:
+        # Construct the group display value
+        if not data:
+            group_by_display = "None"
+
+        elif isinstance(data, dict):
             group_by_display = data["name"]
-        except:
+
+        elif isinstance(data, (list, tuple)):
+            item_strings = []
+            for item in data:
+                if isinstance(item, dict):
+                    item_strings.append(item.get("name", str(item)))
+                else:
+                    item_strings.append(str(item))
+            group_by_display = ", ".join(item_strings)
+
+        else:
             group_by_display = str(data)
 
         return (group_by_id, group_by_display)
