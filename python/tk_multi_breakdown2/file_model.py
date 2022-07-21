@@ -502,7 +502,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self._group_by = value
 
     #########################################################################################################
-    # Public FileModel methods
+    # Override base FileModel class methods
 
     def destroy(self):
         """
@@ -545,6 +545,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 child.stop_timer()
 
         super(FileModel, self).clear()
+
+    #########################################################################################################
+    # Public FileModel methods
 
     def reload(self):
         """
@@ -619,6 +622,39 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             # signal that they have bene fully processed - this must be emitted after signals
             # become unblocked
             self.files_processed.emit()
+
+    def get_group_by_fields(self):
+        """
+        Get the fields that are available to group the file items by.
+
+        :return: The list of group by fields.
+        :rtype: list<str>
+        """
+
+        return list(
+            set(self._manager.get_published_file_fields() + self._published_file_fields)
+        )
+
+    def item_from_file(self, file_item):
+        """
+        Return the model item that matches the given file.
+
+        :param file_item: The file item to find the model item by.
+        :type file_item: FileItem
+
+        :return: The model item.
+        :rtype: QtGui.QStandardItem
+        """
+
+        for group_row in range(self.rowCount()):
+            group_item = self.item(group_row)
+
+            for child_row in range(group_item.rowCount()):
+                child = group_item.child(child_row)
+                if child.data(FileModel.FILE_ITEM_ROLE) == file_item:
+                    return child
+
+        return None
 
     def is_loading(self, model_item=None, thumbnail_only=False):
         """
@@ -706,18 +742,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # Store the model item with the request id, so that the model item can be retrieved
         # to update when the async request completes.
         self._pending_thumbnail_requests[request_id] = model_item
-
-    def get_group_by_fields(self):
-        """
-        Get the fields that are available to group the file items by.
-
-        :return: The list of group by fields.
-        :rtype: list<str>
-        """
-
-        return list(
-            set(self._manager.get_published_file_fields() + self._published_file_fields)
-        )
 
     def update_file_group(
         self, file_model_item_row, cur_file_item_data, new_file_item_data

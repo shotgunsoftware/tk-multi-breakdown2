@@ -34,6 +34,21 @@ class FileItem(object):
         self._latest_published_file = None
         self._locked = False
 
+    def __eq__(self, other):
+        """
+        Override the equality operator to allow comparing FileItem objects.
+
+        :param other: The other FileItem to compare this one with.
+        :type other: FileItem
+        """
+
+        return (
+            self.node_name == other.node_name
+            and self.node_type == other.node_type
+            and self.path == other.path
+            and self.sg_data.get("id") == other.sg_data.get("id")
+        )
+
     ########################################## ####################################################
     ########################################## ####################################################
     @property

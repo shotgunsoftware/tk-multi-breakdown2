@@ -608,9 +608,8 @@ class AppDialog(QtGui.QWidget):
             if isinstance(index.model(), QtGui.QSortFilterProxyModel):
                 index = index.model().mapToSource(index)
 
-            file_model_item = index.model().itemFromIndex(index)
             file_item = index.data(FileModel.FILE_ITEM_ROLE)
-            items.append((file_item, file_model_item))
+            items.append(file_item)
 
         # map the point to a global position:
         pnt = widget.mapToGlobal(pnt)
@@ -619,7 +618,9 @@ class AppDialog(QtGui.QWidget):
         context_menu = QtGui.QMenu(self)
 
         # build the actions
-        q_action = ActionManager.add_update_to_latest_action(items, context_menu)
+        q_action = ActionManager.add_update_to_latest_action(
+            items, self._file_model, context_menu
+        )
         context_menu.addAction(q_action)
 
         # Add action to show details for the item that the context menu is shown for.
@@ -661,7 +662,6 @@ class AppDialog(QtGui.QWidget):
                 update_item_index = update_item_index.model().mapToSource(
                     update_item_index
                 )
-            item_to_update = update_item_index.model().itemFromIndex(update_item_index)
             file_item_to_update = update_item_index.data(FileModel.FILE_ITEM_ROLE)
 
             # Get the data from the file history item to update the selected file item with. The index
@@ -672,7 +672,7 @@ class AppDialog(QtGui.QWidget):
             sg_data = history_item.get_sg_data()
 
             update_action = ActionManager.add_update_to_specific_version_action(
-                (file_item_to_update, item_to_update), sg_data, None
+                file_item_to_update, self._file_model, sg_data, None
             )
             actions.append(update_action)
 
@@ -872,6 +872,10 @@ class AppDialog(QtGui.QWidget):
 
         self._ui.group_by_combo_box.setEnabled(True)
 
+        # Update the details panel
+        selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
+        self._setup_details_panel(selected_indexes)
+
     def _on_files_processed(self):
         """Slot triggered when the file model has finished processed the files."""
 
@@ -1003,10 +1007,9 @@ class AppDialog(QtGui.QWidget):
             if isinstance(index.model(), QtGui.QSortFilterProxyModel):
                 index = index.model().mapToSource(index)
             file_item = index.data(FileModel.FILE_ITEM_ROLE)
-            file_model_item = index.model().itemFromIndex(index)
-            file_items.append((file_item, file_model_item))
+            file_items.append(file_item)
 
-        ActionManager.execute_update_to_latest_action(file_items)
+        ActionManager.execute_update_to_latest_action(file_items, self._file_model)
 
     def _update_search_text_filter(self):
         """
