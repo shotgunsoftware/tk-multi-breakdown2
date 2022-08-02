@@ -74,22 +74,19 @@ class SceneBreakdown2(sgtk.platform.Application):
 
         tk_multi_breakdown2 = self.import_module("tk_multi_breakdown2")
 
-        if tk_multi_breakdown2.show_as_panel(self):
-            try:
-                widget = self.engine.show_panel(
-                    self._unique_panel_id,
-                    "Scene Breakdown",
-                    self,
-                    tk_multi_breakdown2.AppDialog,
-                )
-            except AttributeError as e:
-                self.log_warning(
-                    "Could not execute show_panel method - please upgrade "
-                    "to latest core and engine! Falling back on show_dialog. "
-                    "Error: %s" % e
-                )
-                widget = self.create_dialog()
-        else:
+        try:
+            widget = self.engine.show_panel(
+                self._unique_panel_id,
+                "Scene Breakdown",
+                self,
+                tk_multi_breakdown2.AppDialog,
+            )
+        except AttributeError as e:
+            self.log_warning(
+                "Could not execute show_panel method - please upgrade "
+                "to latest core and engine! Falling back on show_dialog. "
+                "Error: %s" % e
+            )
             widget = self.create_dialog()
 
         self._current_panel = widget
