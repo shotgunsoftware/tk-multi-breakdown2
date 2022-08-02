@@ -57,6 +57,12 @@ configuration:
                      drop down menu. Leave empty to show all available Published File fields or specify a
                      specific set of fields to show.
 
+    auto_refresh:
+        type: bool
+        default_value: True
+        description: Set to True to let the app automatically refresh based on DCC scene events and polling
+                     for published file updates. Set to False to not perform automatic refreshes.
+
     file_status_check_interval:
         type: int
         default_value: 30000
