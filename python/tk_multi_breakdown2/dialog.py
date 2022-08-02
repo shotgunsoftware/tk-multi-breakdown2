@@ -100,7 +100,7 @@ class AppDialog(QtGui.QWidget):
         # Set up buttons
 
         self._ui.refresh_button.setIcon(SGQIcon.refresh_grey(size=SGQIcon.SIZE_40x40))
-        self._ui.refresh_button.setToolTip("Force refresh")
+        self._ui.refresh_button.setToolTip("Click to refresh")
 
         self._ui.list_view_btn.setToolTip("List view mode")
         self._ui.thumbnail_view_btn.setToolTip("Thumbnail view mode")
@@ -348,7 +348,7 @@ class AppDialog(QtGui.QWidget):
         )
         if hasattr(self.scene_operations_hook, "register_scene_change_callback"):
             self.scene_operations_hook.register_scene_change_callback(
-                scene_change_callback=lambda: self._file_model.reload()
+                scene_change_callback=self._file_model.reload
             )
 
         # -----------------------------------------------------
@@ -440,7 +440,7 @@ class AppDialog(QtGui.QWidget):
         return QtGui.QWidget.closeEvent(self, event)
 
     ######################################################################################################
-    # Private methods
+    # Protected methods
 
     def _create_file_item_delegate(self, thumbnail=False):
         """
