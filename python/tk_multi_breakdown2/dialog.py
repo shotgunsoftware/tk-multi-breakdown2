@@ -307,7 +307,6 @@ class AppDialog(QtGui.QWidget):
         self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
         self._file_model.itemChanged.connect(self._on_file_model_item_changed)
-        self._file_model.files_processed.connect(self._on_files_processed)
 
         self._ui.file_view.selectionModel().selectionChanged.connect(
             self._on_file_selection
@@ -862,7 +861,11 @@ class AppDialog(QtGui.QWidget):
         else:
             self._file_model_overlay.hide()
 
+        # Re-enable buttons that were disabled during reset
         self._ui.group_by_combo_box.setEnabled(True)
+        self._ui.refresh_button.setEnabled(True)
+        # Update the filter menu and re-enable the filter butotn
+        self._refresh_filter_menu()
 
         # Update the details panel
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
@@ -874,11 +877,6 @@ class AppDialog(QtGui.QWidget):
         # accepting the group index, this causes the group to collapse, even thoug there are
         # children in it
         self._expand_all_groups()
-
-    def _on_files_processed(self):
-        """Slot triggered when the file model has finished processed the files."""
-
-        self._refresh_filter_menu()
 
     def _on_context_menu_requested(self, pnt):
         """
@@ -909,6 +907,8 @@ class AppDialog(QtGui.QWidget):
         :param model_item: The changed item
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
         """
+
+        self._refresh_filter_menu()
 
         selected = self._ui.file_view.selectionModel().selectedIndexes()
 
