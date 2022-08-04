@@ -10,11 +10,6 @@
 
 from .api import BreakdownManager
 
-# For unit tests to access the app modules
-from .file_model import FileModel
-from .file_proxy_model import FileProxyModel
-from .file_history_model import FileHistoryModel
-
 try:
     # Attempt to import the AppDialog
     from .dialog import AppDialog
