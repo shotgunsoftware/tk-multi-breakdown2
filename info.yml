@@ -51,7 +51,7 @@ configuration:
     group_by_fields:
         type: list
         values: {type: str}
-        default_value: [project, entity, task, published_file_type, created_by.HumanUser.name, tags]
+        default_value: [project, entity, task, published_file_type, created_by.HumanUser.name]
         allows_empty: True
         description: List of Published File fields that the file items can be grouped by using the "Group By"
                      drop down menu. Leave empty to show all available Published File fields or specify a
