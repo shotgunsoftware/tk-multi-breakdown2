@@ -9,6 +9,7 @@
 # not expressly granted therein are reserved by Autodesk Software Inc.
 
 import os
+import sys
 
 import sgtk
 from tank_test.tank_test_base import TankTestBase
@@ -28,17 +29,35 @@ class AppTestBase(TankTestBase):
         super(AppTestBase, self).setUp()
         self.setup_fixtures()
 
+        # Set up the python path to import required modules
+        base_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "python",
+            )
+        )
+        app_dir = os.path.abspath(os.path.join(base_dir, "tk_multi_breakdown2"))
+        api_dir = os.path.abspath(os.path.join(app_dir, "api"))
+        sys.path.extend([base_dir, app_dir, api_dir])
+
+        from tk_multi_breakdown2 import constants
+        from tk_multi_breakdown2.file_model import FileModel
+        from tk_multi_breakdown2.api import BreakdownManager
+        from tk_multi_breakdown2.api.item import FileItem
+
+        self.constants = constants
+        self._manager_class = BreakdownManager
+        self._file_item_class = FileItem
+        self._file_model_class = FileModel
+
         self.project_name = os.path.basename(self.project_root)
         context = self.tk.context_from_entity(self.project["type"], self.project["id"])
 
         engine_name = os.environ.get("TEST_ENGINE", "tk-testengine")
         self._engine = sgtk.platform.start_engine(engine_name, self.tk, context)
         self._app = self._engine.apps["tk-multi-breakdown2"]
-        self.tk_multi_breakdown2 = self.app.import_module("tk_multi_breakdown2")
-
-        self.constants = self.tk_multi_breakdown2.constants
-        self._manager_class = self.tk_multi_breakdown2.api.manager.BreakdownManager
-        self._file_item_class = self.tk_multi_breakdown2.api.item.FileItem
 
         self._manager = None
         self._bg_task_manager = None
