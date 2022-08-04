@@ -74,13 +74,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         STATUS_LOCKED: ":/tk-multi-breakdown2/icons/main-override.png",
     }
     FILE_ITEM_STATUS_ICONS = {
-        STATUS_UP_TO_DATE: QtGui.QIcon(
-            FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE)
-        ),
-        STATUS_OUT_OF_SYNC: QtGui.QIcon(
-            FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_OUT_OF_SYNC)
-        ),
-        STATUS_LOCKED: QtGui.QIcon(FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_LOCKED)),
+        # STATUS_UP_TO_DATE: QtGui.QIcon(
+        #     FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE)
+        # ),
+        # STATUS_OUT_OF_SYNC: QtGui.QIcon(
+        #     FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_OUT_OF_SYNC)
+        # ),
+        # STATUS_LOCKED: QtGui.QIcon(FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_LOCKED)),
+        STATUS_UP_TO_DATE: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE),
+        STATUS_OUT_OF_SYNC: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_OUT_OF_SYNC),
+        STATUS_LOCKED: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_LOCKED),
     }
 
     FILE_ITEM_STATUS_NAMES = {
@@ -490,7 +493,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         Return the icon for the status.
         """
 
-        return cls.FILE_ITEM_STATUS_ICONS.get(status, QtGui.QIcon())
+        icon = cls.FILE_ITEM_STATUS_ICONS.get(status, QtGui.QIcon())
+
+        # The first time the status icon is accessed, it will provide the path to the icon.
+        # Create it and set it in the status icon mapping to avoid creating it on each
+        # access.
+        if not isinstance(icon, QtGui.QIcon):
+            icon = QtGui.QIcon(icon)
+            cls.FILE_ITEM_STATUS_ICONS[status] = icon
+
+        return icon
 
     @property
     def group_by(self):
