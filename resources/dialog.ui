@@ -48,23 +48,33 @@
        <number>5</number>
       </property>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="toolbar_hlayout">
+        <property name="spacing">
+         <number>15</number>
+        </property>
         <item>
-         <widget class="QToolButton" name="refresh_button">
+         <widget class="QToolButton" name="refresh_btn">
           <property name="text">
            <string/>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="group_by_label">
-          <property name="text">
-           <string>Group By:</string>
+         <layout class="QHBoxLayout" name="group_by_hlayout">
+          <property name="spacing">
+           <number>5</number>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="group_by_combo_box"/>
+          <item>
+           <widget class="QLabel" name="group_by_label">
+            <property name="text">
+             <string>Group By:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="group_by_combo_box"/>
+          </item>
+         </layout>
         </item>
         <item>
          <spacer name="horizontalSpacer">
@@ -80,70 +90,77 @@
          </spacer>
         </item>
         <item>
-         <widget class="QToolButton" name="thumbnail_view_btn">
-          <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
+         <layout class="QHBoxLayout" name="view_mode_hlayout">
+          <property name="spacing">
+           <number>5</number>
           </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="resources.qrc">
-            <normaloff>:/tk-multi-breakdown2/icons/mode_switch_thumb.png</normaloff>
-            <normalon>:/tk-multi-breakdown2/icons/mode_switch_thumb_active.png</normalon>:/tk-multi-breakdown2/icons/mode_switch_thumb.png</iconset>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-          <property name="autoRaise">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="list_view_btn">
-          <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="resources.qrc">
-            <normaloff>:/tk-multi-breakdown2/icons/mode_switch_card.png</normaloff>
-            <normalon>:/tk-multi-breakdown2/icons/mode_switch_card_active.png</normalon>:/tk-multi-breakdown2/icons/mode_switch_card.png</iconset>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="autoRaise">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QToolButton" name="grid_view_btn">
-          <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="resources.qrc">
-            <normaloff>:/tk-multi-breakdown2/icons/grid-inactive.png</normaloff>
-            <normalon>:/tk-multi-breakdown2/icons/grid-active.png</normalon>:/tk-multi-breakdown2/icons/grid-inactive.png</iconset>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="autoRaise">
-           <bool>false</bool>
-          </property>
-         </widget>
+          <item>
+           <widget class="QToolButton" name="thumbnail_view_btn">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/tk-multi-breakdown2/icons/mode_switch_thumb.png</normaloff>
+              <normalon>:/tk-multi-breakdown2/icons/mode_switch_thumb_active.png</normalon>:/tk-multi-breakdown2/icons/mode_switch_thumb.png</iconset>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="autoRaise">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="list_view_btn">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/tk-multi-breakdown2/icons/mode_switch_card.png</normaloff>
+              <normalon>:/tk-multi-breakdown2/icons/mode_switch_card_active.png</normalon>:/tk-multi-breakdown2/icons/mode_switch_card.png</iconset>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="autoRaise">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="grid_view_btn">
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/tk-multi-breakdown2/icons/grid-inactive.png</normaloff>
+              <normalon>:/tk-multi-breakdown2/icons/grid-active.png</normalon>:/tk-multi-breakdown2/icons/grid-inactive.png</iconset>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="autoRaise">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="SearchWidget" name="search_widget" native="true">

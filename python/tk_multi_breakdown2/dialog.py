@@ -100,19 +100,26 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
         # Set up buttons
 
-        refresh_button_menu = QtGui.QMenu(self)
-        refresh_action = QtGui.QAction(
-            SGQIcon.refresh_grey(size=SGQIcon.SIZE_40x40), "Refresh", self
-        )
-        refresh_action.setToolTip("Click to refresh. Press and hold for more options.")
+        self._ui.list_view_btn.setToolTip("List view mode")
+        self._ui.thumbnail_view_btn.setToolTip("Thumbnail view mode")
+        self._ui.grid_view_btn.setToolTip("Grid view mode")
+
+        self._ui.details_button.setIcon(SGQIcon.info(size=SGQIcon.SIZE_40x40))
+        self._ui.details_button.setToolTip("Show/Hide details")
+
+        # Set up the refresh button menu
+        refresh_action = QtGui.QAction(SGQIcon.refresh(), "Refresh", self)
         refresh_action.triggered.connect(self._refresh)
         auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
         auto_refresh_option_action.setCheckable(True)
         auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
+        refresh_button_menu = QtGui.QMenu(self)
         refresh_button_menu.addActions([refresh_action, auto_refresh_option_action])
-        self._ui.refresh_button.setMenu(refresh_button_menu)
-        self._ui.refresh_button.setPopupMode(QtGui.QToolButton.DelayedPopup)
-        self._ui.refresh_button.setDefaultAction(refresh_action)
+        self._ui.refresh_btn.setMenu(refresh_button_menu)
+        self._ui.refresh_btn.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
+        self._ui.refresh_btn.setIcon(SGQIcon.refresh())
+        self._ui.refresh_btn.setCheckable(True)
+        self._ui.refresh_btn.clicked.connect(self._on_refresh_clicked)
 
         # Property indicating if the app should auto-refresh. First check if there a user
         # setting saved for this property, else default to the config settings.
@@ -124,13 +131,7 @@ class AppDialog(QtGui.QWidget):
 
         # Initialize the auto-refresh option in the refresh menu
         auto_refresh_option_action.setChecked(self._auto_refresh)
-
-        self._ui.list_view_btn.setToolTip("List view mode")
-        self._ui.thumbnail_view_btn.setToolTip("Thumbnail view mode")
-        self._ui.grid_view_btn.setToolTip("Grid view mode")
-
-        self._ui.details_button.setIcon(SGQIcon.info(size=SGQIcon.SIZE_40x40))
-        self._ui.details_button.setToolTip("Show/Hide details")
+        self._ui.refresh_btn.setChecked(self._auto_refresh)
 
         # -----------------------------------------------------
         # main file view
@@ -868,6 +869,18 @@ class AppDialog(QtGui.QWidget):
     ################################################################################################
     # UI/Widget callbacks
 
+    def _on_refresh_clicked(self, checked=False):
+        """Slot triggered when teh refresh button has been clicked."""
+
+        # The refresh button is checkable, which means that its check state is toggled each
+        # the button is clicked, but we want the check state to reflect the auto-refresh state.
+        # So keep the refresh button checked state the same auto refresh state
+
+        self._ui.refresh_btn.setChecked(self._auto_refresh)
+
+        # Now handle the button click event
+        self._refresh()
+
     def _on_toggle_auto_refresh(self, checked):
         """
         Slot triggered when the auto-refresh option value changed from the refresh menu.
@@ -877,6 +890,7 @@ class AppDialog(QtGui.QWidget):
         """
 
         self._auto_refresh = checked
+        self._ui.refresh_btn.setChecked(self._auto_refresh)
         self._file_model.poll_for_status_updates(self._auto_refresh)
 
     def _on_group_by_changed(self, text):
@@ -913,7 +927,7 @@ class AppDialog(QtGui.QWidget):
 
         # Do not allow user to interact with UI while the model is async reloading
         self._ui.group_by_combo_box.setEnabled(False)
-        self._ui.refresh_button.setEnabled(False)
+        self._ui.refresh_btn.setEnabled(False)
         self._ui.filter_btn.setEnabled(False)
 
     def _on_file_model_reset_end(self):
@@ -933,7 +947,7 @@ class AppDialog(QtGui.QWidget):
 
         # Re-enable buttons that were disabled during reset
         self._ui.group_by_combo_box.setEnabled(True)
-        self._ui.refresh_button.setEnabled(True)
+        self._ui.refresh_btn.setEnabled(True)
         # Update the filter menu and re-enable the filter butotn
         self._refresh_filter_menu()
 
