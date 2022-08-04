@@ -92,28 +92,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         STATUS_LOCKED: "Locked",
     }
 
-    # The group identifier for background tasks created when processing files.
-    TASK_GROUP_PROCESSED_FILES = "process_files"
-
-    # signal emitted once all the files have been processed
-    files_processed = QtCore.Signal()
-
     class BaseModelItem(QtGui.QStandardItem):
         """
         The base model item class for the FileModel.
         """
-
-        def __eq__(self, other):
-            """
-            Overload the equality comparison operator to allow comparing BaseModelItem objects.
-            Model items are compared by their model index; e.g. two indexes are equivalent if
-            they have the same index.
-
-            :param other: The other model item to compare this one to.
-            :type other: BaseModelItem
-            """
-
-            return self.index() == other.index()
 
         def data(self, role):
             """
@@ -154,6 +136,25 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
             self._group_id = group_id
             self._display_value = display_value
+
+        def __eq__(self, other):
+            """
+            Override the base method.
+
+            Group model items are equal if ids are unique. Note that this means the
+            group ids should be unique.
+
+            :param other: The FileModelItem to compare with.
+            :type other: FileModel.FileModelItem
+
+            :return: True if this model item is equal to the other item.
+            :rtype: bool
+            """
+
+            if not isinstance(other, FileModel.GroupModelItem):
+                return False
+
+            return self.group_id == other.group_id
 
         @property
         def group_id(self):
@@ -239,21 +240,42 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             # data cannot be modified outside of the model, or only using the setData method.
             self._file_item = copy.deepcopy(file_item)
 
-            if timeout_interval and timeout_interval > 0:
-                # Create a timer that checks the latest published file every X seconds
-                self._file_status_check_timer = QtCore.QTimer()
-                self._file_status_check_timer.timeout.connect(
-                    lambda s=self: self._check_file_status()
-                )
-                self._file_status_check_timer.start(timeout_interval)
-            else:
-                self._file_status_check_timer = None
+            # Create a timer that checks the latest published file every X seconds
+            self._file_status_check_timer = QtCore.QTimer()
+            self._file_status_check_timer.timeout.connect(
+                lambda s=self: self._check_file_status()
+            )
+            self._timeout_interval = timeout_interval
+
+            if polling:
+                self.start_timer()
+
+        def __eq__(self, other):
+            """
+            Override the base method.
+
+            File model items are equal if their FileItem objects are equal. Note that this
+            means each file model item should refer to a unique file item.
+
+            :param other: The FileModelItem to compare with.
+            :type other: FileModel.FileModelItem
+
+            :return: True if this model item is equal to the other item.
+            :rtype: bool
+            """
+
+            if not isinstance(other, FileModel.FileModelItem):
+                return False
+
+            this_file_item = self.data(FileModel.FILE_ITEM_ROLE)
+            other_file_item = other.data(FileModel.FILE_ITEM_ROLE)
+            return this_file_item == other_file_item
 
         def __del__(self):
             """
-            Delete the FileModelItem object.
+            Override the base method.
 
-            Ensure that the file status check timer has been stopped.
+            Ensure that the file status check timer has been stopped on deletion.
             """
 
             self.stop_timer()
@@ -400,11 +422,17 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             else:
                 super(FileModel.FileModelItem, self).setData(value, role)
 
+        def start_timer(self):
+            """Start the file status check timer to poll for status updates."""
+
+            # Only start the timer if a valid interval was given
+            if self._timeout_interval and self._timeout_interval > 0:
+                self._file_status_check_timer.start(self._timeout_interval)
+
         def stop_timer(self):
             """Stop the file status check timer to prevent any more calls to update the status."""
 
-            if self._file_status_check_timer:
-                self._file_status_check_timer.stop()
+            self._file_status_check_timer.stop()
 
         def _check_file_status(self):
             """
@@ -757,7 +785,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         task_id = self._bg_task_manager.add_task(
             self._manager.get_latest_published_file,
             task_kwargs={"item": file_item},
-            group=self.TASK_GROUP_PROCESSED_FILES,
         )
 
         self._pending_version_requests[task_id] = file_model_item
@@ -1001,10 +1028,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         """
         Slot triggered when the background manager finishes all tasks within a group.
 
+        Implement this functionality for this method if needed.
+
         :param group_id: The group that has finished
         :type group_id: This will be whatever the group_id was set as on 'add_task'.
         """
-
-        if group_id == self.TASK_GROUP_PROCESSED_FILES:
-            # Emit signal now that all files have been processed.
-            self.files_processed.emit()
