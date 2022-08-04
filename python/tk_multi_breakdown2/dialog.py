@@ -57,6 +57,7 @@ class AppDialog(QtGui.QWidget):
     SPLITTER_STATE = "splitter_state"
     FILTER_MENU_STATE = "filter_menu_state"
     GROUP_BY_SETTING = "group_by"
+    AUTO_REFRESH_SETTING = "auto_refresh"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -99,8 +100,30 @@ class AppDialog(QtGui.QWidget):
         # -----------------------------------------------------
         # Set up buttons
 
-        self._ui.refresh_button.setIcon(SGQIcon.refresh_grey(size=SGQIcon.SIZE_40x40))
-        self._ui.refresh_button.setToolTip("Click to refresh")
+        refresh_button_menu = QtGui.QMenu(self)
+        refresh_action = QtGui.QAction(
+            SGQIcon.refresh_grey(size=SGQIcon.SIZE_40x40), "Refresh", self
+        )
+        refresh_action.setToolTip("Click to refresh. Press and hold for more options.")
+        refresh_action.triggered.connect(self._refresh)
+        auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
+        auto_refresh_option_action.setCheckable(True)
+        auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
+        refresh_button_menu.addActions([refresh_action, auto_refresh_option_action])
+        self._ui.refresh_button.setMenu(refresh_button_menu)
+        self._ui.refresh_button.setPopupMode(QtGui.QToolButton.DelayedPopup)
+        self._ui.refresh_button.setDefaultAction(refresh_action)
+
+        # Property indicating if the app should auto-refresh. First check if there a user
+        # setting saved for this property, else default to the config settings.
+        self._auto_refresh = self._settings_manager.retrieve(
+            self.AUTO_REFRESH_SETTING, None
+        )
+        if self._auto_refresh is None:
+            self._auto_refresh = self._bundle.get_setting("auto_refresh", True)
+
+        # Initialize the auto-refresh option in the refresh menu
+        auto_refresh_option_action.setChecked(self._auto_refresh)
 
         self._ui.list_view_btn.setToolTip("List view mode")
         self._ui.thumbnail_view_btn.setToolTip("Thumbnail view mode")
@@ -118,7 +141,9 @@ class AppDialog(QtGui.QWidget):
         group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
         if group_by is None:
             group_by = self._bundle.get_setting("group_by", None)
-        self._file_model = FileModel(self, self._bg_task_manager, group_by)
+        self._file_model = FileModel(
+            self, self._bg_task_manager, group_by=group_by, polling=self._auto_refresh
+        )
 
         self._file_proxy_model = FileProxyModel(self)
         self._file_proxy_model.setSourceModel(self._file_model)
@@ -318,7 +343,6 @@ class AppDialog(QtGui.QWidget):
         )
 
         # Widgets
-        self._ui.refresh_button.clicked.connect(self._file_model.reload)
         self._ui.details_button.clicked.connect(self._toggle_details_panel)
         self._ui.select_all_outdated_button.clicked.connect(
             self._on_select_all_outdated
@@ -347,13 +371,8 @@ class AppDialog(QtGui.QWidget):
         )
         if hasattr(self.scene_operations_hook, "register_scene_change_callback"):
             self.scene_operations_hook.register_scene_change_callback(
-                scene_change_callback=self._file_model.reload
+                scene_change_callback=self._refresh
             )
-
-        # -----------------------------------------------------
-        # finally, update the UI by processing the files of the current scene
-
-        self._file_model.reload()
 
         # -----------------------------------------------------
         # Log metric for app usage
@@ -371,13 +390,62 @@ class AppDialog(QtGui.QWidget):
     ######################################################################################################
     # Override Qt methods
 
+    def showEvent(self, event):
+        """
+        Override the base method.
+
+        :param event: The show event object.
+        :type event: QtGui.QShowEvent
+        """
+
+        if self._file_model:
+            self._file_model.reload()
+
+        super(AppDialog, self).showEvent(event)
+
+    def hideEvent(self, event):
+        """
+        Override the base method.
+
+        :param event: The hide event object.
+        :type event: QtGui.QHideEvent
+        """
+
+        if self._file_model:
+            self._file_model.clear()
+
+        super(AppDialog, self).hideEvent(event)
+
     def closeEvent(self, event):
         """
-        Overriden method triggered when the widget is closed.  Cleans up as much as possible
-        to help the GC.
+        Override the base method.
 
-        :param event: Close event
+        This slot is triggered when the widget is closed. Clean up as much as possible to help
+        the GC.
+
+        :param event: The close event object.
+        :type event: QtGui.QCloseEvent
         """
+
+        # First save any app settings
+        self._settings_manager.store(
+            self.FILTER_MENU_STATE, self._filter_menu.save_state()
+        )
+        self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
+        self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
+        if six.PY2:
+            self._settings_manager.store(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
+        else:
+            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+            # will convert QByteArray objects to str when storing).
+            self._raw_values_settings.setValue(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
+
+        # Tell the main app instance that we are closing
+        self._bundle._on_dialog_close(self)
 
         # Disconnect any signals that were set up for handlding scene changes
         if hasattr(self.scene_operations_hook, "unregister_scene_change_callback"):
@@ -396,9 +464,11 @@ class AppDialog(QtGui.QWidget):
         # clear up the various data models
         if self._file_model:
             self._file_model.destroy()
+            self._file_model = None
 
         if self._file_history_model:
             self._file_history_model.clear()
+            self._file_history_model = None
 
         self._ui.file_view.setItemDelegate(None)
         for view_mode in self.view_modes:
@@ -420,23 +490,7 @@ class AppDialog(QtGui.QWidget):
             self._bg_task_manager.shut_down()
             self._bg_task_manager = None
 
-        # Save the splitter state
-        state = self._ui.details_splitter.saveState()
-        if six.PY2:
-            self._settings_manager.store(self.SPLITTER_STATE, state)
-        else:
-            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
-            # will convert QByteArray objects to str when storing).
-            self._raw_values_settings.setValue(self.SPLITTER_STATE, state)
-
-        # Save the filter menu state
-        menu_state = self._filter_menu.save_state()
-        self._settings_manager.store(self.FILTER_MENU_STATE, menu_state)
-
-        # Save the file model group by field
-        self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
-
-        return QtGui.QWidget.closeEvent(self, event)
+        super(AppDialog, self).closeEvent(event)
 
     ######################################################################################################
     # Protected methods
@@ -806,8 +860,24 @@ class AppDialog(QtGui.QWidget):
 
         self._ui.filter_btn.setEnabled(True)
 
+    def _refresh(self):
+        """Re-scan the scene and reload the file model."""
+
+        self._file_model.reload()
+
     ################################################################################################
     # UI/Widget callbacks
+
+    def _on_toggle_auto_refresh(self, checked):
+        """
+        Slot triggered when the auto-refresh option value changed from the refresh menu.
+
+        :param checked: True if auto-refresh is checked, else False.
+        :type checked: bool
+        """
+
+        self._auto_refresh = checked
+        self._file_model.poll_for_status_updates(self._auto_refresh)
 
     def _on_group_by_changed(self, text):
         """
@@ -840,10 +910,10 @@ class AppDialog(QtGui.QWidget):
         """
 
         self._file_model_overlay.start_spin()
+
+        # Do not allow user to interact with UI while the model is async reloading
         self._ui.group_by_combo_box.setEnabled(False)
-        # Turn off the filter button while model is reloading, but only turn it back on once
-        # the files have been processed (and not the model reset end) - there is a specific
-        # signal for files processing finished
+        self._ui.refresh_button.setEnabled(False)
         self._ui.filter_btn.setEnabled(False)
 
     def _on_file_model_reset_end(self):

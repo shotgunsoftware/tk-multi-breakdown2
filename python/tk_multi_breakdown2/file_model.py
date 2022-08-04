@@ -217,7 +217,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     class FileModelItem(BaseModelItem):
         """Model item that represents a single FileItem in the model."""
 
-        def __init__(self, file_item=None, timeout_interval=None):
+        def __init__(self, file_item=None, timeout_interval=None, polling=False):
             """
             Constructor. Initialize the file item data to None, the file item data will be
             set in the setData method using the FileModel.FILE_ITEM_ROLE.
@@ -227,6 +227,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :param timeout_interval: The timeout interval in milliseconds for polling the file
                 item status. If None or not greater than 0, no polling will be performed.
             :type timeout_interval: int
+            :param polling: True will start the item's timer to poll for automatic status
+                updates, else False will not poll to get status updates.
+            :type polling: bool
             """
 
             # Call the base QStandardItem constructor
@@ -417,21 +420,27 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
             self.model().request_latest_published_file(self)
 
-    def __init__(self, parent, bg_task_manager, group_by=None):
+    def __init__(self, parent, bg_task_manager, group_by=None, polling=False):
         """
         Class constructor
 
-        :param parent:          The parent QObject for this instance
+        :param parent: The parent QObject for this instance
+        :type parent: QtGui.QWidget
         :param bg_task_manager: A BackgroundTaskManager instance that will be used for all background/threaded
-                                work that needs undertaking
-        :param group_by:        The data defining how to create the file item grouping.
+            work that needs undertaking
+        :type bg_task_manager: BackgroundTaskManager
+        :param group_by: The data defining how to create the file item grouping.
         :type group_by: dict
+        :param polling: True will poll each file model item for status updates, else False
+            will not poll to get automatic status updates.
+        :type polling: bool
         """
 
         QtGui.QStandardItemModel.__init__(self, parent)
 
         self._app = sgtk.platform.current_bundle()
 
+        self._polling = polling
         # Get the app setting for the timeout interval length for polling file item statuses.
         self._timeout_interval = self._app.get_setting("file_status_check_interval")
 
@@ -549,12 +558,13 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         self._group_items = {}
 
-        # Stop all the FileModelItem timers that are checking each item's status
-        for row in range(self.rowCount()):
-            group_item = self.item(row)
-            for child_row in range(group_item.rowCount()):
-                child = group_item.child(child_row)
-                child.stop_timer()
+        # Save the current polling state to restore after stopping polling on file items that
+        # will be removed on clearing the model.
+        restore_polling = self._polling
+        # Stop all the FileModelItem timers that are checking each item's status.
+        self.poll_for_status_updates(False)
+        # Restore the polling state.
+        self._polling = restore_polling
 
         super(FileModel, self).clear()
 
@@ -634,6 +644,29 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             # signal that they have bene fully processed - this must be emitted after signals
             # become unblocked
             self.files_processed.emit()
+
+    def poll_for_status_updates(self, on):
+        """
+        Turn on polling for file item status udpates.
+
+        This will start the timer on each item in the model to individually poll for updates
+        on the file item. This will automatically refresh the item in the view when updates
+        are found.
+
+        :param on: True will turn on polling, else False will turn off polling.
+        :type on: bool
+        """
+
+        self._polling = on
+
+        for row in range(self.rowCount()):
+            group_item = self.item(row)
+            for child_row in range(group_item.rowCount()):
+                child = group_item.child(child_row)
+                if self._polling:
+                    child.start_timer()
+                else:
+                    child.stop_timer()
 
     def get_group_by_fields(self):
         """
@@ -821,7 +854,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 group_item = self._group_items[group_by_id]
 
             file_model_item = FileModel.FileModelItem(
-                file_item=file_item, timeout_interval=self._timeout_interval
+                file_item=file_item,
+                timeout_interval=self._timeout_interval,
+                polling=self._polling,
             )
             file_model_item.setIcon(QtGui.QIcon())
             # Send an async requests to retrieve additional data for the file item, and so
