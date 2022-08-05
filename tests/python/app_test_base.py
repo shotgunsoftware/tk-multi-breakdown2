@@ -43,14 +43,12 @@ class AppTestBase(TankTestBase):
         sys.path.extend([base_dir, app_dir, api_dir])
 
         from tk_multi_breakdown2 import constants
-        from tk_multi_breakdown2.file_model import FileModel
         from tk_multi_breakdown2.api import BreakdownManager
         from tk_multi_breakdown2.api.item import FileItem
 
         self.constants = constants
         self._manager_class = BreakdownManager
         self._file_item_class = FileItem
-        self._file_model_class = FileModel
 
         self.project_name = os.path.basename(self.project_root)
         context = self.tk.context_from_entity(self.project["type"], self.project["id"])
