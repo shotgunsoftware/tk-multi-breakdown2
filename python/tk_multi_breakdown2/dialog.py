@@ -927,8 +927,11 @@ class AppDialog(QtGui.QWidget):
 
         # Do not allow user to interact with UI while the model is async reloading
         self._ui.group_by_combo_box.setEnabled(False)
+        self._ui.group_by_label.setEnabled(False)
         self._ui.refresh_btn.setEnabled(False)
         self._ui.filter_btn.setEnabled(False)
+        self._ui.select_all_outdated_button.setEnabled(False)
+        self._ui.update_selected_button.setEnabled(False)
 
     def _on_file_model_reset_end(self):
         """
@@ -947,7 +950,10 @@ class AppDialog(QtGui.QWidget):
 
         # Re-enable buttons that were disabled during reset
         self._ui.group_by_combo_box.setEnabled(True)
+        self._ui.group_by_label.setEnabled(True)
         self._ui.refresh_btn.setEnabled(True)
+        self._ui.select_all_outdated_button.setEnabled(True)
+        self._ui.update_selected_button.setEnabled(True)
         # Update the filter menu and re-enable the filter butotn
         self._refresh_filter_menu()
 
