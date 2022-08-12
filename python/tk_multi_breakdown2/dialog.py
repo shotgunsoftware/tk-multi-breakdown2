@@ -399,8 +399,8 @@ class AppDialog(QtGui.QWidget):
         :type event: QtGui.QShowEvent
         """
 
-        if self._file_model:
-            self._file_model.reload()
+        # Refresh the view on showing the app
+        self._refresh()
 
         super(AppDialog, self).showEvent(event)
 
@@ -864,7 +864,8 @@ class AppDialog(QtGui.QWidget):
     def _refresh(self):
         """Re-scan the scene and reload the file model."""
 
-        self._file_model.reload()
+        if self._file_model:
+            self._file_model.reload()
 
     ################################################################################################
     # UI/Widget callbacks
