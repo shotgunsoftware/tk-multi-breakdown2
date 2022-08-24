@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Breakdown API &mdash; tk-multi-breakdown2 v0.2.4 documentation</title>
+  <title>Breakdown API &mdash; tk-multi-breakdown2 master documentation</title>
   
 
   
@@ -124,7 +124,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.4.<br>
+    <b>tk-multi-breakdown2</b> master.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -134,6 +134,12 @@
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
     </div>
+    <style>
+        p.privacy_links { margin: 4px 0px;}
+    </style>
+    <p class="privacy_links"><a data-opt-in-preferences href="javascript:;">Privacy settings</a></p>
+    <p class="privacy_links"><a data-wat-linkname="manage-ccpa-settings-footer-link" href="javascript:;">Do not sell my personal information</a></p>
+    <p class="privacy_links"><a href="https://www.autodesk.com/company/legal-notices-trademarks/privacy-statement">Privacy/Cookies</a></p>
 
 
 
@@ -199,200 +205,9 @@
 <span id="id1"></span><h1>Breakdown API<a class="headerlink" href="#breakdown-api" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="breakdownmanager">
 <h2>BreakdownManager<a class="headerlink" href="#breakdownmanager" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="tk_multi_breakdown2.api.BreakdownManager">
-<em class="property">class </em><code class="descclassname">tk_multi_breakdown2.api.</code><code class="descname">BreakdownManager</code><span class="sig-paren">(</span><em>bundle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>This class is used for managing and executing file updates.</p>
-<p>Initialize the manager.</p>
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.scan_scene">
-<code class="descname">scan_scene</code><span class="sig-paren">(</span><em>extra_fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.scan_scene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.scan_scene" title="Permalink to this definition">¶</a></dt>
-<dd><p>Scan the current scene to return a list of object we could perform actions on.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query
-for published files.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of :class`FileItem` objects containing the file data.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">
-<code class="descname">get_latest_published_file</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_latest_published_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the latest available published file according to the current item context.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – :class`FileItem` object we want to get the latest published file</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The latest published file as a ShotGrid entity dictionary</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_published_file_history">
-<code class="descname">get_published_file_history</code><span class="sig-paren">(</span><em>item</em>, <em>extra_fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_file_history"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the published history for the selected item. It will gather all the published files with the same context
-than the current item (project, name, task, …)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query fields.</li>
-<li><strong>item</strong> – :class`FileItem` object we want to get the published file history</li>
-<li><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query
-for published files.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of ShotGrid published file dictionary</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version">
-<code class="descname">update_to_latest_version</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.update_to_latest_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the item to its latest version.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> – Item to update</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version">
-<code class="descname">update_to_specific_version</code><span class="sig-paren">(</span><em>item</em>, <em>sg_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.update_to_specific_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the item to a specific version.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>item</strong> – Item to update</li>
-<li><strong>sg_data</strong> – Dictionary of ShotGrid data representing the published file we want to update the item to</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 <div class="section" id="fileitem">
 <span id="breakdown-api-manager"></span><h2>FileItem<a class="headerlink" href="#fileitem" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="tk_multi_breakdown2.api.FileItem">
-<em class="property">class </em><code class="descclassname">tk_multi_breakdown2.api.</code><code class="descname">FileItem</code><span class="sig-paren">(</span><em>node_name</em>, <em>node_type</em>, <em>path</em>, <em>sg_data=None</em>, <em>extra_data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/item.html#FileItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Encapsulate details about a single version of a file. Each instance represents a single “version”
-but will contain details about the latest available version of the file.</p>
-<p>Class constructor.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>node_name</strong> – Name of the file node</li>
-<li><strong>node_type</strong> – Type of the file node</li>
-<li><strong>path</strong> – Path on disk of this file</li>
-<li><strong>sg_data</strong> – Dictionary of ShotGrid data representing this file in the database</li>
-<li><strong>extra_data</strong> – Dictionary containing additional information about this file</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.highest_version_number">
-<code class="descname">highest_version_number</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.highest_version_number" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The highest version number available in the ShotGrid database for this file</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.node_name">
-<code class="descname">node_name</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.node_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the name of the file node.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.node_type">
-<code class="descname">node_type</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.node_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the type of the file node.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.path">
-<code class="descname">path</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the path on disk for this file item.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.locked">
-<code class="descname">locked</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.locked" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get whether or not this file item is locked.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.latest_published_file">
-<code class="descname">latest_published_file</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.latest_published_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the latest published file for this file item.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.extra_data">
-<code class="descname">extra_data</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.extra_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get or set the extra data associated with this item.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.sg_data">
-<code class="descname">sg_data</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.sg_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get or set the ShotGrid data associated with this item.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.FileItem.to_dict">
-<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/item.html#FileItem.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the FileItem as a dictionary. Only include the properties needed by the
-scene operation hook update method.i</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The item properties as a dictionary</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 <span class="target" id="breakdown-api-item"></span></div>
 </div>
 
@@ -444,15 +259,14 @@ scene operation hook update method.i</p>
   
  
 
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-2114792-1', 'auto');
-  ga('send', 'pageview');
-</script>
-
+  <script type="text/javascript">
+    window.wafCCPAForceShow = true;
+    (function(a,b,c,d){
+      a='https://tags.tiqcdn.com/utag/autodesk/micro-opt/prod/utag.js';
+      b=document;c='script';d=b.createElement(c);d.src=a;d.type='text/java'+c;d.async=true;
+      a=b.getElementsByTagName(c)[0];a.parentNode.insertBefore(d,a);
+    })();
+  </script>
 
 
 </body>
