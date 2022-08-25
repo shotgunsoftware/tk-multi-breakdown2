@@ -23,13 +23,11 @@ delegates = sgtk.platform.import_framework("tk-framework-qtwidgets", "delegates"
 ViewItemDelegate = delegates.ViewItemDelegate
 ThumbnailViewItemDelegate = delegates.ThumbnailViewItemDelegate
 
-# ShotGrid formatted widget
 shotgun_widget = sgtk.platform.import_framework(
     "tk-framework-qtwidgets", "shotgun_widget"
 )
 ShotgunFolderWidget = shotgun_widget.ShotgunFolderWidget
 
-# Overlay widget
 overlay_widget = sgtk.platform.import_framework(
     "tk-framework-qtwidgets", "overlay_widget"
 )
@@ -50,3 +48,6 @@ FilterItem = filtering.FilterItem
 FilterMenu = filtering.FilterMenu
 FilterMenuButton = filtering.FilterMenuButton
 FilterItemTreeProxyModel = filtering.FilterItemTreeProxyModel
+
+sg_qicons = sgtk.platform.import_framework("tk-framework-qtwidgets", "sg_qicons")
+SGQIcon = sg_qicons.SGQIcon

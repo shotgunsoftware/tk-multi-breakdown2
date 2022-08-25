@@ -15,17 +15,14 @@ from .. import constants
 
 
 class BreakdownManager(object):
-    """
-    This class is used for managing and executing file updates.
-    """
+    """This class is used for managing and executing file updates."""
 
     def __init__(self, bundle):
-        """
-        Initialize the manager.
-        """
+        """Initialize the manager."""
 
         self._bundle = bundle
 
+    @sgtk.LogManager.log_timing
     def scan_scene(self, extra_fields=None):
         """
         Scan the current scene to return a list of object we could perform actions on.
@@ -46,9 +43,7 @@ class BreakdownManager(object):
         # cannot rely on templates so we have to query SG instead
         file_paths = [o["path"] for o in scene_objects]
 
-        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
-            "published_file_fields", []
-        )
+        fields = self.get_published_file_fields()
         if extra_fields is not None:
             fields += extra_fields
 
@@ -64,6 +59,19 @@ class BreakdownManager(object):
                 file_items.append(file_item)
 
         return file_items
+
+    def get_published_file_fields(self):
+        """
+        Get the fields to pass to the query to retrieve the published files when scanning the
+        scene.
+
+        :return: The published file fields.
+        :rtype: list<str>
+        """
+
+        return constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
+            "published_file_fields", []
+        )
 
     def get_latest_published_file(self, item):
         """

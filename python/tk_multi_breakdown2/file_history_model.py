@@ -11,6 +11,7 @@
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
+from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
 from . import constants
 
@@ -46,14 +47,10 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     ) = range(2)
 
     STATUS_BADGES = {
-        STATUS_UP_TO_DATE: QtGui.QIcon(
-            ":/tk-multi-breakdown2/icons/current-uptodate.png"
-        ),
-        STATUS_OUT_OF_DATE: QtGui.QIcon(
-            ":/tk-multi-breakdown2/icons/current-outofdate.png"
-        ),
+        STATUS_UP_TO_DATE: ":/tk-multi-breakdown2/icons/current-uptodate.png",
+        STATUS_OUT_OF_DATE: ":/tk-multi-breakdown2/icons/current-outofdate.png",
     }
-    LOCKED_ICON = QtGui.QIcon(":/tk-multi-breakdown2/icons/current-override.png")
+    LOCKED_ICON = ":/tk-multi-breakdown2/icons/current-override.png"
 
     def __init__(self, parent, bg_task_manager):
         """
@@ -141,7 +138,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         if not self.parent_file:
             return None
 
-        return self.parent_file.highest_version_number
+        return self.parent_file.highest_version_number or -1
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         """
@@ -235,8 +232,18 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
             if self.parent_locked:
                 badge = self.LOCKED_ICON
+                # The first access will only provide the path to the icon. Create the icon
+                # and set for next time.
+                if not isinstance(badge, QtGui.QIcon):
+                    badge = QtGui.QIcon(badge)
             else:
                 badge = self.STATUS_BADGES.get(status, None)
+                # The first icon access only the path will be provided. Create the icon and
+                # set it in the status badge mapping for next time
+                if badge and not isinstance(badge, QtGui.QIcon):
+                    badge = QtGui.QIcon(badge)
+                    self.STATUS_BADGES[status] = badge
+
         else:
             # No status or badge for non-current items
             status = None

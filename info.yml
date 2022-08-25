@@ -43,6 +43,35 @@ configuration:
         description: List of Published File fields returned when querying ShotGrid for published file history.
                      These fields will also be used when scanning the scene to get the current scene elements.
 
+    group_by:
+        type: str
+        default_value: project
+        description: Define the field which the published files are grouped by in the main view.
+
+    group_by_fields:
+        type: list
+        values: {type: str}
+        default_value: [project, entity, task, published_file_type, created_by.HumanUser.name]
+        allows_empty: True
+        description: List of Published File fields that the file items can be grouped by using the "Group By"
+                     drop down menu. Leave empty to show all available Published File fields or specify a
+                     specific set of fields to show.
+
+    auto_refresh:
+        type: bool
+        default_value: True
+        description: Set to True to let the app automatically refresh based on DCC scene events and polling
+                     for published file updates. Set to False to not perform automatic refreshes.
+
+    file_status_check_interval:
+        type: int
+        default_value: 30000
+        description: The timeout interval (in milliseconds) to poll the statuses of the file items. A
+                     background task will be executed to query the file item statuses at each interval
+                     timeout. The default interval length is 30 seconds. Set a negative valeu to not
+                     perform the background file item status checks.
+
+
 # The ShotGrid fields that this app needs in order to operate correctly
 requires_shotgun_fields:
 # linked_projects.Asset is required for references in multiple ShotGrid rojects
@@ -62,4 +91,4 @@ supported_engines:
 # the frameworks required to run this app
 frameworks:
     - {"name": "tk-framework-shotgunutils", "version": "v5.x.x", "minimum_version": "v5.8.2"}
-    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.10.1"}
+    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.10.5"}

@@ -7,8 +7,7 @@
 # By accessing, using, copying or modifying this work you indicate your
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk Software Inc.
-import datetime
-import imp  # For python2 support. Use importlib for python3
+
 import os
 import sys
 
@@ -50,16 +49,17 @@ class AppTestBase(TankTestBase):
         self.constants = constants
         self._manager_class = BreakdownManager
         self._file_item_class = FileItem
-        self._app = None
-        self._engine = None
-        self._manager = None
+
         self.project_name = os.path.basename(self.project_root)
         context = self.tk.context_from_entity(self.project["type"], self.project["id"])
 
-        # Full App test environment
         engine_name = os.environ.get("TEST_ENGINE", "tk-testengine")
         self._engine = sgtk.platform.start_engine(engine_name, self.tk, context)
         self._app = self._engine.apps["tk-multi-breakdown2"]
+
+        self._manager = None
+        self._bg_task_manager = None
+
         self.published_file_type = sgtk.util.get_published_file_entity_type(
             self._app.sgtk
         )
@@ -89,6 +89,21 @@ class AppTestBase(TankTestBase):
         """
 
         return self._app
+
+    @property
+    def bg_task_manager(self):
+        """Get the background task manager."""
+
+        if not self._bg_task_manager:
+            # Create it if this is the first time requesting it
+            self._bg_task_manager = (
+                self.app.frameworks["tk-framework-shotgunutils"]
+                .import_module("task_manager")
+                .BackgroundTaskManager(parent=None, start_processing=True)
+            )
+            self.addCleanup(self._bg_task_manager.shut_down)
+
+        return self._bg_task_manager
 
     @property
     def manager(self):
