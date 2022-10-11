@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.2.4 documentation</title>
+  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.2.5 documentation</title>
   
 
   
@@ -118,7 +118,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.4.<br>
+    <b>tk-multi-breakdown2</b> v0.2.5.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -231,6 +231,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_extra_data</span> <span class="o">=</span> <span class="n">extra_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_locked</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override the equality operator to allow comparing FileItem objects.</span>
+
+<span class="sd">        :param other: The other FileItem to compare this one with.</span>
+<span class="sd">        :type other: FileItem</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node_name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">node_name</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">node_type</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">path</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="c1">########################################## ####################################################</span>
     <span class="c1">########################################## ####################################################</span>

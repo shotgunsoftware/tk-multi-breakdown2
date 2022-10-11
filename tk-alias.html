@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.2.4 documentation</title>
+  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.2.5 documentation</title>
   
 
   
@@ -131,7 +131,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.4.<br>
+    <b>tk-multi-breakdown2</b> v0.2.5.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -415,6 +415,35 @@
             <span class="n">path_list</span><span class="p">,</span>
             <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">],</span>
             <span class="n">only_current_project</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">register_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register the callback such that it is executed on a scene change event.</span>
+
+<span class="sd">        This hook method is useful to reload the breakdown data when the data in the scene has</span>
+<span class="sd">        changed.</span>
+
+<span class="sd">        For Alias, the callback is registered with the AliasEngine event watcher to be</span>
+<span class="sd">        triggered on a PostRetrieve event (e.g. when a file is opened).</span>
+
+<span class="sd">        :param callback: The callback to register and execute on scene chagnes.</span>
+<span class="sd">        :type callback: function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Trigger the scene change callback for these event messages</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">PostRetrieve</span><span class="p">,</span>
+            <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileDeleted</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="c1"># Alias event messages that are only available in version &gt;= 2023.0</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="p">,</span> <span class="s2">&quot;ReferenceFileAdded&quot;</span><span class="p">):</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileAdded</span><span class="p">)</span>
+
+        <span class="c1"># No need to set up the unregister_scene_change_callback method since the</span>
+        <span class="c1"># AliasEventWatcher will take care of disconnecting the callbacks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span><span class="o">.</span><span class="n">register_alias_callback</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="n">scene_change_callback</span><span class="p">(),</span> <span class="n">events</span>
         <span class="p">)</span>
 </pre></div>
 </div>

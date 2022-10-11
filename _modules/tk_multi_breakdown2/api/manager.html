@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.4 documentation</title>
+  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.5 documentation</title>
   
 
   
@@ -118,7 +118,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.4.<br>
+    <b>tk-multi-breakdown2</b> v0.2.5.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -213,18 +213,15 @@
 
 
 <div class="viewcode-block" id="BreakdownManager"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager">[docs]</a><span class="k">class</span> <span class="nc">BreakdownManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This class is used for managing and executing file updates.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;This class is used for managing and executing file updates.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bundle</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the manager.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the manager.&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span> <span class="o">=</span> <span class="n">bundle</span>
 
-<div class="viewcode-block" id="BreakdownManager.scan_scene"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.scan_scene">[docs]</a>    <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="BreakdownManager.scan_scene"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.scan_scene">[docs]</a>    <span class="nd">@sgtk</span><span class="o">.</span><span class="n">LogManager</span><span class="o">.</span><span class="n">log_timing</span>
+    <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Scan the current scene to return a list of object we could perform actions on.</span>
 
@@ -244,9 +241,7 @@
         <span class="c1"># cannot rely on templates so we have to query SG instead</span>
         <span class="n">file_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">scene_objects</span><span class="p">]</span>
 
-        <span class="n">fields</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">PUBLISHED_FILES_FIELDS</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span>
-            <span class="s2">&quot;published_file_fields&quot;</span><span class="p">,</span> <span class="p">[]</span>
-        <span class="p">)</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_published_file_fields</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">extra_fields</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fields</span> <span class="o">+=</span> <span class="n">extra_fields</span>
 
@@ -262,6 +257,19 @@
                 <span class="n">file_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_item</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">file_items</span></div>
+
+<div class="viewcode-block" id="BreakdownManager.get_published_file_fields"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields">[docs]</a>    <span class="k">def</span> <span class="nf">get_published_file_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the fields to pass to the query to retrieve the published files when scanning the</span>
+<span class="sd">        scene.</span>
+
+<span class="sd">        :return: The published file fields.</span>
+<span class="sd">        :rtype: list&lt;str&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">constants</span><span class="o">.</span><span class="n">PUBLISHED_FILES_FIELDS</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span>
+            <span class="s2">&quot;published_file_fields&quot;</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_latest_published_file"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
