@@ -34,9 +34,10 @@ class BreakdownManager(object):
 
         file_items = []
 
-        # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
-        scene_objects = self._bundle.execute_hook_method(
-            "hook_scene_operations", "scan_scene"
+        # perform the scene scanning in the main UI thread - a lot of apps are sensitive to these
+        # types of operations happening in other threads.
+        scene_objects = self._bundle.engine.execute_in_main_thread(
+            self._bundle.execute_hook_method, "hook_scene_operations", "scan_scene"
         )
 
         # only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we
