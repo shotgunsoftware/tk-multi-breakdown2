@@ -135,6 +135,16 @@ class BreakdownSceneOperations(HookBaseClass):
             )
             self.__callback_ids.append(callback_id)
 
+        # adding callbacks for file nodes as well (to handle texture nodes)
+        callback_id = OpenMaya.MDGMessage.addNodeAddedCallback(
+            lambda n, c: scene_change_callback(), "file"
+        )
+        self.__callback_ids.append(callback_id)
+        callback_id = OpenMaya.MDGMessage.addNodeRemovedCallback(
+            lambda n, c: scene_change_callback(), "file"
+        )
+        self.__callback_ids.append(callback_id)
+
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
