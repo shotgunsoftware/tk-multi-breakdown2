@@ -122,6 +122,8 @@ class BreakdownSceneOperations(HookBaseClass):
         scene_events = [
             OpenMaya.MSceneMessage.kAfterCreateReference,
             OpenMaya.MSceneMessage.kAfterRemoveReference,
+            OpenMaya.MSceneMessage.kAfterOpen,
+            OpenMaya.MSceneMessage.kAfterNew,
         ]
 
         # when registering the Maya callbacks, we need to use a lambda as the addCallback method always return an
