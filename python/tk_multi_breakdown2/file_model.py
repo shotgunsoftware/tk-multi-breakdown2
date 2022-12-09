@@ -876,6 +876,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :type file_items: list<FileItem>
         """
 
+        # Keep track of file items by grouping to add all at once at the end of processing. It
+        # is more efficient to call appendRows rather than appendRow for each item.
+        file_items_by_group = {}
+
         for file_item in file_items:
             # if the item doesn't have any associated shotgun data, it means that the file is not a
             # Published File so skip it
@@ -885,7 +889,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             group_by_id, group_by_display = self._get_file_group_info(file_item)
             if self._group_items.get(group_by_id) is None:
                 group_item = FileModel.GroupModelItem(group_by_id, group_by_display)
-                self.appendRow(group_item)
                 self._group_items[group_by_id] = group_item
             else:
                 group_item = self._group_items[group_by_id]
@@ -902,7 +905,14 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.request_thumbnail(file_model_item, file_item)
 
             # Add the file item to the grouping
-            group_item.appendRow(file_model_item)
+            file_items_by_group.setdefault(group_by_id, []).append(file_model_item)
+
+        # Add all model items (by their parent) at once to improve performance.
+        group_items = list(self._group_items.values())
+        self.invisibleRootItem().appendRows(group_items)
+        for group_id, file_items in file_items_by_group.items():
+            group_item = self._group_items[group_id]
+            group_item.appendRows(file_items)
 
     def _get_file_group_info(self, file_item):
         """
