@@ -586,6 +586,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         self._group_items = {}
 
+        # Stop any background tasks currently running
+        for request_id in self._pending_version_requests:
+            self._bg_task_manager.stop_task(request_id)
+        for request_id in self._pending_thumbnail_requests:
+            self._bg_task_manager.stop_task(request_id)
+
+        # Clear request ids
+        self._pending_version_requests.clear()
+        self._pending_thumbnail_requests.clear()
+
         # Save the current polling state to restore after stopping polling on file items that
         # will be removed on clearing the model.
         restore_polling = self._polling
