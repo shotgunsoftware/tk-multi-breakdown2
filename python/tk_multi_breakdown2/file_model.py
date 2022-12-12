@@ -86,9 +86,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     }
 
     class BaseModelItem(QtGui.QStandardItem):
-        """
-        The base model item class for the FileModel.
-        """
+        """The base model item class for the FileModel."""
 
         def data(self, role):
             """
