@@ -940,15 +940,6 @@ class AppDialog(QtGui.QWidget):
         the `modelRest` signal.
         """
 
-        if self._file_model.is_loading():
-            # The model is still loading, don't do anything
-            return
-
-        if self._file_model.rowCount() <= 0:
-            self._file_model_overlay.show_message("No items found.")
-        else:
-            self._file_model_overlay.hide()
-
         # Re-enable buttons that were disabled during reset
         self._ui.group_by_combo_box.setEnabled(True)
         self._ui.group_by_label.setEnabled(True)
@@ -968,6 +959,11 @@ class AppDialog(QtGui.QWidget):
         # accepting the group index, this causes the group to collapse, even thoug there are
         # children in it
         self._expand_all_groups()
+
+        if self._file_model.rowCount() <= 0:
+            self._file_model_overlay.show_message("No items found.")
+        else:
+            self._file_model_overlay.hide()
 
     def _on_context_menu_requested(self, pnt):
         """
