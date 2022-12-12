@@ -349,19 +349,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                         }
                     }
 
-                if role == FileModel.VIEW_ITEM_LOADING_ROLE:
-                    check_thumbnail_only = False
-
-                    if (
-                        self._file_item
-                        and self._file_item.highest_version_number is not None
-                    ):
-                        check_thumbnail_only = True
-
-                    return self.model().is_loading(
-                        self, thumbnail_only=check_thumbnail_only
-                    )
-
                 if role == FileModel.REFERENCE_LOADED:
                     # TODO call a hook method per DCC to check if the reference associated with this
                     # file item has been loaded into the scene (if the DCC supports loading and
@@ -729,39 +716,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                     return child
 
         return None
-
-    def is_loading(self, model_item=None, thumbnail_only=False):
-        """
-        Return True if the whole model, or the individual model item is in a loading state.
-
-        The model is loading when the current scene is being scanned and the model is
-        waiting for the file items to be returned to create the items in the model. The
-        model loading state will be returned if the `model_item` is not specified.
-
-        A model item is loading when its data is being fetched. The model item loading state
-        will be returned for the `model_item` specified.
-
-        :param model_item: The item in the model, or None to check the loading status of the
-            model as a whole.
-        :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem` | None
-        :param thumbnail_only: Check specifically if the thumbnail is loading.
-        :type thumbnail_only: bool
-
-        :return: True if model or model item is loading the item, else False.
-        :rtype: bool
-        """
-
-        if model_item is None:
-            return self._pending_files_request is not None
-
-        # Else return the loading state of the model item specified.
-        if thumbnail_only:
-            return model_item in list(self._pending_thumbnail_requests.values())
-
-        items_loading = list(self._pending_version_requests.values()) + list(
-            self._pending_thumbnail_requests.values()
-        )
-        return model_item in items_loading
 
     def request_latest_published_file(self, file_model_item, file_item=None):
         """
