@@ -522,7 +522,7 @@ class AppDialog(QtGui.QWidget):
         delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
         delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
-        delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
+        delegate.loading_role = None
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
 
         # Create an icon for the expand header action
