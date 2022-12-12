@@ -74,13 +74,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         STATUS_LOCKED: ":/tk-multi-breakdown2/icons/main-override.png",
     }
     FILE_ITEM_STATUS_ICONS = {
-        # STATUS_UP_TO_DATE: QtGui.QIcon(
-        #     FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE)
-        # ),
-        # STATUS_OUT_OF_SYNC: QtGui.QIcon(
-        #     FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_OUT_OF_SYNC)
-        # ),
-        # STATUS_LOCKED: QtGui.QIcon(FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_LOCKED)),
         STATUS_UP_TO_DATE: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE),
         STATUS_OUT_OF_SYNC: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_OUT_OF_SYNC),
         STATUS_LOCKED: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_LOCKED),
