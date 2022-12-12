@@ -76,7 +76,7 @@ class AppDialog(QtGui.QWidget):
 
         # create a single instance of the task manager that manages all
         # asynchronous work/tasks
-        self._bg_task_manager = BackgroundTaskManager(self, max_threads=8)
+        self._bg_task_manager = BackgroundTaskManager(self, max_threads=2)
         self._bg_task_manager.start_processing()
 
         shotgun_globals.register_bg_task_manager(self._bg_task_manager)
