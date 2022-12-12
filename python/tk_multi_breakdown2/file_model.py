@@ -18,6 +18,7 @@ from tank_vendor import six
 
 from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
+from .decorators import wait_cursor
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
@@ -587,6 +588,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     #########################################################################################################
     # Public FileModel methods
 
+    @wait_cursor
     def reload(self):
         """
         Reload the data in the model.
