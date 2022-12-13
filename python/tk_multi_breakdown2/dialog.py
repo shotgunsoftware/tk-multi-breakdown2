@@ -332,6 +332,7 @@ class AppDialog(QtGui.QWidget):
         # Model & Views
         self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
+        self._file_model.layoutChanged.connect(self._on_file_model_layout_changed)
         self._file_model.itemChanged.connect(self._on_file_model_item_changed)
 
         self._ui.file_view.selectionModel().selectionChanged.connect(
@@ -960,6 +961,20 @@ class AppDialog(QtGui.QWidget):
             self._file_model_overlay.show_message("No items found.")
         else:
             self._file_model_overlay.hide()
+
+    def _on_file_model_layout_changed(self):
+        """Callback triggered when the file model's layout has changed."""
+
+        # Update the details panel
+        selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
+        self._setup_details_panel(selected_indexes)
+
+        # Ensure all the file groupings are expand after a model reset. This is a bit of a
+        # work around for how filtering works - the group indexes are never accepted by the
+        # filter model and only accepted if a child index is accepted. By not explicitly
+        # accepting the group index, this causes the group to collapse, even thoug there are
+        # children in it
+        self._expand_all_groups()
 
     def _on_context_menu_requested(self, pnt):
         """
