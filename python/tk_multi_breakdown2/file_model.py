@@ -472,6 +472,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # Keep track of pending background tasks.
         # The pending published file data requests should only ever have one item in it.
         self.__pending_published_file_data_request = {}
+        self.__pending_version_requests = {}
         self.__pending_thumbnail_requests = {}
 
         if group_by and isinstance(group_by, six.string_types):
@@ -588,11 +589,15 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         for published_file_data_request_id in self.__pending_published_file_data_request:
             self._bg_task_manager.stop_task(published_file_data_request_id)
 
+        for version_request_id in self.__pending_version_requests:
+            self._bg_task_manager.stop_task(version_request_id)
+
         for thumbnail_request_id in self.__pending_thumbnail_requests:
             self._bg_task_manager.stop_task(thumbnail_request_id)
 
         # Clear request ids
         self.__pending_published_file_data_request.clear()
+        self.__pending_version_requests.clear()
         self.__pending_thumbnail_requests.clear()
 
         # Save the current polling state to restore after stopping polling on file items that
@@ -760,13 +765,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         if not file_item:
             return
 
-        # Retrieve the latest version in order to know if the file is up-to-date or not
-        task_id = self._bg_task_manager.add_task(
-            self._manager.get_latest_published_file,
-            task_kwargs={"item": file_item},
-        )
-
-        self._pending_version_requests[task_id] = file_model_item
+        task_id = self._manager.get_latest_published_file(file_item, self._sg_data_retriever)
+        self.__pending_version_requests[task_id] = file_model_item
 
     def request_thumbnail(self, model_item, file_item):
         """
@@ -1027,6 +1027,15 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 # to become very sluggish). Instead the view should be updated once the model
                 # emits the endResetModel signal.
                 file_model_item.set_thumbnail(QtGui.QIcon(thumb_path))
+        
+        elif uid in self.__pending_version_requests:
+            file_model_item = self.__pending_version_requests[uid]
+            del self.__pending_version_requests[uid]
+
+            latest_pf_data = data.get("sg")
+            file_model_item.setData(
+                latest_pf_data, FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE
+            )
 
         elif uid in self.__pending_published_file_data_request:
             file_items = self.__pending_published_file_data_request[uid]
@@ -1048,6 +1057,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         elif uid in self.__pending_published_file_data_request:
             del self.__pending_published_file_data_request[uid]
+
+        elif uid in self.__pending_version_requests:
+            del self.__pending_version_requests[uid]
 
     def _on_background_task_group_finished(self, group_id):
         """
