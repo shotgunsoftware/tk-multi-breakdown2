@@ -436,6 +436,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             if not self.model():
                 return
 
+            # TODO think about making this request once for all items and then updating the
+            # items as needed (as we do for the full reload), so we're not making an api
+            # request per item (which may slow things down if there are hundres of items,
+            # then we're making hundreds of api calls every time we poll for the file status)
             self.model().request_latest_published_file(self)
 
     def __init__(self, parent, bg_task_manager, group_by=None, polling=False):
