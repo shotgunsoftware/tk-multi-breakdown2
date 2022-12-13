@@ -656,6 +656,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.blockSignals(restore_state)
 
     @sgtk.LogManager.log_timing
+    @wait_cursor
     def refresh(self):
         """
         Refresh the model internal data layout.
