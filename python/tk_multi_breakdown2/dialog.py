@@ -841,8 +841,6 @@ class AppDialog(QtGui.QWidget):
         re-enabled once done refreshing.
         """
 
-        self._ui.filter_btn.setEnabled(False)
-
         self._filter_menu.refresh(force=True)
 
         if not self._filter_menu_restored:
@@ -858,8 +856,6 @@ class AppDialog(QtGui.QWidget):
 
             self._filter_menu.restore_state(menu_state)
             self._filter_menu_restored = True
-
-        self._ui.filter_btn.setEnabled(True)
 
     def _refresh(self):
         """Re-scan the scene and reload the file model."""
