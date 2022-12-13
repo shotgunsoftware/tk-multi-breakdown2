@@ -34,46 +34,45 @@ class GetPublishedFiles(HookBaseClass):
         if not items:
             return {}
 
-        # Build the filters to get published files for the given file items.
-        entities = list()
-        names = list()
-        tasks = list()
-        pf_types = list()
+        # Build the filters to get all published files for at once for all the file items.
+        entities = []
+        names = []
+        tasks = []
+        pf_types = []
         for file_item in items:
             entities.append(file_item.sg_data["entity"])
             names.append(file_item.sg_data["name"])
             tasks.append(file_item.sg_data["task"])
             pf_types.append(file_item.sg_data["published_file_type"])
 
+        # Published files will be found by their entity, name, task and published file type.
         filters = [
-            ["entity", "in", list(entities)],
-            ["name", "in", list(names)],
-            ["task", "in", list(tasks)],
-            ["published_file_type", "in", list(pf_types)],
+            ["entity", "in", entities],
+            ["name", "in", names],
+            ["task", "in", tasks],
+            ["published_file_type", "in", pf_types],
         ]
 
-        # Get the query fields. This assumes all items in the list have the same fields.
+        # Get the query fields. This assumes all file items in the list have the same fields.
         fields = list(items[0].sg_data.keys()) + ["version_number", "path"]
         order = [{"field_name": "version_number", "direction": "desc"}]
 
         if data_retriever:
-            result = data_retriever.execute_find(
+            # Execute async and return the background task id.
+            return data_retriever.execute_find(
                 "PublishedFile",
                 filters=filters,
                 fields=fields,
                 order=order,
-                filter_operator="any",
-            )
-        else:
-            result = self.sgtk.shotgun.find(
-                "PublishedFile",
-                filters=filters,
-                fields=fields,
-                order=order,
-                filter_operator="any",
             )
 
-        return result
+        # No data retriever, execute synchronously and return the published file data result.
+        return self.sgtk.shotgun.find(
+            "PublishedFile",
+            filters=filters,
+            fields=fields,
+            order=order,
+        )
 
     def get_latest_published_file(self, item, data_retriever=None, **kwargs):
         """
