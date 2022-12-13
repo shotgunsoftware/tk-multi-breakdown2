@@ -890,7 +890,7 @@ class AppDialog(QtGui.QWidget):
 
         self._auto_refresh = checked
         self._ui.refresh_btn.setChecked(self._auto_refresh)
-        self._file_model.poll_for_status_updates(self._auto_refresh)
+        self._file_model.polling = self._auto_refresh
 
     def _on_group_by_changed(self, text):
         """
