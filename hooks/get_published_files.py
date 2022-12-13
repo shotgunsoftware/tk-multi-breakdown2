@@ -75,12 +75,19 @@ class GetPublishedFiles(HookBaseClass):
 
         return result
 
-    def get_latest_published_file(self, item, **kwargs):
+    def get_latest_published_file(self, item, data_retriever=None, **kwargs):
         """
         Query ShotGrid to get the latest published file for the given item.
 
         :param item: :class`FileItem` object we want to get the latest published file for
-        :return: The published file as a ShotGrid dictionary
+        :type item: :class`FileItem`
+        :param data_retreiver: If provided, the api request will be async. The default value
+            will execute the api request synchronously.
+        :type data_retriever: ShotgunDataRetriever
+
+        :return: If the request is async, then the request task id is returned, else the
+            published file data result from the api request.
+        :rtype: str | dict
         """
 
         filters = [
@@ -94,11 +101,19 @@ class GetPublishedFiles(HookBaseClass):
 
         # todo: check if this work with url published files
         # todo: need to check for path comparison?
-        published_file = self.sgtk.shotgun.find_one(
-            "PublishedFile",
-            filters=filters,
-            fields=fields,
-            order=order,
-        )
+        if data_retriever:
+            result = data_retriever.execute_find_one(
+                "PublishedFile",
+                filters=filters,
+                fields=fields,
+                order=order,
+            )
+        else:
+            result = self.sgtk.shotgun.find_one(
+                "PublishedFile",
+                filters=filters,
+                fields=fields,
+                order=order,
+            )
 
-        return published_file
+        return result

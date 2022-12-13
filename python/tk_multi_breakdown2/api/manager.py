@@ -73,24 +73,31 @@ class BreakdownManager(object):
             "published_file_fields", []
         )
 
-    def get_latest_published_file(self, item):
+    def get_latest_published_file(self, item, data_retriever=None):
         """
         Get the latest available published file according to the current item context.
 
         :param item: :class`FileItem` object we want to get the latest published file
-        :return:  The latest published file as a ShotGrid entity dictionary
+        :type item: FileItem
+        :param data_retreiver: If provided, the api request will be async. The default value
+            will execute the api request synchronously.
+        :type data_retriever: ShotgunDataRetriever
+
+        :return: The latest published file as a ShotGrid entity dictionary if the request was
+            synchronous, else the request background task id if the request was async.
         """
 
         if not item or not item.sg_data:
             return {}
 
-        latest_published_file = self._bundle.execute_hook_method(
-            "hook_get_published_files", "get_latest_published_file", item=item
+        result = self._bundle.execute_hook_method(
+            "hook_get_published_files", "get_latest_published_file", item=item, data_retriever=data_retriever
         )
 
-        item.latest_published_file = latest_published_file
+        if data_retriever is None:
+            item.latest_published_file = result
 
-        return latest_published_file
+        return result
 
     def get_published_files_for_items(self, items, data_retriever=None):
         """
