@@ -211,7 +211,7 @@ class AppDialog(QtGui.QWidget):
             FilterItem.FilterOp.IN,
             data_func=list_item_delegate.get_displayed_text,
         )
-        self._filter_menu = FilterMenu(self)
+        self._filter_menu = FilterMenu(self, refresh_on_show=False)
         self._filter_menu.set_ignore_fields(
             [
                 "PublishedFile.Id",
