@@ -118,7 +118,7 @@ class BreakdownManager(object):
         """
 
         if not items:
-            return []
+            return None if data_retriever else {}
 
         return self._bundle.execute_hook_method(
             "hook_get_published_files", "get_published_files_for_items", items=items, data_retriever=data_retriever
