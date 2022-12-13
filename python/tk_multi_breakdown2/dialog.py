@@ -831,6 +831,7 @@ class AppDialog(QtGui.QWidget):
 
         # Set the slider value for the current view, this will also update the viewport.
         self._ui.size_slider.setValue(slider_value)
+        self._on_view_item_size_slider_change(slider_value)
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
