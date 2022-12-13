@@ -18,7 +18,7 @@ class GetPublishedFiles(HookBaseClass):
 
     def get_published_files_for_items(self, items, data_retriever=None):
         """
-        Make an API request to get all published files for hte given file items.
+        Make an API request to get all published files for the given file items.
 
         :param items: a list of :class`FileItem` we want to get published files for.
         :type items: List[FileItem]
