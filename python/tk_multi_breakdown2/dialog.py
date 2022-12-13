@@ -944,7 +944,8 @@ class AppDialog(QtGui.QWidget):
         self._ui.refresh_btn.setEnabled(True)
         self._ui.select_all_outdated_button.setEnabled(True)
         self._ui.update_selected_button.setEnabled(True)
-        # Update the filter menu and re-enable the filter butotn
+
+        # Refresh the filter menu after the data has loaded
         self._refresh_filter_menu()
 
         # Update the details panel
