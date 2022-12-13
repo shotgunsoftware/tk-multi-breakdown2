@@ -991,8 +991,6 @@ class AppDialog(QtGui.QWidget):
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
         """
 
-        self._refresh_filter_menu()
-
         selected = self._ui.file_view.selectionModel().selectedIndexes()
 
         if not selected or len(selected) > 1:
