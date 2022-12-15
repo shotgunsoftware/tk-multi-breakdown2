@@ -1234,14 +1234,18 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         elif uid == self.__pending_latest_published_files_data_request:
             self.__pending_latest_published_files_data_request = None
 
-    def _on_background_task_completed(self, task_id, search_id, result):
+    def _on_background_task_completed(self, uid, group_id, result):
         """
-        Handle completed tasks, emit completion signals, and schedule next steps.
+        Callback triggered when the background manager has finished doing some task. The only
+        task we're asking the manager to do is to find the latest published file associated
+        to the current item.
 
-        Runs in main thread
+        :param uid: Unique id associated with the task
+        :param group_id: The group the task is associated with
+        :param result: The data returned by the task 
         """
 
-        if task_id == self.__pending_published_file_data_request:
+        if uid == self.__pending_published_file_data_request:
             self.__pending_published_file_data_request = None
 
             # Get the list of FileItem objects representing the objects in the scene
@@ -1257,13 +1261,17 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 )
             )
 
-    def _on_background_task_failed(self, task_id, group, message, traceback_str):
+    def _on_background_task_failed(self, uid, group_id, msg, stack_trace):
         """
-        If the schema query fails, add a log warning. It's not catastrophic, but
-        it shouldn't fail, so we need to make a record of it.
+        Callback triggered when the background manager failed to complete a task.
+
+        :param uid: Unique id associated with the task
+        :param group_id: The group the task is associated with
+        :param msg: Short error message
+        :param stack_trace: Full error traceback
         """
 
-        if task_id == self.__pending_published_file_data_request:
+        if uid == self.__pending_published_file_data_request:
             self.__pending_published_file_data_request = None
             self._finish_reload()
 
@@ -1275,8 +1283,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :type group_id: This will be whatever the group_id was set as on 'add_task'.
         """
 
-        # We cannot check the specific group id since we are using the data retriever
-        # to initiate the background tasks, so instead we know we're done with the model
+        # We cannot check the specific group id since we are using the data retriever to
+        # initiate the reload background tasks, so instead we know we're done with the model
         # reload when all our pending requets are empty.
         if (
             self.__is_reloading
