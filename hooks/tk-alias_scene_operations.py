@@ -23,6 +23,15 @@ class BreakdownSceneOperations(HookBaseClass):
 
     This implementation handles detection of Alias references.
     """
+    def __init__(self, *args, **kwargs):
+        """Class constructor."""
+
+        super(BreakdownSceneOperations, self).__init__(*args, **kwargs)
+
+        # Keep track of the scene change callbacks that are registered, so that they can be
+        # disconnected at a later time.
+        self.__alias_event_callbacks = []
+
 
     def scan_scene(self):
         """
@@ -217,7 +226,7 @@ class BreakdownSceneOperations(HookBaseClass):
         :type callback: function
         """
 
-        # Trigger the scene change callback for these event messages
+        # Define the list of Alias event to that will trigger the scene change callback.
         events = [
             alias_api.AlMessageType.PostRetrieve,
             alias_api.AlMessageType.ReferenceFileDeleted,
@@ -226,8 +235,25 @@ class BreakdownSceneOperations(HookBaseClass):
         if hasattr(alias_api.AlMessageType, "ReferenceFileAdded"):
             events.append(alias_api.AlMessageType.ReferenceFileAdded)
 
-        # No need to set up the unregister_scene_change_callback method since the
-        # AliasEventWatcher will take care of disconnecting the callbacks
-        self.parent.engine.event_watcher.register_alias_callback(
-            lambda result: scene_change_callback(), events
-        )
+        # Create the scene change callback to register with the Alias event watcher.
+        scene_change_cb = lambda result: scene_change_callback()
+
+        # Keep track of the Alias event callbacks that will be registered, so that they can
+        # properly be unregistered on shut down.
+        self.__alias_event_callbacks = [
+            (scene_change_cb, events)
+        ]
+
+        for callback, events in self.__alias_event_callbacks.items():
+            self.parent.engine.event_watcher.register_alias_callback(
+                # lambda result: scene_change_callback(), events
+                callback, events
+            )
+
+    def unregister_scene_change_callback(self):
+        """Unregister the scene change callbacks by disconnecting any signals."""
+
+        for callback, events in self.__alias_event_callbacks.items():
+            self.parent.engine.event_watcher.unregister_alias_callback(
+                callback, events
+            )
