@@ -152,6 +152,7 @@ class BreakdownSceneOperations(HookBaseClass):
             vrReferenceService.referencesChanged.disconnect(
                 self._on_references_changed_cb
             )
+            self._on_references_changed_cb = None
 
 
 def get_reference_by_id(ref_id):

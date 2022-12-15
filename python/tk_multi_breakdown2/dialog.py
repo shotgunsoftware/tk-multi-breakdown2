@@ -389,10 +389,8 @@ class AppDialog(QtGui.QWidget):
         self._scene_operations_hook = self._bundle.create_hook_instance(
             scene_operations_hook_path
         )
-        if hasattr(self.scene_operations_hook, "register_scene_change_callback"):
-            self.scene_operations_hook.register_scene_change_callback(
-                scene_change_callback=self._refresh
-            )
+        self.__can_register_scene_change_callback = hasattr(self.scene_operations_hook, "register_scene_change_callback")
+        self.__can_unregister_scene_change_callback = hasattr(self.scene_operations_hook, "unregister_scene_change_callback")
 
         # -----------------------------------------------------
         # Log metric for app usage
@@ -469,7 +467,7 @@ class AppDialog(QtGui.QWidget):
         self._bundle._on_dialog_close(self)
 
         # Disconnect any signals that were set up for handlding scene changes
-        if hasattr(self.scene_operations_hook, "unregister_scene_change_callback"):
+        if self.__can_unregister_scene_change_callback:
             self.scene_operations_hook.unregister_scene_change_callback()
 
         # clear the selection in the main views.
@@ -884,6 +882,25 @@ class AppDialog(QtGui.QWidget):
         if self._file_model:
             self._file_model.reload()
 
+    def _listen_for_events(self, listen):
+        """
+        Listen for DCC specific events that require the app to update.
+        
+        :param listen: True will listen for DCC events, else False will to not listen for events.
+        :type listen: bool
+        """
+
+        if listen:
+            # Start listening to DCC events to trigger updates
+            if self.__can_register_scene_change_callback:
+                self.scene_operations_hook.register_scene_change_callback(
+                    scene_change_callback=self._refresh
+                )
+        else:
+            # Stop listening to DCC events to trigger updates
+            if self.__can_unregister_scene_change_callback:
+                self.scene_operations_hook.unregister_scene_change_callback()
+
     ################################################################################################
     # UI/Widget callbacks
 
@@ -909,7 +926,12 @@ class AppDialog(QtGui.QWidget):
 
         self._auto_refresh = checked
         self._ui.refresh_btn.setChecked(self._auto_refresh)
+
+        # Turn on/off polling for published file updates
         self._file_model.polling = self._auto_refresh
+
+        # Start/stop listening for DCC change events
+        self._listen_for_events(self._auto_refresh)
 
     def _on_toggle_dynamic_loading(self, checked):
         """
