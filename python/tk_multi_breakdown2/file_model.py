@@ -582,10 +582,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         if self._bg_task_manager:
             self._bg_task_manager.task_completed.disconnect(
-                self._on_background_task_group_finished
+                self._on_background_task_completed
             )
             self._bg_task_manager.task_failed.disconnect(
-                self._on_background_task_group_finished
+                self._on_background_task_failed
             )
             self._bg_task_manager.task_group_finished.disconnect(
                 self._on_background_task_group_finished
