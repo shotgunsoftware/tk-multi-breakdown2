@@ -58,6 +58,7 @@ class AppDialog(QtGui.QWidget):
     FILTER_MENU_STATE = "filter_menu_state"
     GROUP_BY_SETTING = "group_by"
     AUTO_REFRESH_SETTING = "auto_refresh"
+    DYNAMIC_LOADING = "dynamic_loading"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -113,8 +114,13 @@ class AppDialog(QtGui.QWidget):
         auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
         auto_refresh_option_action.setCheckable(True)
         auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
+        dynamic_loading_action = QtGui.QAction("Turn On Dynamic Loading", self)
+        dynamic_loading_action.setCheckable(True)
+        dynamic_loading_action.triggered.connect(self._on_toggle_dynamic_loading)
         refresh_button_menu = QtGui.QMenu(self)
-        refresh_button_menu.addActions([refresh_action, auto_refresh_option_action])
+        refresh_button_menu.addActions(
+            [refresh_action, auto_refresh_option_action, dynamic_loading_action]
+        )
         self._ui.refresh_btn.setMenu(refresh_button_menu)
         self._ui.refresh_btn.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
         self._ui.refresh_btn.setIcon(SGQIcon.refresh())
@@ -129,10 +135,18 @@ class AppDialog(QtGui.QWidget):
         if self._auto_refresh is None:
             self._auto_refresh = self._bundle.get_setting("auto_refresh", True)
 
-        # Initialize the auto-refresh option in the refresh menu
         auto_refresh_option_action.setChecked(self._auto_refresh)
         self._ui.refresh_btn.setChecked(self._auto_refresh)
 
+        # Initialize the dynamic loading option in the refresh menu
+        # Property indicating if the app should load the data in dynamically as it is
+        # retrieved async.
+        self._dynamic_loading = self._settings_manager.retrieve(
+            self.DYNAMIC_LOADING, True
+        )
+        dynamic_loading_action.setChecked(self._dynamic_loading)
+
+        # Initialize the auto-refresh option in the refresh menu
         # -----------------------------------------------------
         # main file view
 
@@ -143,7 +157,11 @@ class AppDialog(QtGui.QWidget):
         if group_by is None:
             group_by = self._bundle.get_setting("group_by", None)
         self._file_model = FileModel(
-            self, self._bg_task_manager, group_by=group_by, polling=self._auto_refresh
+            self,
+            self._bg_task_manager,
+            group_by=group_by,
+            polling=self._auto_refresh,
+            dynamic_loading=self._dynamic_loading,
         )
 
         self._file_proxy_model = FileProxyModel(self)
@@ -435,6 +453,7 @@ class AppDialog(QtGui.QWidget):
         )
         self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
         self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
+        self._settings_manager.store(self.DYNAMIC_LOADING, self._dynamic_loading)
         if six.PY2:
             self._settings_manager.store(
                 self.SPLITTER_STATE, self._ui.details_splitter.saveState()
@@ -523,7 +542,7 @@ class AppDialog(QtGui.QWidget):
         delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
         delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
         delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
-        delegate.loading_role = None
+        delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
 
         # Create an icon for the expand header action
@@ -892,6 +911,17 @@ class AppDialog(QtGui.QWidget):
         self._ui.refresh_btn.setChecked(self._auto_refresh)
         self._file_model.polling = self._auto_refresh
 
+    def _on_toggle_dynamic_loading(self, checked):
+        """
+        Slot triggered when the dynamic loading option value changed from the refresh menu.
+
+        :param checked: True if dynamic loading is checked, else False.
+        :type checked: bool
+        """
+
+        self._dynamic_loading = checked
+        self._file_model.dynamic_loading = self._dynamic_loading
+
     def _on_group_by_changed(self, text):
         """
         Slot triggered when the group by combo box text has changed.
@@ -945,9 +975,6 @@ class AppDialog(QtGui.QWidget):
         self._ui.select_all_outdated_button.setEnabled(True)
         self._ui.update_selected_button.setEnabled(True)
 
-        # Refresh the filter menu after the data has loaded
-        self._refresh_filter_menu()
-
         # Update the details panel
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
         self._setup_details_panel(selected_indexes)
@@ -963,6 +990,9 @@ class AppDialog(QtGui.QWidget):
             self._file_model_overlay.show_message("No items found.")
         else:
             self._file_model_overlay.hide()
+
+        # Refresh the filter menu after the data has loaded
+        self._refresh_filter_menu()
 
     def _on_file_model_layout_changed(self):
         """Callback triggered when the file model's layout has changed."""

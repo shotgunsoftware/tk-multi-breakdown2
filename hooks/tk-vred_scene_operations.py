@@ -154,7 +154,6 @@ class BreakdownSceneOperations(HookBaseClass):
             )
 
 
-
 def get_reference_by_id(ref_id):
     """
     Get a reference node from its name.

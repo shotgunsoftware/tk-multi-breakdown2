@@ -228,6 +228,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             # Create the item icon from the thumbnail data
             if self._file_item:
                 self.__thumbnail_icon = QtGui.QIcon(self._file_item.thumbnail_path)
+            else:
+                self.__thumbnail_icon = QtGui.QIcon()
 
         def __eq__(self, other):
             """
@@ -330,6 +332,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                         }
                     }
 
+                if role == FileModel.VIEW_ITEM_LOADING_ROLE:
+                    return self.model().is_loading(self)
+
                 if role == FileModel.REFERENCE_LOADED:
                     # TODO call a hook method per DCC to check if the reference associated with this
                     # file item has been loaded into the scene (if the DCC supports loading and
@@ -350,7 +355,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :param role: The :class:`sgtk.platform.qt.QtCore.Qt.ItemDataRole` role.
             """
 
-            if role == FileModel.FILE_ITEM_ROLE:
+            if role == QtCore.Qt.DecorationRole:
+                self.set_thumbnail(value)
+                self.emitDataChanged()
+
+            elif role == FileModel.FILE_ITEM_ROLE:
                 if self.model():
                     cur_group_value = self._file_item.sg_data.get(self.model().group_by)
                     updated_group_value = value.sg_data.get(self.model().group_by)
@@ -382,9 +391,17 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         def set_thumbnail(self, thumbnail_path):
             """Custom method to set the thumbnail data to avoid emitting data changed signals."""
 
-            self.__thumbnail = QtGui.QIcon(thumbnail_path)
+            self._file_item.thumbnail_path = thumbnail_path
+            self.__thumbnail_icon = QtGui.QIcon(thumbnail_path)
 
-    def __init__(self, parent, bg_task_manager, group_by=None, polling=False):
+    def __init__(
+        self,
+        parent,
+        bg_task_manager,
+        group_by=None,
+        polling=False,
+        dynamic_loading=True,
+    ):
         """
         Class constructor
 
@@ -398,26 +415,43 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :param polling: True will poll each file model item for status updates, else False
             will not poll to get automatic status updates.
         :type polling: bool
+        :param dynamic_loading: True will populate the model as the data is loaded
+            asynchronously, else False will populate the model once all data has finished
+            loading. The data is loaded async, in the same way, whether this param is True or
+            False, the difference is when the view is updated to reflect the model data
+            changes. When True, the UI may be slower to respond while loading, though the
+            benefit is that the user can see data as is comes in and can interact with the
+            data that has already loaded. When False, the UI will not be available until all
+            data has loaded, which may speed up the model load and the UI will not be slowed
+            down.
+        :type dynamic_loading: bool
         """
 
         QtGui.QStandardItemModel.__init__(self, parent)
 
         self._app = sgtk.platform.current_bundle()
 
+        # Flag indicating if the model is dynamically loaded as it is retrieved async. False
+        # will show a loader until all data is loaded in.
+        self.__dynamic_loading = dynamic_loading
+
         # Flag indicating if the model is in the middle of a reload
         self.__is_reloading = False
 
         # Flag indicating if the model will poll for published file updates async.
-        self._polling = polling
+        self.__polling = polling
 
         # Get the app setting for the timeout interval length for polling file item statuses.
         self._timeout_interval = self._app.get_setting("file_status_check_interval")
         # Create a timer that checks the latest published file every X seconds
         self._file_status_check_timer = QtCore.QTimer()
         self._file_status_check_timer.timeout.connect(
-            lambda s=self: self.check_published_file_status()
+            lambda s=self: self.check_published_files_status()
         )
 
+        # The list of scene objects last found by the scan_scene method. These objects
+        # determine the file items shown in the app.
+        self.__scene_objects = []
         # The list of file item data that currently populates the model.
         self.__file_items = []
         # The list of current group items in the model to easily change groupings.
@@ -425,6 +459,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         # Keep track of pending background tasks.
         self.__pending_published_file_data_request = None
+        self.__pending_latest_published_files_data_request = None
         self.__pending_version_requests = {}
         self.__pending_thumbnail_requests = {}
 
@@ -436,6 +471,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self._manager = self._app.create_breakdown_manager()
 
         self._bg_task_manager = bg_task_manager
+        self._bg_task_manager.task_completed.connect(self._on_background_task_completed)
+        self._bg_task_manager.task_failed.connect(self._on_background_task_failed)
         self._bg_task_manager.task_group_finished.connect(
             self._on_background_task_group_finished
         )
@@ -502,12 +539,21 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     @property
     def polling(self):
         """Get or set the property indicating if the model is polling for published file updates."""
-        return self._polling
-    
+        return self.__polling
+
     @polling.setter
     def polling(self, value):
-        self._polling = value
-        self.start_timer() if self._polling else self.stop_timer()
+        self.__polling = value
+        self.start_timer() if self.__polling else self.stop_timer()
+
+    @property
+    def dynamic_loading(self):
+        """Get or set the property indicating if the model dynamicly loads data or not."""
+        return self.__dynamic_loading
+
+    @dynamic_loading.setter
+    def dynamic_loading(self, value):
+        self.__dynamic_loading = value
 
     #########################################################################################################
     # Override base FileModel class methods
@@ -535,6 +581,12 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self._sg_data_retriever = None
 
         if self._bg_task_manager:
+            self._bg_task_manager.task_completed.disconnect(
+                self._on_background_task_group_finished
+            )
+            self._bg_task_manager.task_failed.disconnect(
+                self._on_background_task_group_finished
+            )
             self._bg_task_manager.task_group_finished.disconnect(
                 self._on_background_task_group_finished
             )
@@ -547,11 +599,15 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         clean up.
         """
 
+        self.__scene_objects = []
         self.__file_items = []
         self._group_items = {}
 
         # Stop any background tasks currently running
         self._bg_task_manager.stop_task(self.__pending_published_file_data_request)
+        self._bg_task_manager.stop_task(
+            self.__pending_latest_published_files_data_request
+        )
 
         for version_request_id in self.__pending_version_requests:
             self._bg_task_manager.stop_task(version_request_id)
@@ -561,6 +617,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         # Clear request ids
         self.__pending_published_file_data_request = None
+        self.__pending_latest_published_files_data_request = None
         self.__pending_version_requests.clear()
         self.__pending_thumbnail_requests.clear()
 
@@ -594,12 +651,20 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
             # Run the scan scene method in the main thread (not a background task) since this
             # may cause issues for certain DCCs
-            self.__file_items = self._manager.scan_scene(extra_fields=self._published_file_fields)
+            self.__scene_objects = self._manager.scan_scene()
 
-            # Run the api call to get all published file data necessary to determine the
-            # latest published file per file item. Get all info in a single request and
-            # execute the request async.
-            self.__pending_published_file_data_request = self._get_published_files_for_items(self.__file_items, self._sg_data_retriever)
+            # Make an async request to get the published files for the references in the scene.
+            # This will omit any objects from the scene that do not have a ShotGrid Published
+            # File. Some files can come from other projects so we cannot rely on templates,
+            # and instead need to query ShotGrid.
+            file_paths = [o["path"] for o in self.__scene_objects]
+            self.__pending_published_file_data_request = (
+                self._manager.get_published_files_from_file_paths(
+                    file_paths,
+                    extra_fields=self._published_file_fields,
+                    bg_task_manager=self._bg_task_manager,
+                )
+            )
         except:
             # Reset on failure to reload
             self.__pending_published_file_data_request = None
@@ -611,8 +676,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # If there was no data to fetch, then the model is done reloading (async tasks will
         # not emit signals to finish model reload).
         if self.__pending_published_file_data_request is None:
-            self.__is_reloading = False
-            self.endResetModel()
+            self._finish_reload(start_timer=False)
 
     @sgtk.LogManager.log_timing
     @wait_cursor
@@ -636,6 +700,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             # Save the current file items to refresh with (these will be lost on clear)
             file_items = self.__file_items
 
+            if self.__pending_thumbnail_requests:
+                request_thumbnails = True
+            else:
+                request_thumbnails = False
+
             # Clear the current model and pause the timer polling for updates.
             self.clear()
             self.stop_timer()
@@ -645,7 +714,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
             # Rebuild the model without refreshing the current model data. Only the model
             # structure has chagned.
-            self._build_model_from_file_items(refresh_thumbnails=False)
+            self._build_model_from_file_items(refresh_thumbnails=request_thumbnails)
 
             self.start_timer()
         finally:
@@ -722,8 +791,26 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     #########################################################################################################
     # Protected FileModel methods
 
+    def _finish_reload(self, start_timer=True):
+        """
+        Model has finished reloading.
+
+        Emit the Qt signal for model reset and reset the reloading flag.
+
+        :param start_timer: True will start the timer to poll for published file updates.
+        :type start_time: bool
+        """
+
+        if start_timer:
+            self.start_timer()
+
+        self.__is_reloading = False
+        self.endResetModel()
+
     @sgtk.LogManager.log_timing
-    def _build_model_from_file_items(self, published_files_mapping=None, refresh_thumbnails=True):
+    def _build_model_from_file_items(
+        self, published_files_mapping=None, refresh_thumbnails=True
+    ):
         """
         Process the current file items data in the model to create and add the model items.
 
@@ -762,7 +849,11 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 group_item = self._group_items[group_by_id]
 
             if published_files_mapping:
-                file_item.latest_published_file = self._get_latest_published_file_for_item(file_item, published_files_mapping)
+                file_item.latest_published_file = (
+                    self._get_latest_published_file_for_item(
+                        file_item, published_files_mapping
+                    )
+                )
 
             file_model_item = FileModel.FileModelItem(file_item=file_item)
 
@@ -785,7 +876,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     def _update_latest_published_files(self, published_files_mapping):
         """
         Update the current model data to reflect the latest published file data.
-        
+
         :param published_files_mapping: A dictionary mapping a list of published files by
             their entity, task, published file type, and name which is used to determine
             the latest published file for the given item. This param is expected to be the
@@ -802,8 +893,37 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             for child_row in range(group_item.rowCount()):
                 child = group_item.child(child_row)
                 file_item = child.data(self.FILE_ITEM_ROLE)
-                latest_published_file = self._get_latest_published_file_for_item(file_item, published_files_mapping)
-                child.setData(latest_published_file, FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE)
+                latest_published_file = self._get_latest_published_file_for_item(
+                    file_item, published_files_mapping
+                )
+                child.setData(
+                    latest_published_file,
+                    FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,
+                )
+
+    def is_loading(self, model_item=None):
+        """Return True if the model item is currently being loaded."""
+
+        if (
+            self.__pending_published_file_data_request
+            or self.__pending_latest_published_files_data_request
+        ):
+            return True
+
+        if model_item:
+            if model_item in [v[1] for v in self.__pending_thumbnail_requests.values()]:
+                return True
+
+            if model_item in self.__pending_version_requests.values():
+                return True
+        else:
+            if self.__pending_thumbnail_requests:
+                return True
+
+            if self.__pending_version_requests.values():
+                return True
+
+        return False
 
     # ----------------------------------------------------------------------------------------
     # Methods to retrieving and handling published file data
@@ -811,7 +931,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     def _get_published_files_for_items(self, file_items, data_retriever=None):
         """
         Make an api request to get the published file data for the given file items.
-        
+
         If a data retreiver is given, then the api request will be executed async, else it
         will execute synchronously. For async requests, the background task id will be
         returned, else the published file data will be returned for synchronous requests.
@@ -827,14 +947,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         :rtype: str | dict
         """
 
-        return self._manager.get_published_files_for_items(file_items, data_retriever=data_retriever)
+        return self._manager.get_published_files_for_items(
+            file_items, data_retriever=data_retriever
+        )
 
     def _get_published_files_mapping(self, published_file_data):
         """
         Return a mapping of published files by their entity, name, task and type.
 
         The published file data passed in is a list of published file data (dictionaries). A
-        mapping is created where the published files are indexed by their entity, name, task, 
+        mapping is created where the published files are indexed by their entity, name, task,
         and published file type.
 
         :param published_file_data: The list of published file data to map.
@@ -866,10 +988,16 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             else:
                 pf_type_id = pf_data["published_file_type"]["id"]
 
-            published_files_mapping.setdefault(entity_type, {}).setdefault(entity_id, {}).setdefault(task_id, {}).setdefault(pf_type_id, {}).setdefault(name, []).append(pf_data)
+            published_files_mapping.setdefault(entity_type, {}).setdefault(
+                entity_id, {}
+            ).setdefault(task_id, {}).setdefault(pf_type_id, {}).setdefault(
+                name, []
+            ).append(
+                pf_data
+            )
 
         return published_files_mapping
-    
+
     def _get_latest_published_file_for_item(self, file_item, published_files_mapping):
         """
         Return the latest published file for the given file item and published file data.
@@ -907,7 +1035,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         # Look up the published files for this item by the entity, task, published file type,
         # and name
-        publish_files = published_files_mapping[entity_type][entity_id][task_id][pf_type_id][name]
+        publish_files = published_files_mapping[entity_type][entity_id][task_id][
+            pf_type_id
+        ][name]
 
         # The published files are assumed to be in order of highest to lowest by version
         # number. Thus the latest, is the first item in the list.
@@ -937,7 +1067,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         # Store the model item with the request id, so that the model item can be retrieved
         # to update when the async request completes.
-        self.__pending_thumbnail_requests[request_id] = file_item
+        self.__pending_thumbnail_requests[request_id] = (file_item, model_item)
 
     # ----------------------------------------------------------------------------------------
     # File grouping methods
@@ -1007,7 +1137,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         self._file_status_check_timer.stop()
 
-    def check_published_file_status(self):
+    def check_published_files_status(self):
         """
         Slot triggered on the file status check timeout.
 
@@ -1016,10 +1146,20 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         or not.
         """
 
-        if not self.polling or self.__is_reloading or self.__pending_published_file_data_request or self.rowCount() <= 0:
+        if (
+            not self.polling
+            or self.__is_reloading
+            or self.__pending_published_file_data_request
+            or self.__pending_latest_published_files_data_request
+            or self.rowCount() <= 0
+        ):
             return
 
-        self.__pending_published_file_data_request = self._get_published_files_for_items(self.__file_items, self._sg_data_retriever)
+        self.__pending_latest_published_files_data_request = (
+            self._get_published_files_for_items(
+                self.__file_items, self._sg_data_retriever
+            )
+        )
 
     # ----------------------------------------------------------------------------------------
     # Background task and Data Retriever callbacks
@@ -1037,13 +1177,21 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         if uid in self.__pending_thumbnail_requests:
             # Get the file item pertaining to this thumbnail request
-            file_item = self.__pending_thumbnail_requests[uid]
+            file_item, file_model_item = self.__pending_thumbnail_requests[uid]
             del self.__pending_thumbnail_requests[uid]
 
             # Update the file item's thumbnail from the data returned by the request. The
             # model item will get this data and create the QIcon to display.
-            file_item.thumbnail_path = data.get("thumb_path")
-        
+            if self.dynamic_loading:
+                # Set the model item data to emit a signal for the view to update immediately.
+                file_model_item.setData(
+                    data.get("thumb_path"), QtCore.Qt.DecorationRole
+                )
+            else:
+                # Just set the file item data with the thumbnail path, and the next time its
+                # respective model item is painted it show the thumbnail.
+                file_item.thumbnail_path = data.get("thumb_path")
+
         elif uid in self.__pending_version_requests:
             file_model_item = self.__pending_version_requests[uid]
             del self.__pending_version_requests[uid]
@@ -1053,12 +1201,18 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 latest_pf_data, FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE
             )
 
-        elif uid == self.__pending_published_file_data_request:
-            self.__pending_published_file_data_request = None
-            published_files_mapping = self._get_published_files_mapping(data.get("sg", []))
+        elif uid == self.__pending_latest_published_files_data_request:
+            self.__pending_latest_published_files_data_request = None
+            published_files_mapping = self._get_published_files_mapping(
+                data.get("sg", [])
+            )
 
             if self.__is_reloading:
                 self._build_model_from_file_items(published_files_mapping)
+                if self.dynamic_loading:
+                    # Emit signals that data has finished loading. Any data still loading will
+                    # be dynamically populated as it is retrieved (e.g. thumbnails).
+                    self._finish_reload()
             else:
                 # Only update the latest published file data
                 self._update_latest_published_files(published_files_mapping)
@@ -1077,8 +1231,41 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         elif uid in self.__pending_version_requests:
             del self.__pending_version_requests[uid]
 
-        elif uid == self.__pending_published_file_data_request:
+        elif uid == self.__pending_latest_published_files_data_request:
+            self.__pending_latest_published_files_data_request = None
+
+    def _on_background_task_completed(self, task_id, search_id, result):
+        """
+        Handle completed tasks, emit completion signals, and schedule next steps.
+
+        Runs in main thread
+        """
+
+        if task_id == self.__pending_published_file_data_request:
             self.__pending_published_file_data_request = None
+
+            # Get the list of FileItem objects representing the objects in the scene
+            self.__file_items = self._manager.get_file_items(
+                self.__scene_objects, result
+            )
+
+            # Make an async request to get all published file data necessary to determine the
+            # latest published file per file item. Get all info in a single request.
+            self.__pending_latest_published_files_data_request = (
+                self._get_published_files_for_items(
+                    self.__file_items, self._sg_data_retriever
+                )
+            )
+
+    def _on_background_task_failed(self, task_id, group, message, traceback_str):
+        """
+        If the schema query fails, add a log warning. It's not catastrophic, but
+        it shouldn't fail, so we need to make a record of it.
+        """
+
+        if task_id == self.__pending_published_file_data_request:
+            self.__pending_published_file_data_request = None
+            self._finish_reload()
 
     def _on_background_task_group_finished(self, group_id):
         """
@@ -1091,7 +1278,10 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # We cannot check the specific group id since we are using the data retriever
         # to initiate the background tasks, so instead we know we're done with the model
         # reload when all our pending requets are empty.
-        if self.__is_reloading and self.__pending_published_file_data_request is None and not self.__pending_thumbnail_requests:
-            self.__is_reloading = False
-            self.start_timer()
-            self.endResetModel()
+        if (
+            self.__is_reloading
+            and self.__pending_published_file_data_request is None
+            and self.__pending_latest_published_files_data_request is None
+            and not self.__pending_thumbnail_requests
+        ):
+            self._finish_reload()

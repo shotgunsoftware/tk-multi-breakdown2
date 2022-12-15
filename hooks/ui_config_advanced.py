@@ -252,7 +252,9 @@ class UIConfigAdvanced(HookClass):
                     if status == source_model.STATUS_OUT_OF_SYNC:
                         source_out_of_sync += 1
 
-                    is_loading = child_index.data(source_model.VIEW_ITEM_LOADING_ROLE) or False
+                    is_loading = (
+                        child_index.data(source_model.VIEW_ITEM_LOADING_ROLE) or False
+                    )
                     if not is_loading:
                         loaded += 1
 

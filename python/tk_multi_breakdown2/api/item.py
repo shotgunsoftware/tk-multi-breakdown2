@@ -50,7 +50,6 @@ class FileItem(object):
             and self.sg_data.get("id") == other.sg_data.get("id")
         )
 
-
     # ----------------------------------------------------------------------------------------
     # Properties
 
@@ -117,7 +116,7 @@ class FileItem(object):
 
     @property
     def sg_data(self):
-        """Get or set the ShotGrid data associated with this item.  """
+        """Get or set the ShotGrid data associated with this item."""
         return self._sg_data
 
     @sg_data.setter
@@ -128,11 +127,10 @@ class FileItem(object):
     def thumbnail_path(self):
         """Get or set the thumbnail path for this item."""
         return self._thumbnail_path
-    
+
     @thumbnail_path.setter
     def thumbnail_path(self, value):
         self._thumbnail_path = value
-
 
     # ----------------------------------------------------------------------------------------
     # Public methods
