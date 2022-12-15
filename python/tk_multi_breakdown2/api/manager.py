@@ -23,10 +23,14 @@ class BreakdownManager(object):
         self._bundle = bundle
 
     @sgtk.LogManager.log_timing
-    def scan_scene(self):
+    def scan_scene(self, execute_in_main_thread=False):
         """
         Scan the current scene to return a list of scene references.
 
+        :param execute_in_main_thread: True will ensure the hook method is executed in themain
+            thread, else False will execute in the current thread. Default is False, but should
+            be set to True if this method is not being executed in the main thread (e.g. using
+            the BackgroundTaskManager to run this method).
         :return: A list of scene references.
         :rtype: dict with key-values:
             node
@@ -47,7 +51,14 @@ class BreakdownManager(object):
                 optional: True
         """
 
-        # todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()
+        if execute_in_main_thread:
+            # Ensure that the scan scene operation is executedi in the main UI thread. Many
+            # apps are sensitive to these types of operations happening in other threads.
+            return self._bundle.engine.execute_in_main_thread(
+                self._bundle.execute_hook_method, "hook_scene_operations", "scan_scene"
+            )
+        
+        # Execute in the current thread
         return self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
 
     @sgtk.LogManager.log_timing
