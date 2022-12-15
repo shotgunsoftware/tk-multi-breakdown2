@@ -79,8 +79,11 @@ class BreakdownManager(object):
 
         :return: The task id for the request is returned if executed async, else the published
             files data is returned if executed synchronosly.
-        :rtype: int | List[dict]
+        :rtype: int | dict
         """
+
+        if not file_paths:
+            return None if bg_task_manager else {}
 
         # Get the published file fields to pass to the query
         fields = self.get_published_file_fields()
@@ -105,6 +108,9 @@ class BreakdownManager(object):
     def get_file_items(self, scene_objects, published_files):
         """
         Get the file item objects for the given scene objects.
+
+        Scene objects that do not have a corresponding ShotGrid Published File will be omitted
+        from the result (a FileItem will not be created for it).
 
         :param scene_objects: Objects from the DCC. This value can be the result returned by
             the `scan_scene` method.
@@ -174,7 +180,7 @@ class BreakdownManager(object):
         """
 
         if not item or not item.sg_data:
-            return {}
+            return None if data_retriever else {}
 
         result = self._bundle.execute_hook_method(
             "hook_get_published_files",
@@ -183,6 +189,7 @@ class BreakdownManager(object):
             data_retriever=data_retriever,
         )
 
+        # Only set the latest published file data if the result was immediately returned.
         if data_retriever is None:
             item.latest_published_file = result
 
