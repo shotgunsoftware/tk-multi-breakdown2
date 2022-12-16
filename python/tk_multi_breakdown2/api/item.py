@@ -138,7 +138,7 @@ class FileItem(object):
     def to_dict(self):
         """
         Return the FileItem as a dictionary. Only include the properties needed by the
-        scene operation hook update method.i
+        scene operation hook update method.
 
         :return: The item properties as a dictionary
         """
