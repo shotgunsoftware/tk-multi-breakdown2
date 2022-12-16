@@ -244,7 +244,7 @@ class BreakdownSceneOperations(HookBaseClass):
             (scene_change_cb, events)
         ]
 
-        for callback, events in self.__alias_event_callbacks.items():
+        for callback, events in self.__alias_event_callbacks:
             self.parent.engine.event_watcher.register_alias_callback(
                 # lambda result: scene_change_callback(), events
                 callback, events
@@ -253,7 +253,7 @@ class BreakdownSceneOperations(HookBaseClass):
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
-        for callback, events in self.__alias_event_callbacks.items():
+        for callback, events in self.__alias_event_callbacks:
             self.parent.engine.event_watcher.unregister_alias_callback(
                 callback, events
             )

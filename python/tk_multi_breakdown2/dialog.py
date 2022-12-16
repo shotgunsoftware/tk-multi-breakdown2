@@ -391,6 +391,7 @@ class AppDialog(QtGui.QWidget):
         )
         self.__can_register_scene_change_callback = hasattr(self.scene_operations_hook, "register_scene_change_callback")
         self.__can_unregister_scene_change_callback = hasattr(self.scene_operations_hook, "unregister_scene_change_callback")
+        self._listen_for_events(self._auto_refresh)
 
         # -----------------------------------------------------
         # Log metric for app usage
