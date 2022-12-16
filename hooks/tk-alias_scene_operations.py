@@ -56,56 +56,42 @@ class BreakdownSceneOperations(HookBaseClass):
         available. Any such versions are then displayed in the UI as out of date.
         """
 
+        # Get all referencs currently in Alias
+        alias_refs = alias_api.get_references()
+
+        # The references result to return. This will be a list of references formatted in a
+        # dictionary with the required key-values:
+        #   'node_name': str, 'node_type': str, 'path': str
         refs = []
 
-        alias_refs = alias_api.get_references()
-        sg_data = self._get_sg_publish_data(alias_refs)
+        # The set of file paths already added to the result. The result should contain items
+        # with unique paths.
+        file_paths = set()
 
-        # Find PublishedFiles associated with the references
+        # For each Alias reference, add an item to the result for both its source path and path,
+        # if they both exist. The next step to gather the file items will query for the
+        # Published Files for each of these reference objects, which will decide if the source
+        # path or path value should be used for this reference.
         for r in alias_refs:
-
-            if r.source_path in sg_data.keys():
-                node_sg_data = sg_data[r.source_path]
-            elif r.path in sg_data.keys():
-                node_sg_data = sg_data[r.path]
-            else:
-                node_sg_data = None
-
-            if not node_sg_data:
-                self.logger.error(
-                    "Couldn't find a ShotGrid Published File entry for {}".format(
-                        r.source_path
-                    )
-                )
-                continue
-
-            tk = self.parent.engine.get_tk_from_project_id(
-                node_sg_data["project"]["id"]
-            )
-            reference_template = self.parent.engine.get_reference_template(
-                tk, node_sg_data
-            )
-
-            # here, we've imported a file as reference and we need to use the source path to get the next
-            # available version
-            if reference_template:
+            if r.source_path and r.source_path not in file_paths:
                 refs.append(
                     {
                         "node_name": r.name,
                         "node_type": "reference",
                         "path": r.source_path.replace("/", os.path.sep),
-                        "extra_data": {"sg_data": node_sg_data},
                     }
                 )
-            else:
+                file_paths.add(r.source_path)
+
+            if r.path and r.path not in file_paths:
                 refs.append(
                     {
                         "node_name": r.name,
                         "node_type": "reference",
                         "path": r.path.replace("/", os.path.sep),
-                        "extra_data": {"sg_data": node_sg_data},
                     }
                 )
+                file_paths.add(r.path)
 
         return refs
 
@@ -123,35 +109,31 @@ class BreakdownSceneOperations(HookBaseClass):
         node_type = item["node_type"]
         path = item["path"]
         extra_data = item["extra_data"]
+        sg_data = item["sg_data"]
 
         if node_type == "reference":
-            self.update_reference(path, extra_data)
+            self.update_reference(path, extra_data, sg_data)
 
-    def update_reference(self, path, extra_data):
-        """"""
+    def update_reference(self, path, extra_data, sg_data):
+        """
+        Update the Alias reference from the given data.
+        
+        :param path: The new file path to set the Alias reference to.
+        :type path: str
+        :param extra_data: Additional data containing the existing Alias reference file path,
+            which will be updated to the new file path. The existing path is used to look up
+            the reference to update.
+        :type extra_data: dict (required key-values: 'old_path': str)
+        :param sg_data: Additional ShotGrid specific data required to look up reference
+            templates to perform the reference update.
+        :type sg_data: dict (required key-values: 'project': dict, 'task': dict)
+        """
 
         old_path = extra_data["old_path"]
-        sg_data = extra_data["sg_data"]
-
         _, ext = os.path.splitext(path)
 
         # if the new path is not a path to a wref file, we need to handle the conversion
         if ext != ".wref":
-
-            # get the Alias Translations framework to translate the file to wref before importing it
-            framework = self.load_framework("tk-framework-aliastranslations_v0.x.x")
-            if not framework:
-                self.logger.error(
-                    "Couldn't load tk-framework-aliastranslations. Skipping reference update for file {}.".format(
-                        path
-                    )
-                )
-                return
-
-            tk_framework_aliastranslations = framework.import_module(
-                "tk_framework_aliastranslations"
-            )
-
             tk = self.parent.engine.get_tk_from_project_id(sg_data["project"]["id"])
             source_template = tk.template_from_path(path)
             reference_template = self.parent.engine.get_reference_template(tk, sg_data)
@@ -173,12 +155,25 @@ class BreakdownSceneOperations(HookBaseClass):
 
                 else:
                     self.logger.debug("Translating file to wref...")
+
+                    # get the Alias Translations framework to translate the file to wref before importing it
+                    framework = self.load_framework("tk-framework-aliastranslations_v0.x.x")
+                    if not framework:
+                        self.logger.error(
+                            "Couldn't load tk-framework-aliastranslations. Skipping reference update for file {}.".format(
+                                path
+                            )
+                        )
+                        return
+
+                    tk_framework_aliastranslations = framework.import_module(
+                        "tk_framework_aliastranslations"
+                    )
                     translator = tk_framework_aliastranslations.Translator(
                         path, reference_path
                     )
                     translator.execute()
                     path = reference_path
-
             else:
                 self.logger.error(
                     "Couldn't convert file to wref, missing templates. Skipping file {}...".format(
@@ -195,22 +190,6 @@ class BreakdownSceneOperations(HookBaseClass):
 
         # get the reference by its uuid if possible, otherwise use its name to find the right instance
         alias_api.update_reference(old_path, path)
-
-    def _get_sg_publish_data(self, alias_refs):
-        """"""
-        path_list = []
-        for r in alias_refs:
-            if r.source_path not in path_list:
-                path_list.append(r.source_path)
-            if r.path not in path_list:
-                path_list.append(r.path)
-
-        return sgtk.util.find_publish(
-            self.parent.sgtk,
-            path_list,
-            fields=["project", "task"],
-            only_current_project=False,
-        )
 
     def register_scene_change_callback(self, scene_change_callback):
         """

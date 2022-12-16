@@ -148,4 +148,5 @@ class FileItem(object):
             "node_type": self.node_type,
             "path": self.path,
             "extra_data": self.extra_data,
+            "sg_data": self.sg_data,
         }
