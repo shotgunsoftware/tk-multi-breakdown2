@@ -821,6 +821,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         # TODO: allow this operation to be async
 
+        if self.__is_reloading:
+            return
+
         # Query for the published file for the new file item and create the FileItem object.
         published_files = self._manager.get_published_files_from_file_paths(
             [file_item_data["path"]],
@@ -898,6 +901,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :return: True if the item was successfully removed, else False.
         :rtype: bool
         """
+
+        if self.__is_reloading:
+            return
 
         index = self.index_from_file_path(file_path)
         if not index.isValid():
