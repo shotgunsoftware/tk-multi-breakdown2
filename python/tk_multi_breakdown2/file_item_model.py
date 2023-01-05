@@ -521,9 +521,12 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                             # The group status is locked only if all children are locked.
                             locked = False
 
-                return (
-                    FileTreeItemModel.STATUS_LOCKED if locked else FileTreeItemModel.STATUS_UP_TO_DATE
-                )
+                    return (
+                        FileTreeItemModel.STATUS_LOCKED if locked else FileTreeItemModel.STATUS_UP_TO_DATE
+                    )
+                
+                # Group has no children, it should not exist.
+                return None
         
         # base model item handling here for role methods
         result = None
