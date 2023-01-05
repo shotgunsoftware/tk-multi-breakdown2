@@ -16,7 +16,7 @@ from tank_vendor import six
 from .ui.dialog import Ui_Dialog
 from .ui import resources_rc  # Required for accessing icons
 
-from .file_model import FileModel
+from .file_item_model import FileTreeItemModel as FileModel
 from .file_history_model import FileHistoryModel
 from .actions import ActionManager
 from .framework_qtwidgets import (
@@ -351,7 +351,7 @@ class AppDialog(QtGui.QWidget):
         self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
         self._file_model.layoutChanged.connect(self._on_file_model_layout_changed)
-        self._file_model.itemChanged.connect(self._on_file_model_item_changed)
+        self._file_model.dataChanged.connect(self._on_file_model_item_changed)
 
         self._ui.file_view.selectionModel().selectionChanged.connect(
             self._on_file_selection
@@ -1050,7 +1050,7 @@ class AppDialog(QtGui.QWidget):
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
         self._setup_details_panel(selected_indexes)
 
-    def _on_file_model_item_changed(self, model_item):
+    def _on_file_model_item_changed(self, top_left_index, bottom_right_index, roles):
         """
         Slot triggered when an item in the file_model has changed.
 
@@ -1066,14 +1066,22 @@ class AppDialog(QtGui.QWidget):
         if not selected or len(selected) > 1:
             return
 
-        changed_index = model_item.index()
         selected_index = selected[0]
         if isinstance(selected_index.model(), QtGui.QSortFilterProxyModel):
             selected_index = selected_index.model().mapToSource(selected_index)
 
-        if selected_index == changed_index:
-            # The item that changed was the currently selected on, update the details panel.
-            self._setup_details_panel([selected_index])
+        # The two indexes are expected to have the same parent.
+        parent_index = top_left_index.parent()
+        start_row = top_left_index.row()
+        end_row = bottom_right_index.row()
+        for row in range(start_row, end_row + 1):
+            changed_index = self._file_model.index(row, 0, parent_index)
+            if selected_index == changed_index:
+                # The item that changed was the currently selected on, update the details panel.
+                self._setup_details_panel([selected_index])
+                
+                # Exit since there the only index was found
+                return
 
     def _on_view_item_size_slider_change(self, value):
         """
