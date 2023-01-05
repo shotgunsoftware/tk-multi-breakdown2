@@ -49,6 +49,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_ROLE,  # The item status
         STATUS_FILTER_DATA_ROLE,  # The item status data used for filtering
         REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
+        GROUP_ID_ROLE,  # The id of the group for this item
         FILE_ITEM_ROLE,  # The file item object
         FILE_ITEM_NODE_NAME_ROLE,  # Convenience role for the file item node_name field
         FILE_ITEM_NODE_TYPE_ROLE,  # Convenience role for the file item node_type field
@@ -59,7 +60,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
         FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 13)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 14)
 
     # File item status enum
     (
@@ -397,6 +398,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                     model_item.set_thumbnail(file_item.thumbnail_path)
                 return model_item.thumbnail_icon
 
+            if role == FileTreeItemModel.GROUP_ID_ROLE:
+                return model_item.group_id
+
             if role == FileTreeItemModel.FILE_ITEM_ROLE:
                 return file_item
 
@@ -488,6 +492,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             if role == QtCore.Qt.DisplayRole:
                 return model_item.group_display
+
+            if role == FileTreeItemModel.GROUP_ID_ROLE:
+                return model_item.group_id
 
             if role == FileTreeItemModel.VIEW_ITEM_HEIGHT_ROLE:
                 # Group item height always adjusts to content size
