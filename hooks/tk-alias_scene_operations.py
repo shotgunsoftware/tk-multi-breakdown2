@@ -209,6 +209,7 @@ class BreakdownSceneOperations(HookBaseClass):
         events = [
             alias_api.AlMessageType.PostRetrieve,
             alias_api.AlMessageType.ReferenceFileDeleted,
+            alias_api.AlMessageType.StageActive,
         ]
         # Alias event messages that are only available in version >= 2023.0
         if hasattr(alias_api.AlMessageType, "ReferenceFileAdded"):
