@@ -1657,6 +1657,37 @@ class FileTreeModelItem(FileModelItem):
         self.__child_items = []
         self.__parent_item = None
 
+
+    def __eq__(self, other):
+        """
+        Override the base method.
+
+        File tree model items are equal if their FileItem objects are equal. Note that this
+        means each file model item should refer to a unique file item.
+
+        :param other: The FileTreeModelItem to compare with.
+        :type other: FileTreeModelItem
+
+        :return: True if this model item is equal to the other item.
+        :rtype: bool
+        """
+
+        if not isinstance(other, FileTreeModelItem):
+            return False
+
+        if self.file_item_id is None or other.file_item_id is None:
+            # One of the items are a group
+
+            if self.file_item_id != other.file_item_id:
+                # One item is a group, while the other is a file, thus they are not equal.
+                return False
+
+            # Both items are groups, compare their group ids.
+            return self.group_id == other.group_id
+
+        # They are both file items, compare their file ids.
+        return self.file_item_id == other.file_item_id
+
     # ----------------------------------------------------------------------
     # Properties
     
