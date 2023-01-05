@@ -587,9 +587,56 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if changed:
             self.dataChanged.emit(index, index, change_roles)
 
+    # ----------------------------------------------------------------------
+    # Override base QAbstractItemModel methods
 
-    #########################################################################################################
-    # Override base FileModel class methods
+    def insertRows(self, row, count, parent=QtCore.QModelIndex()):
+        """Insert count rows starting with the given row under parent from the model."""
+
+        self.beginInsertRows(parent, row, row + count - 1)
+
+        # First get the parent to insert the rows under
+        if not parent.isValid():
+            parent_item = self.__root_item
+        else:
+            parent_item = self.__get_internal_data(parent)
+        
+        assert parent_item, "Parent item not found"
+
+        # Insert the rows now 
+        if row == parent_item.child_count():
+            # Append to the parent item
+            for _ in range(count):
+                placeholder_item = FileTreeModelItem()
+                parent_item.append_child(placeholder_item)
+        else:
+            for i in range(count):
+                placeholder_item = FileTreeModelItem()
+                parent_item.child_items.insert(row + i, placeholder_item)
+
+        self.endInsertRows()
+
+        return True
+
+    def removeRows(self, row, count, parent=QtCore.QModelIndex()):
+        """Removes count rows starting with the given row under parent from the model."""
+
+        self.beginRemoveRows(parent, row, row + count - 1)
+
+        # First get the parent to insert the rows under
+        if not parent.isValid():
+            parent_item = self.__root_item
+        else:
+            parent_item = self.__get_internal_data(parent)
+
+        assert parent_item, "Parent item not found"
+
+        # Delete the layers from the model data
+        del parent_item.child_items[row:row + count]
+
+        self.endRemoveRows()
+
+        return True
 
     def destroy(self):
         """
@@ -756,6 +803,142 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             self.blockSignals(restore_state)
             self.layoutChanged.emit()
 
+    @sgtk.LogManager.log_timing
+    @wait_cursor
+    def add_item(self, file_item_data):
+        """
+        Add a new file item to the model from the given data.
+        
+        :param file_item_data: The data to create the new file item.
+        :type file_item_data: dict
+
+        :return: True if the item was added successfully, else False.
+        :rtype: bool
+        """
+
+        # TODO: allow this operation to be async
+
+        # Query for the published file for the new file item and create the FileItem object.
+        published_files = self._manager.get_published_files_from_file_paths(
+            [file_item_data["path"]],
+            extra_fields=self._published_file_fields,
+        )
+
+        # Get the FileItem object from the published file data
+        file_items = self._manager.get_file_items([file_item_data], published_files)
+        if not file_items:
+            return False
+        
+        file_item = file_items[0]
+        if not file_item.sg_data:
+            # Invalid file item, cannot continue.
+            return False
+
+        # Get the latest published file for the new item.
+        item_published_files = self._get_published_files_for_items(file_items)
+        file_item.latest_published_file = item_published_files[0]
+
+        # Now we have all the data necessary to add the new file item to the model.
+        group_by_id, group_by_display = self._get_file_group_info(file_item)
+        if self._group_items.get(group_by_id) is None:
+            # Insert a new row in the model for the new file item grouping
+            success = self.insertRows(self.__root_item.child_count(), 1)
+            if not success:
+                return False
+
+            # Create a new group model item for the file item
+            group_item = FileTreeModelItem(group_id=group_by_id, group_display=group_by_display)
+            self._group_items[group_by_id] = group_item
+
+            # Insert rows has created the space but not the item
+            self.__root_item.child_items[self.__root_item.child_count() - 1] = group_item
+            self.__set_internal_data(group_item)
+
+            # Add the new group model item under the model root item.
+            group_item.parent_item = self.__root_item
+        else:
+            # Get the existing group item to add the new file model item to.
+            group_item = self._group_items[group_by_id]
+
+        # Insert the row in the model to hold the new file item data
+        group_index = self.index(group_item.row(), 0)
+        success = self.insertRows(group_item.child_count(), 1, group_index)
+        if success:
+            # Create the new model item.
+            file_model_item = FileTreeModelItem(file_item=file_item)
+
+            # Request the thumbnail data
+            self._request_thumbnail(file_model_item, file_item)
+
+            # Insert rows has created the space but not the item
+            group_item.child_items[group_item.child_count() - 1] = file_model_item
+            self.__set_internal_data(file_model_item)
+
+            # Add the new model item under the group item.
+            file_model_item.parent_item = group_item
+
+            # Update the internal data with the new file item.
+            self.__scene_objects.append(file_item_data)
+            self.__file_items.append(file_item)
+        
+        return success
+
+    @sgtk.LogManager.log_timing
+    @wait_cursor
+    def remove_item_by_file_path(self, file_path):
+        """
+        Find the model item corresponding to the given file path and remove it from the model.
+
+        :param file_path: The file path to look up the model item to remove.
+        :type file_path: str
+
+        :return: True if the item was successfully removed, else False.
+        :rtype: bool
+        """
+
+        index = self.index_from_file_path(file_path)
+        if not index.isValid():
+            return False
+        
+        file_item_to_remove = self.data(index, self.FILE_ITEM_ROLE)
+        if not file_item_to_remove:
+            # Invalid index data
+            return False
+        
+        file_path = file_item_to_remove.path
+        for i, obj in enumerate(self.__scene_objects):
+            if obj["path"] == file_path:
+                del self.__scene_objects[i]
+                break
+
+        for i, fi in enumerate(self.__file_items):
+            if fi == file_item_to_remove:
+                del self.__file_items[i]
+                break
+
+        parent_index = index.parent() 
+        success = self.removeRows(index.row(), 1, parent_index)
+
+        if not success:
+            # Failed to remove item, return failure.
+            return False
+        
+        # Check if by remove this item, the item's group is now empty. If so, remove the group
+        if not parent_index.isValid():
+            # No parent group to check, return success.
+            return True
+
+        if not self.rowCount(parent_index):
+            # Remove the group from the internal data list
+            group_id = self.data(parent_index, self.GROUP_ID_ROLE)
+            del self._group_items[group_id]
+
+            # Remove the group since it is now empty. Return the result of removing the group.
+            return self.removeRows(parent_index.row(), 1, parent_index.parent())
+
+        # Item removed successfully. 
+        return True
+        
     def get_group_by_fields(self):
         """
         Get the fields that are available to group the file items by.
@@ -794,6 +977,33 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                     return child_item
 
         return None
+
+    def index_from_file_path(self, file_path):
+        """
+        Traverse the model to get the model item index that matches the given file path.
+
+        :param file_path: The file path to find the model index by.
+        :type file_path: str
+
+        :return: The model index.
+        :rtype: QtCore.QModelIndex
+        """
+
+        row_count = self.__root_item.child_count()
+
+        for group_row in range(row_count):
+            group_index = self.index(group_row, 0)
+            group_item = self.__get_internal_data(group_index)
+
+            num_children = group_item.child_count()
+            for child_row in range(num_children):
+                child_index = self.index(child_row, 0, group_index)
+                file_item = self.data(child_index, FileTreeItemModel.FILE_ITEM_ROLE)
+
+                if file_item.path == file_path:
+                    return child_index
+
+        return QtCore.QModelIndex()
 
     def update_file_group(
         self, file_model_item_row, cur_file_item_data, new_file_item_data
@@ -1393,7 +1603,7 @@ class FileModelItem:
         means each file model item should refer to a unique file item.
 
         :param other: The FileModelItem to compare with.
-        :type other: FileModel.FileModelItem
+        :type other: FileModelItem
 
         :return: True if this model item is equal to the other item.
         :rtype: bool
