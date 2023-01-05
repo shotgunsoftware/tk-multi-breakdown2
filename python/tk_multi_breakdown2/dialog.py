@@ -75,6 +75,10 @@ class AppDialog(QtGui.QWidget):
 
         self._bundle = sgtk.platform.current_bundle()
 
+        # Keep track of when a menu is executing. This is to avoid triggering unwanted DCC
+        # event callbacks when menu actions are executed.
+        self.__context_menu_executing = False
+
         # create a single instance of the task manager that manages all
         # asynchronous work/tasks
         self._bg_task_manager = BackgroundTaskManager(self, max_threads=2)
@@ -110,7 +114,7 @@ class AppDialog(QtGui.QWidget):
 
         # Set up the refresh button menu
         refresh_action = QtGui.QAction(SGQIcon.refresh(), "Refresh", self)
-        refresh_action.triggered.connect(self._refresh)
+        refresh_action.triggered.connect(self._reload_file_model)
         auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
         auto_refresh_option_action.setCheckable(True)
         auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
@@ -156,6 +160,7 @@ class AppDialog(QtGui.QWidget):
         group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
         if group_by is None:
             group_by = self._bundle.get_setting("group_by", None)
+
         self._file_model = FileModel(
             self,
             self._bg_task_manager,
@@ -418,7 +423,7 @@ class AppDialog(QtGui.QWidget):
         """
 
         # Refresh the view on showing the app
-        self._refresh()
+        self._reload_file_model()
 
         super(AppDialog, self).showEvent(event)
 
@@ -704,7 +709,11 @@ class AppDialog(QtGui.QWidget):
         )
         context_menu.addAction(show_details_action)
 
-        context_menu.exec_(pnt)
+        self.__context_menu_executing = True
+        try:
+            context_menu.exec_(pnt)
+        finally:
+            self.__context_menu_executing = False
 
     def _show_history_item_context_menu(self, view, index, pos):
         """
@@ -757,7 +766,12 @@ class AppDialog(QtGui.QWidget):
 
         menu = QtGui.QMenu()
         menu.addActions(actions)
-        menu.exec_(view.mapToGlobal(pos))
+
+        self.__context_menu_executing = True
+        try:
+            menu.exec_(view.mapToGlobal(pos))
+        finally:
+            self.__context_menu_executing = False
 
     def _set_details_panel_visibility(self, visible):
         """
@@ -877,11 +891,45 @@ class AppDialog(QtGui.QWidget):
             self._filter_menu.restore_state(menu_state)
             self._filter_menu_restored = True
 
-    def _refresh(self):
-        """Re-scan the scene and reload the file model."""
+    def _reload_file_model(self):
+        """
+        Reload the file model.
+        
+        This will scan the scene again to gather any new file data.
+        """
 
-        if self._file_model:
-            self._file_model.reload()
+        if not self._file_model:
+            # Cannot reload the model if it does not exist yet.
+            return
+        
+        self._file_model.reload()
+    
+    def _scene_changed(self, event_type="reload", data=None):
+        """
+        Handle a scene changed event.
+
+        :param event_type: The scene change event type. Defaults to "reload".
+        :type event_type: "reload" | "add" | "remove"
+        :param data: The data that has changed.
+        :type data: str | dict
+        """
+
+        if self.__context_menu_executing:
+            # Ignore DCC event callbacks that are triggered from executing a context menu
+            # action. If these actions do require an event callback, the action can manually
+            # execute the callback if needed. This is to avoid unwanted model reloads.
+            return
+        
+        if event_type == "reload":
+            self._reload_file_model()
+
+        elif event_type == "add":
+            if self._file_model:
+                self._file_model.add_item(data)
+
+        elif event_type == "remove":
+            if self._file_model:
+                self._file_model.remove_item_by_file_path(data)
 
     def _listen_for_events(self, listen):
         """
@@ -892,10 +940,10 @@ class AppDialog(QtGui.QWidget):
         """
 
         if listen:
-            # Start listening to DCC events to trigger updates
+            # Start listening to DCC scene change events to trigger reload.
             if self.__can_register_scene_change_callback:
                 self.scene_operations_hook.register_scene_change_callback(
-                    scene_change_callback=self._refresh
+                    scene_change_callback=self._scene_changed
                 )
         else:
             # Stop listening to DCC events to trigger updates
@@ -906,7 +954,7 @@ class AppDialog(QtGui.QWidget):
     # UI/Widget callbacks
 
     def _on_refresh_clicked(self, checked=False):
-        """Slot triggered when teh refresh button has been clicked."""
+        """Slot triggered when the refresh button has been clicked."""
 
         # The refresh button is checkable, which means that its check state is toggled each
         # the button is clicked, but we want the check state to reflect the auto-refresh state.
@@ -915,7 +963,7 @@ class AppDialog(QtGui.QWidget):
         self._ui.refresh_btn.setChecked(self._auto_refresh)
 
         # Now handle the button click event
-        self._refresh()
+        self._reload_file_model()
 
     def _on_toggle_auto_refresh(self, checked):
         """

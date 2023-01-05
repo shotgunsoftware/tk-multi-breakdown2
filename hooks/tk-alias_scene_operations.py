@@ -201,8 +201,8 @@ class BreakdownSceneOperations(HookBaseClass):
         For Alias, the callback is registered with the AliasEngine event watcher to be
         triggered on a PostRetrieve event (e.g. when a file is opened).
 
-        :param callback: The callback to register and execute on scene chagnes.
-        :type callback: function
+        :param scene_change_callback: The callback to register and execute on scene chagnes.
+        :type scene_change_callback: function
         """
 
         # Define the list of Alias event to that will trigger the scene change callback.
@@ -215,24 +215,54 @@ class BreakdownSceneOperations(HookBaseClass):
             events.append(alias_api.AlMessageType.ReferenceFileAdded)
 
         # Create the scene change callback to register with the Alias event watcher.
-        scene_change_cb = lambda result: scene_change_callback()
+        scene_change_cb = lambda result, cb=scene_change_callback: self.__handle_event_callback(result, cb)
 
         # Keep track of the Alias event callbacks that will be registered, so that they can
         # properly be unregistered on shut down.
-        self.__alias_event_callbacks = [
-            (scene_change_cb, events)
-        ]
+        self.__alias_event_callbacks = [(scene_change_cb, events)]
 
+        # Register the event callbacks to the engine's event watcher
         for callback, events in self.__alias_event_callbacks:
-            self.parent.engine.event_watcher.register_alias_callback(
-                # lambda result: scene_change_callback(), events
-                callback, events
-            )
+            self.parent.engine.event_watcher.register_alias_callback(callback, events)
 
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
+        # Unregister the event callbacks from the engine's event watcher
         for callback, events in self.__alias_event_callbacks:
             self.parent.engine.event_watcher.unregister_alias_callback(
                 callback, events
             )
+
+    def __handle_event_callback(self, event_result, scene_change_callback):
+        """
+        Intermediate callback handler for Alias events.
+        
+        Process the result returned by the Alias event that triggered the callback, to call
+        the scene callback function with the appropriate parameters.
+        
+        :param event_result: The object returned by the Alias event.
+        :type event_result: alias_api.MessageResult
+        :param scene_change_callback: The callback to execute.
+        :type scene_change_callback: function
+        """
+
+        if event_result.message_type == alias_api.AlMessageType.ReferenceFileDeleted:
+            # Remove the reference from the model by its path.
+            scene_change_callback(
+                event_type="remove",
+                data=event_result.reference_file_1_path,
+            )
+
+        elif hasattr(alias_api.AlMessageType, "ReferenceFileAdded") and event_result.message_type == alias_api.AlMessageType.ReferenceFileAdded:
+            # Add the new reference to the model
+            file_item_data = {
+                "node_name": event_result.reference_file_1_name,
+                "node_type": "reference",
+                "path": event_result.reference_file_1_path,
+            }
+            scene_change_callback(event_type="add", data=file_item_data)
+
+        else:
+            # Requset a full model reload.
+            scene_change_callback()
