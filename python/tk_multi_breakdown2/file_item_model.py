@@ -819,8 +819,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :rtype: bool
         """
 
-        # TODO: allow this operation to be async
-
         if self.__is_reloading:
             return
 
