@@ -11,7 +11,7 @@
 import copy
 
 import sgtk
-from sgtk.platform.qt import QtGui
+from sgtk.platform.qt import QtCore, QtGui
 
 from .decorators import wait_cursor
 
@@ -127,22 +127,32 @@ class Action(object):
             "Implementation of execute() method missing for action '%s'" % self.label
         )
 
-    def update_model(self, old_file_item, new_file_item):
+    def emit_update(self, file_item):
         """
-        Update the action's model with the update file item data.
+        Emit the model signal to indicate there was a data change.
 
-        :param old_file_item: The file item data before the action executed.
-        :type old_file_item: FileItem
-        :param new_file_item: The fiel item data after the action executed.
-        :type new_file_item: FileItem
+        Find the model item corresponding to the given file item data, this is the model data
+        that has changed. From the model item, get the index and parent index to emit the
+        model data changed signal. 
+
+        :param file_item: The file item data
+        :type file_item: FileItem
         """
 
-        # Get the item from the model to update.
-        file_model_item = self._model.item_from_file(old_file_item)
+        # Get the model item for the FileItem
+        file_model_item = self._model.item_from_file(file_item)
+        if not file_model_item:
+            return
 
-        # Update the item with the new file item data, if it was found.
-        if file_model_item:
-            file_model_item.setData(new_file_item, self._model.FILE_ITEM_ROLE)
+        # Get the index and parent index from the model item, to use to emit the model data
+        # changed signal
+        if file_model_item.parent_item:
+            parent_index = self._model.index(file_model_item.parent_item.row(), 0)
+        else:
+            parent_index = QtCore.QModelIndex()
+
+        index = self._model.index(file_model_item.row(), 0, parent_index)
+        self._model.dataChanged.emit(index, index, self._model.FILE_ITEM_ROLE)
 
 
 class UpdateToLatestVersionAction(Action):
@@ -170,15 +180,12 @@ class UpdateToLatestVersionAction(Action):
             return
 
         for file_item in self._file_items:
-            # Save the original state of the file item so that the model item can be looked up
-            # in the model to update it with the new file item data
-            old_file_item = copy.deepcopy(file_item)
-
             # Call the manager to update the file item object to the latest version.
             self._manager.update_to_latest_version(file_item)
 
-            # Update the model with the updated file item data.
-            self.update_model(old_file_item, file_item)
+            # The file item object that the model holds will be updated by the manager. The model
+            # just needs to emit a signal that the data has changed.
+            self.emit_update(file_item)
 
 
 class UpdateToSpecificVersionAction(Action):
@@ -206,12 +213,10 @@ class UpdateToSpecificVersionAction(Action):
         """Update an item to a specific version."""
 
         file_item = self._file_items[0]
-        # Save the original state of the file item so that the model item can be looked up
-        # in the model to update it with the new file item data
-        old_file_item = copy.deepcopy(file_item)
 
         # Call the manager to update the file item to the specific version.
         self._manager.update_to_specific_version(file_item, self._sg_data)
 
-        # Update the model with the updated file item data.
-        self.update_model(old_file_item, file_item)
+        # The file item object that the model holds will be updated by the manager. The model
+        # just needs to emit a signal that the data has changed.
+        self.emit_update(file_item)
