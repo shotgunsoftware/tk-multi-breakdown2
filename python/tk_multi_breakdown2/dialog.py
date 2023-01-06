@@ -919,17 +919,38 @@ class AppDialog(QtGui.QWidget):
             # action. If these actions do require an event callback, the action can manually
             # execute the callback if needed. This is to avoid unwanted model reloads.
             return
-        
+
+        invalidate_filtering = False
+
         if event_type == "reload":
             self._reload_file_model()
 
         elif event_type == "add":
             if self._file_model:
+                # Special case handling when adding an item that requires a new group to be
+                # created, filtering does not accept the newly added item. Set the flag to
+                # invalidate the proxy model at the end of this operation.
+                # TODO understand exactly why this happens.
+                invalidate_filtering = True
+
                 self._file_model.add_item(data)
 
         elif event_type == "remove":
             if self._file_model:
                 self._file_model.remove_item_by_file_path(data)
+
+        # Check if we need to show or hide the overlay
+        if self._file_model.rowCount() <= 0:
+            self._file_model_overlay.show_message("No items found.")
+        else:
+            self._file_model_overlay.hide()
+
+        # Refresh the filter menu after the data has loaded
+        self._refresh_filter_menu()
+
+        if invalidate_filtering:
+            self._file_proxy_model.invalidate()
+            self._expand_all_groups()
 
     def _listen_for_events(self, listen):
         """
