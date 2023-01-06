@@ -50,6 +50,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_FILTER_DATA_ROLE,  # The item status data used for filtering
         REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
         GROUP_ID_ROLE,  # The id of the group for this item
+        GROUP_DISPLAY_ROLE,  # The id of the group for this item
         FILE_ITEM_ROLE,  # The file item object
         FILE_ITEM_NODE_NAME_ROLE,  # Convenience role for the file item node_name field
         FILE_ITEM_NODE_TYPE_ROLE,  # Convenience role for the file item node_type field
@@ -60,7 +61,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
         FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 14)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 15)
 
     # File item status enum
     (
@@ -277,7 +278,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         """
 
         if file_item:
-            ptr_id = file_item.file_item_id or file_item.group_id
+            ptr_id = file_item
         else:
             ptr_id = None
 
@@ -308,6 +309,17 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         ptr_id = self.__get_ptr_id(file_item)
         self.__data[ptr_id] = file_item
 
+    def __remove_internal_data(self, index):
+        """
+        Store the layer item object data in the model's internal data storage.
+        
+        :param layer_item: The layer item obejct to store.
+        :type layer_item: LayerTreeItem
+        """
+
+        ptr_id = index.internalId()
+        del self.__data[ptr_id]
+
     # ----------------------------------------------------------------------
     # Implement required base QAbstractItemModel methods
 
@@ -334,8 +346,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         else:
             parent_item = self.__get_internal_data(parent)
 
-        assert parent_item, "Parent item not found"
-        
         child_item = parent_item.child(row)
         if child_item:
             return self.createIndex(row, column, child_item)
@@ -372,8 +382,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         else:
             parent_item = self.__get_internal_data(parent)
         
-        assert parent_item, "Parent item not found"
-
         return parent_item.child_count()
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
@@ -400,6 +408,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             if role == FileTreeItemModel.GROUP_ID_ROLE:
                 return model_item.group_id
+
+            if role == FileTreeItemModel.GROUP_DISPLAY_ROLE:
+                return model_item.group_display
 
             if role == FileTreeItemModel.FILE_ITEM_ROLE:
                 return file_item
@@ -496,6 +507,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             if role == FileTreeItemModel.GROUP_ID_ROLE:
                 return model_item.group_id
 
+            if role == FileTreeItemModel.GROUP_DISPLAY_ROLE:
+                return model_item.group_display
+
             if role == FileTreeItemModel.VIEW_ITEM_HEIGHT_ROLE:
                 # Group item height always adjusts to content size
                 return -1
@@ -559,14 +573,22 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         
         changed = False
         change_roles = [role]
-        file_item = model_item.file_item
 
-        if file_item:
-            if role == QtCore.Qt.DecorationRole:
-                model_item.set_thumbnail(value)
-                changed = True
+        if role == QtCore.Qt.DecorationRole:
+            model_item.set_thumbnail(value)
+            changed = True
 
-            elif role == FileTreeItemModel.FILE_ITEM_ROLE:
+        elif role == FileTreeItemModel.GROUP_ID_ROLE:
+            model_item.group_id = value
+            changed = True
+
+        elif role == FileTreeItemModel.GROUP_DISPLAY_ROLE:
+            model_item.group_display = value
+            changed = True
+
+        elif role == FileTreeItemModel.FILE_ITEM_ROLE:
+            file_item = model_item.file_item
+            if file_item:
                 cur_group_value = file_item.sg_data.get(self.group_by)
                 updated_group_value = value.sg_data.get(self.group_by)
                 if cur_group_value != updated_group_value:
@@ -574,10 +596,12 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                     # and it no longer belongs in its current group
                     self.update_file_group(index.row(), file_item, value)
 
-                self.__set_internal_data(value)
-                changed = True
+            model_item.set_file_item(value)
+            changed = True
 
-            elif role == FileTreeItemModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
+        elif role == FileTreeItemModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
+            file_item = model_item.file_item
+            if file_item:
                 if (
                     not file_item.latest_published_file
                     or not value
@@ -604,18 +628,20 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         else:
             parent_item = self.__get_internal_data(parent)
         
-        assert parent_item, "Parent item not found"
-
         # Insert the rows now 
         if row == parent_item.child_count():
             # Append to the parent item
             for _ in range(count):
-                placeholder_item = FileTreeModelItem()
-                parent_item.append_child(placeholder_item)
+                item = FileTreeModelItem()
+                parent_item.append_child(item)
+                item.parent_item = parent_item
+                self.__set_internal_data(item)
         else:
             for i in range(count):
-                placeholder_item = FileTreeModelItem()
-                parent_item.child_items.insert(row + i, placeholder_item)
+                item = FileTreeModelItem()
+                parent_item.child_items.insert(row + i, item)
+                item.parent_item = parent_item
+                self.__set_internal_data(item)
 
         self.endInsertRows()
 
@@ -626,20 +652,24 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         self.beginRemoveRows(parent, row, row + count - 1)
 
-        # First get the parent to insert the rows under
-        if not parent.isValid():
-            parent_item = self.__root_item
+        index = self.index(row, 0, parent)
+        if index.isValid():
+            if not parent.isValid():
+                parent_item = self.__root_item
+            else:
+                parent_item = self.__get_internal_data(parent)
+
+            # Update the model internal data
+            del parent_item.child_items[row:row + count]
+            self.__remove_internal_data(index)
+
+            success = True
         else:
-            parent_item = self.__get_internal_data(parent)
-
-        assert parent_item, "Parent item not found"
-
-        # Delete the layers from the model data
-        del parent_item.child_items[row:row + count]
+            success = False
 
         self.endRemoveRows()
 
-        return True
+        return success
 
     def destroy(self):
         """
@@ -846,40 +876,32 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         group_by_id, group_by_display = self._get_file_group_info(file_item)
         if self._group_items.get(group_by_id) is None:
             # Insert a new row in the model for the new file item grouping
-            success = self.insertRows(self.__root_item.child_count(), 1)
+            group_row = self.__root_item.child_count()
+            success = self.insertRows(group_row, 1)
             if not success:
                 return False
+            
+            group_index = self.index(group_row)
+            self.setData(group_index, group_by_id, self.GROUP_ID_ROLE)
+            self.setData(group_index, group_by_display, self.GROUP_DISPLAY_ROLE)
 
-            # Create a new group model item for the file item
-            group_item = FileTreeModelItem(group_id=group_by_id, group_display=group_by_display)
+            group_item = self.__get_internal_data(group_index)
             self._group_items[group_by_id] = group_item
-
-            # Insert rows has created the space but not the item
-            self.__root_item.child_items[self.__root_item.child_count() - 1] = group_item
-            self.__set_internal_data(group_item)
-
-            # Add the new group model item under the model root item.
-            group_item.parent_item = self.__root_item
         else:
             # Get the existing group item to add the new file model item to.
             group_item = self._group_items[group_by_id]
+            group_index = self.index(group_item.row(), 0)
 
         # Insert the row in the model to hold the new file item data
-        group_index = self.index(group_item.row(), 0)
-        success = self.insertRows(group_item.child_count(), 1, group_index)
+        item_row = group_item.child_count()
+        success = self.insertRows(item_row, 1, group_index)
         if success:
-            # Create the new model item.
-            file_model_item = FileTreeModelItem(file_item=file_item)
+            item_index = self.index(item_row, 0, group_index)
+            self.setData(item_index, file_item, self.FILE_ITEM_ROLE)
 
             # Request the thumbnail data
+            file_model_item = self.__get_internal_data(item_index)
             self._request_thumbnail(file_model_item, file_item)
-
-            # Insert rows has created the space but not the item
-            group_item.child_items[group_item.child_count() - 1] = file_model_item
-            self.__set_internal_data(file_model_item)
-
-            # Add the new model item under the group item.
-            file_model_item.parent_item = group_item
 
             # Update the internal data with the new file item.
             self.__scene_objects.append(file_item_data)
@@ -1591,15 +1613,7 @@ class FileModelItem:
     def __init__(self, file_item):
         """Initialize the file item."""
 
-        self.__file_item = file_item
-
-        if self.__file_item:
-            # File item path should be unique
-            self.__file_item_id = self.__file_item.path
-            self.__thumbnail_icon = QtGui.QIcon(self.__file_item.thumbnail_path)
-        else:
-            self.__file_item_id = None
-            self.__thumbnail_icon = QtGui.QIcon()
+        self.set_file_item(file_item)
 
 
     def __eq__(self, other):
@@ -1639,12 +1653,24 @@ class FileModelItem:
     # ----------------------------------------------------------------------
     # Public methods
 
+    def set_file_item(self, file_item):
+        """Set the file item data for this model item."""
+
+        self.__file_item = file_item
+
+        if self.__file_item:
+            # File item path should be unique
+            self.__file_item_id = self.__file_item.path
+            self.__thumbnail_icon = QtGui.QIcon(self.__file_item.thumbnail_path)
+        else:
+            self.__file_item_id = None
+            self.__thumbnail_icon = QtGui.QIcon()
+
     def set_thumbnail(self, thumbnail_path):
         """Custom method to set the thumbnail data to avoid emitting data changed signals."""
 
         self.__file_item.thumbnail_path = thumbnail_path
         self.__thumbnail_icon = QtGui.QIcon(thumbnail_path)
-
 
 
 class FileTreeModelItem(FileModelItem):
@@ -1697,13 +1723,21 @@ class FileTreeModelItem(FileModelItem):
     
     @property
     def group_id(self):
-        """Get the unique group id for this item."""
+        """Get or set the unique group id for this item."""
         return self.__group_id
+
+    @group_id.setter
+    def group_id(self, value):
+        self.__group_id = value
 
     @property
     def group_display(self):
-        """Get the group display value for this item."""
+        """Get or set the group display value for this item."""
         return self.__group_display
+
+    @group_display.setter
+    def group_display(self, value):
+        self.__group_display = value
 
     @property
     def child_items(self):
