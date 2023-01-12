@@ -58,7 +58,7 @@ class AppDialog(QtGui.QWidget):
     FILTER_MENU_STATE = "filter_menu_state"
     GROUP_BY_SETTING = "group_by"
     AUTO_REFRESH_SETTING = "auto_refresh"
-    DYNAMIC_LOADING = "dynamic_loading"
+    DYNAMIC_LOADING_SETTING = "dynamic_loading"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -74,6 +74,13 @@ class AppDialog(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         self._bundle = sgtk.platform.current_bundle()
+
+        # This property indicates if the app should listen for DCC events to perform data
+        # refreshes automatically.
+        self._auto_refresh = False
+        # This property indicates if the app should load the data in dynamically as it is
+        # retrieved async.
+        self._dynamic_loading = False
 
         # Keep track of when a menu is executing. This is to avoid triggering unwanted DCC
         # event callbacks when menu actions are executed.
@@ -115,40 +122,21 @@ class AppDialog(QtGui.QWidget):
         # Set up the refresh button menu
         refresh_action = QtGui.QAction(SGQIcon.refresh(), "Refresh", self)
         refresh_action.triggered.connect(self._reload_file_model)
-        auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
-        auto_refresh_option_action.setCheckable(True)
-        auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
-        dynamic_loading_action = QtGui.QAction("Turn On Dynamic Loading", self)
-        dynamic_loading_action.setCheckable(True)
-        dynamic_loading_action.triggered.connect(self._on_toggle_dynamic_loading)
+        self._auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
+        self._auto_refresh_option_action.setCheckable(True)
+        self._auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
+        self._dynamic_loading_action = QtGui.QAction("Turn On Dynamic Loading", self)
+        self._dynamic_loading_action.setCheckable(True)
+        self._dynamic_loading_action.triggered.connect(self._on_toggle_dynamic_loading)
         refresh_button_menu = QtGui.QMenu(self)
         refresh_button_menu.addActions(
-            [refresh_action, auto_refresh_option_action, dynamic_loading_action]
+            [refresh_action, self._auto_refresh_option_action, self._dynamic_loading_action]
         )
         self._ui.refresh_btn.setMenu(refresh_button_menu)
         self._ui.refresh_btn.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
         self._ui.refresh_btn.setIcon(SGQIcon.refresh())
         self._ui.refresh_btn.setCheckable(True)
         self._ui.refresh_btn.clicked.connect(self._on_refresh_clicked)
-
-        # Property indicating if the app should auto-refresh. First check if there a user
-        # setting saved for this property, else default to the config settings.
-        self._auto_refresh = self._settings_manager.retrieve(
-            self.AUTO_REFRESH_SETTING, None
-        )
-        if self._auto_refresh is None:
-            self._auto_refresh = self._bundle.get_setting("auto_refresh", True)
-
-        auto_refresh_option_action.setChecked(self._auto_refresh)
-        self._ui.refresh_btn.setChecked(self._auto_refresh)
-
-        # Initialize the dynamic loading option in the refresh menu
-        # Property indicating if the app should load the data in dynamically as it is
-        # retrieved async.
-        self._dynamic_loading = self._settings_manager.retrieve(
-            self.DYNAMIC_LOADING, True
-        )
-        dynamic_loading_action.setChecked(self._dynamic_loading)
 
         # Initialize the auto-refresh option in the refresh menu
         # -----------------------------------------------------
@@ -342,19 +330,8 @@ class AppDialog(QtGui.QWidget):
         )
         self._set_details_panel_visibility(details_panel_visibility)
 
-        # Restore the splitter state that divides the main view and the details
-        # First try to restore the state from the settings manager
-        splitter_state = self._settings_manager.retrieve(self.SPLITTER_STATE, None)
-        if not splitter_state:
-            # Splitter state was not found in the settings manager, check the raw values settings.
-            splitter_state = self._raw_values_settings.value(self.SPLITTER_STATE)
-
-        if splitter_state:
-            self._ui.details_splitter.restoreState(splitter_state)
-        else:
-            # Splitter state was not restored, default to set details size to 1 (the min value
-            # to show the details, but will be at a minimal size)
-            self._ui.details_splitter.setSizes([800, 1])
+        # Restore the app settings for the user.
+        self.restore_state()
 
         # -----------------------------------------------------
         # Connect signals
@@ -459,22 +436,7 @@ class AppDialog(QtGui.QWidget):
         """
 
         # First save any app settings
-        self._settings_manager.store(
-            self.FILTER_MENU_STATE, self._filter_menu.save_state()
-        )
-        self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
-        self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
-        self._settings_manager.store(self.DYNAMIC_LOADING, self._dynamic_loading)
-        if six.PY2:
-            self._settings_manager.store(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
-        else:
-            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
-            # will convert QByteArray objects to str when storing).
-            self._raw_values_settings.setValue(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
+        self.save_state()
 
         # Tell the main app instance that we are closing
         self._bundle._on_dialog_close(self)
@@ -523,6 +485,91 @@ class AppDialog(QtGui.QWidget):
             self._bg_task_manager = None
 
         super(AppDialog, self).closeEvent(event)
+
+    ######################################################################################################
+    # Public methods
+
+    def save_state(self):
+        """
+        Save the app user settings.
+
+        This method should be called when the app is exiting/closing to save the current user
+        settings, so that they can be restored on opening the app for the user next time.
+        """
+
+        self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
+        self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
+        self._settings_manager.store(self.DYNAMIC_LOADING_SETTING, self._dynamic_loading)
+
+        if six.PY2:
+            self._settings_manager.store(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
+        else:
+            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+            # will convert QByteArray objects to str when storing).
+            self._raw_values_settings.setValue(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
+
+        self._settings_manager.store(
+            self.FILTER_MENU_STATE, self._filter_menu.save_state()
+        )
+
+    def restore_state(self):
+        """
+        Restore the app user settings.
+
+        This method should be called on app init, after all widgets have been created to
+        ensure all widgets are available to apply the restored state.
+
+        NOTE that the GROUP_BY_SETTING is not restored here, since it is required for
+        initializing the file model.
+        """
+
+        # Restore the auto-refresh option in the refresh menu. First check if there a user
+        # setting saved for this property, else default to the config setting.
+        self._auto_refresh = self._settings_manager.retrieve(
+            self.AUTO_REFRESH_SETTING, None
+        )
+        if self._auto_refresh is None:
+            self._auto_refresh = self._bundle.get_setting("auto_refresh", True)
+        self._auto_refresh_option_action.setChecked(self._auto_refresh)
+        self._ui.refresh_btn.setChecked(self._auto_refresh)
+
+        # Restore the dynamic loading option in the refresh menu. This property indicates
+        # if the app should load the data in dynamically as it is retrieved async.
+        self._dynamic_loading = self._settings_manager.retrieve(
+            self.DYNAMIC_LOADING_SETTING, True
+        )
+        self._dynamic_loading_action.setChecked(self._dynamic_loading)
+
+        # Restore the splitter state that divides the main view and the details
+        # First try to restore the state from the settings manager
+        splitter_state = self._settings_manager.retrieve(self.SPLITTER_STATE, None)
+        if not splitter_state:
+            # Splitter state was not found in the settings manager, check the raw values settings.
+            splitter_state = self._raw_values_settings.value(self.SPLITTER_STATE)
+
+        if splitter_state:
+            self._ui.details_splitter.restoreState(splitter_state)
+        else:
+            # Splitter state was not restored, default to set details size to 1 (the min value
+            # to show the details, but will be at a minimal size)
+            self._ui.details_splitter.setSizes([800, 1])
+
+        # Restore the filter menu state
+        menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
+        if not menu_state:
+            menu_state = {
+                "{role}.status".format(
+                    role=self._file_model.STATUS_FILTER_DATA_ROLE
+                ): {},
+                "{role}.PublishedFile.published_file_type.PublishedFileType.code".format(
+                    role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ): {},
+            }
+        self._filter_menu.restore_state(menu_state)
 
     ######################################################################################################
     # Protected methods
@@ -874,30 +921,6 @@ class AppDialog(QtGui.QWidget):
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
-    def _refresh_filter_menu(self):
-        """
-        Restore the filter menu. Restore the menu state the first time the menu is refreshed.
-
-        Ensure that the filter menu button is not enabled while refreshing, and then
-        re-enabled once done refreshing.
-        """
-
-        self._filter_menu.refresh(force=True)
-
-        if not self._filter_menu_restored:
-            menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
-
-            if menu_state is None:
-                menu_state = {
-                    "{role}.status".format(
-                        role=self._file_model.STATUS_FILTER_DATA_ROLE
-                    ): {},
-                    "PublishedFile.published_file_type.PublishedFileType.code": {},
-                }
-
-            self._filter_menu.restore_state(menu_state)
-            self._filter_menu_restored = True
-
     def _reload_file_model(self):
         """
         Reload the file model.
@@ -952,8 +975,8 @@ class AppDialog(QtGui.QWidget):
         else:
             self._file_model_overlay.hide()
 
-        # Refresh the filter menu after the data has loaded
-        self._refresh_filter_menu()
+        # Refresh the filter menu after the data has loaded.
+        self._filter_menu.refresh()
 
         if invalidate_filtering:
             self._file_proxy_model.invalidate()
@@ -1091,7 +1114,7 @@ class AppDialog(QtGui.QWidget):
             self._file_model_overlay.hide()
 
         # Refresh the filter menu after the data has loaded
-        self._refresh_filter_menu()
+        self._filter_menu.refresh()
 
     def _on_file_model_layout_changed(self):
         """Callback triggered when the file model's layout has changed."""
