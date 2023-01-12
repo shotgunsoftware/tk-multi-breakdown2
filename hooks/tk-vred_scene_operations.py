@@ -142,7 +142,9 @@ class BreakdownSceneOperations(HookBaseClass):
         self._on_references_changed_cb = lambda nodes, cb=scene_change_callback: cb()
 
         # Set up the signal/slot connection to potentially call the scene change callback
-        # based on how the references have cahnged
+        # based on how the references have cahnged.
+        # NOTE ideally the VRED API would have signals for specific reference change events,
+        # until then, any reference change will trigger a full reload of the app.
         vrReferenceService.referencesChanged.connect(self._on_references_changed_cb)
 
     def unregister_scene_change_callback(self):
