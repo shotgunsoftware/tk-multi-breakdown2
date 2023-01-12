@@ -951,36 +951,37 @@ class AppDialog(QtGui.QWidget):
             return
 
         invalidate_filtering = False
+        is_reload = event_type == "reload"
 
-        if event_type == "reload":
+        if is_reload:
             self._reload_file_model()
-
-        elif event_type == "add":
-            if self._file_model:
-                # Special case handling when adding an item that requires a new group to be
-                # created, filtering does not accept the newly added item. Set the flag to
-                # invalidate the proxy model at the end of this operation.
-                # TODO understand exactly why this happens.
-                invalidate_filtering = True
-
-                self._file_model.add_item(data)
-
-        elif event_type == "remove":
-            if self._file_model:
-                self._file_model.remove_item_by_file_path(data)
-
-        # Check if we need to show or hide the overlay
-        if self._file_model.rowCount() <= 0:
-            self._file_model_overlay.show_message("No items found.")
         else:
-            self._file_model_overlay.hide()
+            if event_type == "add":
+                if self._file_model:
+                    # Special case handling when adding an item that requires a new group to be
+                    # created, filtering does not accept the newly added item. Set the flag to
+                    # invalidate the proxy model at the end of this operation.
+                    # TODO understand exactly why this happens.
+                    invalidate_filtering = True
 
-        # Refresh the filter menu after the data has loaded.
-        self._filter_menu.refresh()
+                    self._file_model.add_item(data)
 
-        if invalidate_filtering:
-            self._file_proxy_model.invalidate()
-            self._expand_all_groups()
+            elif event_type == "remove":
+                if self._file_model:
+                    self._file_model.remove_item_by_file_path(data)
+
+            # Check if we need to show or hide the overlay
+            if self._file_model.rowCount() <= 0:
+                self._file_model_overlay.show_message("No items found.")
+            else:
+                self._file_model_overlay.hide()
+
+            # Refresh the filter menu after the data has loaded.
+            self._filter_menu.refresh()
+
+            if invalidate_filtering:
+                self._file_proxy_model.invalidate()
+                self._expand_all_groups()
 
     def _listen_for_events(self, listen):
         """
