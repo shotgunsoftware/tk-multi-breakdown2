@@ -138,14 +138,35 @@ class AppDialog(QtGui.QWidget):
         self._ui.refresh_btn.setCheckable(True)
         self._ui.refresh_btn.clicked.connect(self._on_refresh_clicked)
 
-        # Initialize the auto-refresh option in the refresh menu
+        # -----------------------------------------------------
+        # Restore setting required to set up widgets. The rest of the settings will be
+
+        # Restore the auto-refresh option in the refresh menu. First check if there a user
+        # setting saved for this property, else default to the config setting.
+        self._auto_refresh = self._settings_manager.retrieve(
+            self.AUTO_REFRESH_SETTING, None
+        )
+        if self._auto_refresh is None:
+            self._auto_refresh = self._bundle.get_setting("auto_refresh", True)
+        self._auto_refresh_option_action.setChecked(self._auto_refresh)
+        self._ui.refresh_btn.setChecked(self._auto_refresh)
+
+        # Restore the dynamic loading option in the refresh menu. This property indicates
+        # if the app should load the data in dynamically as it is retrieved async.
+        self._dynamic_loading = self._settings_manager.retrieve(
+            self.DYNAMIC_LOADING_SETTING, True
+        )
+        self._dynamic_loading_action.setChecked(self._dynamic_loading)
+
+        # restored in the designated retore_state method
+        group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
+
         # -----------------------------------------------------
         # main file view
 
         self._ui.file_view.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self._ui.file_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-        group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
         if group_by is None:
             group_by = self._bundle.get_setting("group_by", None)
 
@@ -523,26 +544,9 @@ class AppDialog(QtGui.QWidget):
         This method should be called on app init, after all widgets have been created to
         ensure all widgets are available to apply the restored state.
 
-        NOTE that the GROUP_BY_SETTING is not restored here, since it is required for
-        initializing the file model.
+        NOTE some settings may be restored in the init method if they are required at the time
+        of creating the widgets.
         """
-
-        # Restore the auto-refresh option in the refresh menu. First check if there a user
-        # setting saved for this property, else default to the config setting.
-        self._auto_refresh = self._settings_manager.retrieve(
-            self.AUTO_REFRESH_SETTING, None
-        )
-        if self._auto_refresh is None:
-            self._auto_refresh = self._bundle.get_setting("auto_refresh", True)
-        self._auto_refresh_option_action.setChecked(self._auto_refresh)
-        self._ui.refresh_btn.setChecked(self._auto_refresh)
-
-        # Restore the dynamic loading option in the refresh menu. This property indicates
-        # if the app should load the data in dynamically as it is retrieved async.
-        self._dynamic_loading = self._settings_manager.retrieve(
-            self.DYNAMIC_LOADING_SETTING, True
-        )
-        self._dynamic_loading_action.setChecked(self._dynamic_loading)
 
         # Restore the splitter state that divides the main view and the details
         # First try to restore the state from the settings manager
