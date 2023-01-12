@@ -368,7 +368,7 @@ class AppDialog(QtGui.QWidget):
         )
 
         self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
-        self._ui.search_widget.search_edited.connect(
+        self._ui.search_widget.search_changed.connect(
             lambda text: self._update_search_text_filter()
         )
 
