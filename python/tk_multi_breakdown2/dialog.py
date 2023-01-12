@@ -235,24 +235,31 @@ class AppDialog(QtGui.QWidget):
             data_func=list_item_delegate.get_displayed_text,
         )
         self._filter_menu = FilterMenu(self, refresh_on_show=False)
-        self._filter_menu.set_ignore_fields(
+        # TODO allow this list of filters to be defined in the config.
+        self._filter_menu.set_accept_fields(
             [
-                "PublishedFile.Id",
-                "PublishedFile.path",
-                "PublishedFile.published_file_type",
-                "{}.latest_published_file".format(self._file_model.FILE_ITEM_ROLE),
+                "{sg_data_role}.PublishedFile.created_at".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.created_by.HumanUser.name".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.description".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.entity".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.name".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.project".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.published_file_type".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.sg_status_list".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.tags".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.task".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.task.Task.sg_status_list".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.version_number".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
+                "{status_model_role}.status".format(status_model_role=self._file_model.STATUS_FILTER_DATA_ROLE),
             ]
         )
         self._filter_menu.set_filter_model(self._file_proxy_model)
         self._filter_menu.set_filter_roles(
             [
                 self._file_model.STATUS_FILTER_DATA_ROLE,
-                self._file_model.FILE_ITEM_ROLE,
                 self._file_model.FILE_ITEM_SG_DATA_ROLE,
             ]
         )
-        self._filter_menu_restored = False
-        self._filter_menu.initialize_menu()
         self._ui.filter_btn.setMenu(self._filter_menu)
 
         # Set up the view modes
