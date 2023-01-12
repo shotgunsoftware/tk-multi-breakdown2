@@ -152,7 +152,7 @@ class Action(object):
             parent_index = QtCore.QModelIndex()
 
         index = self._model.index(file_model_item.row(), 0, parent_index)
-        self._model.dataChanged.emit(index, index, self._model.FILE_ITEM_ROLE)
+        self._model.dataChanged.emit(index, index, [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE])
 
 
 class UpdateToLatestVersionAction(Action):

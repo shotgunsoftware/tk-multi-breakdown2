@@ -1161,7 +1161,10 @@ class AppDialog(QtGui.QWidget):
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
         """
 
-        self._filter_menu.refresh()
+        # Only update the filter menu if the item data changed is relevant. NOTE this could be
+        # optimized to only refresh the menu based on the roles list.
+        if self._filter_menu.has_role(roles):
+            self._filter_menu.refresh()
 
         selected = self._ui.file_view.selectionModel().selectedIndexes()
         if not selected or len(selected) > 1:
