@@ -127,16 +127,15 @@ class Action(object):
             "Implementation of execute() method missing for action '%s'" % self.label
         )
 
-    def emit_update(self, file_item):
+    def _get_index_for_item(self, file_item):
         """
-        Emit the model signal to indicate there was a data change.
+        Find the model item corresponding to the given file item data.
 
-        Find the model item corresponding to the given file item data, this is the model data
-        that has changed. From the model item, get the index and parent index to emit the
-        model data changed signal. 
-
-        :param file_item: The file item data
+        :param file_item: The file item data.
         :type file_item: FileItem
+
+        :return: The model index for the file item.
+        :rtype: QtCore.QModelIndex
         """
 
         # Get the model item for the FileItem
@@ -151,8 +150,7 @@ class Action(object):
         else:
             parent_index = QtCore.QModelIndex()
 
-        index = self._model.index(file_model_item.row(), 0, parent_index)
-        self._model.dataChanged.emit(index, index, [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE])
+        return self._model.index(file_model_item.row(), 0, parent_index)
 
 
 class UpdateToLatestVersionAction(Action):
@@ -185,7 +183,8 @@ class UpdateToLatestVersionAction(Action):
 
             # The file item object that the model holds will be updated by the manager. The model
             # just needs to emit a signal that the data has changed.
-            self.emit_update(file_item)
+            index = self._get_index_for_item(file_item)
+            self._model.dataChanged.emit(index, index, [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE])
 
 
 class UpdateToSpecificVersionAction(Action):
@@ -219,4 +218,5 @@ class UpdateToSpecificVersionAction(Action):
 
         # The file item object that the model holds will be updated by the manager. The model
         # just needs to emit a signal that the data has changed.
-        self.emit_update(file_item)
+        index = self._get_index_for_item(file_item)
+        self._model.dataChanged.emit(index, index, [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE])
