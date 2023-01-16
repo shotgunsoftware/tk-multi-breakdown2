@@ -362,6 +362,7 @@ class AppDialog(QtGui.QWidget):
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
         self._file_model.layoutChanged.connect(self._on_file_model_layout_changed)
         self._file_model.dataChanged.connect(self._on_file_model_item_changed)
+        self._file_proxy_model.layoutChanged.connect(self._update_file_view_overlay)
 
         self._ui.file_view.selectionModel().selectionChanged.connect(
             self._on_file_selection
@@ -925,6 +926,21 @@ class AppDialog(QtGui.QWidget):
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
+    def _update_file_view_overlay(self):
+        """Show an overlay message if no items are displayed in the file view."""
+
+        if self._file_model.rowCount() <= 0:
+            # No data in the file model.
+            self._file_model_overlay.show_message("No items found.")
+
+        elif self._file_proxy_model.rowCount() <= 0:
+            # There is data in the model, but it is currently all filtered out.
+            self._file_model_overlay.show_message("Reset filters to see results.")
+
+        else:
+            # There are results, hide the overlay.
+            self._file_model_overlay.hide()
+
     def _reload_file_model(self):
         """
         Reload the file model.
@@ -973,12 +989,6 @@ class AppDialog(QtGui.QWidget):
             elif event_type == "remove":
                 if self._file_model:
                     self._file_model.remove_item_by_file_path(data)
-
-            # Check if we need to show or hide the overlay
-            if self._file_model.rowCount() <= 0:
-                self._file_model_overlay.show_message("No items found.")
-            else:
-                self._file_model_overlay.hide()
 
             # Refresh the filter menu after the data has loaded.
             self._filter_menu.refresh()
@@ -1112,11 +1122,6 @@ class AppDialog(QtGui.QWidget):
         # accepting the group index, this causes the group to collapse, even thoug there are
         # children in it
         self._expand_all_groups()
-
-        if self._file_model.rowCount() <= 0:
-            self._file_model_overlay.show_message("No items found.")
-        else:
-            self._file_model_overlay.hide()
 
         # Refresh the filter menu after the data has loaded
         self._filter_menu.refresh()
