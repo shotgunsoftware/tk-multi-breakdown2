@@ -27,28 +27,23 @@ class BreakdownManager(object):
         """
         Scan the current scene to return a list of scene references.
 
+        The return dict value has the following key-values:
+
+            node (str)
+                The name of the node which holds the reference.
+            type (str)
+                The node type.
+            path (str)
+                The reference file path.
+            extra_data (dict)
+                Extra data for the reference (optional).
+
         :param execute_in_main_thread: True will ensure the hook method is executed in themain
             thread, else False will execute in the current thread. Default is False, but should
             be set to True if this method is not being executed in the main thread (e.g. using
             the BackgroundTaskManager to run this method).
         :return: A list of scene references.
-        :rtype: dict with key-values:
-            node
-                type: str
-                description: the name of the node which holds the reference
-                optional: False
-            type
-                type: str
-                description: the node type
-                optional: False
-            path
-                type: str
-                description: the reference file path
-                optional: False
-            extra_data
-                type: dict
-                description: extra data for the reference
-                optional: True
+        :rtype: dict
         """
 
         if execute_in_main_thread:
@@ -112,32 +107,27 @@ class BreakdownManager(object):
         Scene objects that do not have a corresponding ShotGrid Published File will be omitted
         from the result (a FileItem will not be created for it).
 
+        The `scene_objects` dict param expects the key-values:
+
+            node (str)
+                The name of the node which holds the reference.
+            type (str)
+                The node type.
+            path (str)
+                The reference file path.
+            extra_data (dict)
+                Extra data for the reference (optional).
+
         :param scene_objects: Objects from the DCC. This value can be the result returned by
             the `scan_scene` method.
-        :type scene_objects: dict with key-values:
-            node
-                type: str
-                description: the name of the node which holds the reference
-                optional: False
-            type
-                type: str
-                description: the node type
-                optional: False
-            path
-                type: str
-                description: the reference file path
-                optional: False
-            extra_data
-                type: dict
-                description: extra data for the reference
-                optional: True
+        :type scene_objects: dict
         :param published_files: The list of published files corresponding to the
             `scene_objects`. Any scene objects that do not have a matching published will be
             omitted from the result (there will not be a FileItem object created for it). This
             can be the result returned by the `sgtk.util.find_publish` method.
         :type publishehd_files: List[dict]
 
-        :return: A list of :class`FileItem` objects representing the scene objects.
+        :return: A list of FileItem objects representing the scene objects.
         :rtype: List[FileItem]
         """
 

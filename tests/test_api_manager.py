@@ -8,14 +8,6 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
-import sys
-
-sys.path.append("C:\\python_libs")
-import ptvsd
-
-ptvsd.enable_attach()
-ptvsd.wait_for_attach()
-
 import datetime
 import os
 import sys
