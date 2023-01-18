@@ -52,7 +52,7 @@ class BreakdownManager(object):
         """
 
         if execute_in_main_thread:
-            # Ensure that the scan scene operation is executedi in the main UI thread. Many
+            # Ensure that the scan scene operation is executed in the main UI thread. Many
             # apps are sensitive to these types of operations happening in other threads.
             return self._bundle.engine.execute_in_main_thread(
                 self._bundle.execute_hook_method, "hook_scene_operations", "scan_scene"

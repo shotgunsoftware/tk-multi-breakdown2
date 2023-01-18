@@ -133,16 +133,16 @@ def bundle(bundle_settings, bundle_hook_methods):
     """
 
     def mock_app_get_setting(name, default_value=None):
-        """
-        Mock the Application method 'get_settings'
-        """
+        """Mock the Application method 'get_settings'"""
         return bundle_settings.get(name, default_value)
 
     def mock_app_execute_hook_method(hook_name, hook_method, **kwargs):
-        """
-        Mock the Application method 'execute_hook_method'.
-        """
+        """Mock the Application method 'execute_hook_method'."""
         return bundle_hook_methods.get(hook_name, {}).get(hook_method, None)
+
+    def mock_engine_execute_hook_in_main_thread(hook_func, *args, **kwargs):
+        """Mock the Application method 'execute_in_main_thread' for executing hook methods."""
+        return hook_func(*args, **kwargs)
 
     def mock_app_shotgun_find(
         entity_type,
@@ -156,9 +156,7 @@ def bundle(bundle_settings, bundle_hook_methods):
         include_archived_projects=True,
         additional_filter_presets=None,
     ):
-        """
-        Mock the Application method 'find' of it's 'shotgun' property.
-        """
+        """Mock the Application method 'find' of it's 'shotgun' property."""
 
         # Currently this mock method only supports one level of sorting.
         order_by_field = order[0]["field_name"] if order else None
@@ -184,21 +182,17 @@ def bundle(bundle_settings, bundle_hook_methods):
     app.sgtk = MagicMock()
     app.shotgun = MagicMock()
     app.shotgun.find = mock_app_shotgun_find
+    app.engine.execute_in_main_thread = mock_engine_execute_hook_in_main_thread
 
     return app
 
 
 @pytest.mark.parametrize(
-    "extra_fields",
-    [
-        None,
-        [],
-        ["one_field"],
-        ["one_field", "two_field", "three_field"],
-    ],
+    "execute_in_main_thread",
+    [None, True, False]
 )
 def test_scan_scene(
-    bundle, find_publish_return_value, bundle_hook_scan_scene_return_value, extra_fields
+    bundle, find_publish_return_value, bundle_hook_scan_scene_return_value, execute_in_main_thread
 ):
     """
     Test the BreakdownManager 'scan_scene' method. This test case aims to strictly test
@@ -207,34 +201,28 @@ def test_scan_scene(
     """
 
     manager = BreakdownManager(bundle)
-    app = manager._bundle
-    extra_fields = extra_fields or []
 
     # Patch the method call 'sgtk.util.find_publish' in the BreakdownManager scan_scene to
     # return the mock data 'find_publish_return_value'.
     with patch("sgtk.util.find_publish", return_value=find_publish_return_value):
         # Call the method that is to be tested.
-        scene_items = manager.scan_scene(extra_fields=extra_fields)
-        if extra_fields is None:
-            # Assert that passing no param for extra_fields is the same as passing None.
-            scene_items2 = manager.scan_scene()
-            assert scene_items == scene_items2
+        if execute_in_main_thread is None:
+            scene_items = manager.scan_scene()
+        else:
+            scene_items = manager.scan_scene(execute_in_main_thread=execute_in_main_thread)
 
     # Assert the result return type.
     assert isinstance(scene_items, list)
 
     # Assert that the scene items are of the right type and have the expected data.
     for index, item in enumerate(scene_items):
-        assert isinstance(item, FileItem)
+        # assert isinstance(item, FileItem)
+        assert isinstance(item, dict)
 
         expected_scene_item = bundle_hook_scan_scene_return_value[index]
-        assert item.node_name == expected_scene_item["node_name"]
-        assert item.node_type == expected_scene_item["node_type"]
-        assert item.extra_data == expected_scene_item.get("extra_data")
-
-        expected_publish_file = find_publish_return_value[item.path]
-        assert expected_publish_file is not None
-        assert item.sg_data == expected_publish_file
+        assert item.get("node_name") == expected_scene_item["node_name"]
+        assert item.get("node_type") == expected_scene_item["node_type"]
+        assert item.get("extra_data") == expected_scene_item.get("extra_data")
 
 
 @pytest.mark.parametrize(
@@ -464,9 +452,7 @@ class TestBreakdownManager(AppTestBase):
     """
 
     def setUp(self):
-        """
-        Set up before any tests are executed.
-        """
+        """Set up before any tests are executed."""
 
         os.environ["TEST_ENVIRONMENT"] = "test"
         super(TestBreakdownManager, self).setUp()
@@ -573,13 +559,16 @@ class TestBreakdownManager(AppTestBase):
             )
 
     def test_scan_scene(self):
-        """
-        Test scanning the current scene.
-        """
+        """Test scanning the current scene."""
 
         scene_items = self.manager.scan_scene()
         assert isinstance(scene_items, list)
-        assert len(scene_items) == len(self.expected_published_files_found)
+
+        file_paths = [item["path"] for item in scene_items]
+        published_files = self.manager.get_published_files_from_file_paths(file_paths)
+        assert len(published_files) == len(self.expected_published_files_found)
+
+        file_items = self.manager.get_file_items(scene_items, published_files)
 
         fields = self.constants.PUBLISHED_FILES_FIELDS + self.app.get_setting(
             "published_file_fields", []
@@ -587,7 +576,7 @@ class TestBreakdownManager(AppTestBase):
 
         found_paths = []
         found_published_files = []
-        for item in scene_items:
+        for item in file_items:
             assert hasattr(item, "sg_data")
             assert isinstance(item.sg_data, dict)
             assert item.sg_data is not None
@@ -637,9 +626,13 @@ class TestBreakdownManager(AppTestBase):
             if extra_fields:
                 fields += extra_fields
 
+            file_paths = [item["path"] for item in scene_items]
+            published_files = self.manager.get_published_files_from_file_paths(file_paths, extra_fields=extra_fields)
+            file_items = self.manager.get_file_items(scene_items, published_files)
+
             found_paths = []
             found_published_files = []
-            for item in scene_items:
+            for item in file_items:
                 assert hasattr(item, "sg_data")
                 assert isinstance(item.sg_data, dict)
                 assert item.sg_data is not None
@@ -668,24 +661,33 @@ class TestBreakdownManager(AppTestBase):
             ] == []
 
     def test_get_latest_published_file(self):
-        """
-        Test getting the latest available published file according to the current item context.
-        """
+        """Test getting the latest available published file according to the current item context."""
 
         scene_items = self.manager.scan_scene()
-        assert isinstance(scene_items, list)
+        file_paths = [item["path"] for item in scene_items]
 
+        published_files = self.manager.get_published_files_from_file_paths(
+            file_paths,
+        )
+        assert isinstance(published_files, dict)
+        for file_path in published_files:
+            assert file_path in file_paths
+
+        file_items = self.manager.get_file_items(scene_items, published_files)
+        assert isinstance(file_items, list)
         try:
             item = next(
                 i
-                for i in scene_items
+                for i in file_items
                 if i.sg_data["path"]["local_path"]
                 == self.first_publish["path"]["local_path"]
             )
-
         except StopIteration:
             # self.first_publish should be in the scan scene result.
-            raise InvalidTestData("Expected test data to be found in result.")
+            assert False, "Expected test data to be found in result."
+
+        # Make sure we found the file item 
+        assert item
 
         latest = self.manager.get_latest_published_file(item)
         assert item.latest_published_file == latest
@@ -695,19 +697,22 @@ class TestBreakdownManager(AppTestBase):
         )
 
     def test_get_published_file_history(self):
-        """
-        Test getting the published history for the selected item.
-        """
+        """Test getting the published history for the selected item."""
 
         scene_items = self.manager.scan_scene()
         assert isinstance(scene_items, list)
 
         # Use any item from the scene
         try:
-            item = scene_items[0]
+            scene_item = scene_items[0]
         except IndexError:
             # Test data is invalid, expected that scan scene would return at least one item.
             raise InvalidTestData("Expected result to have at least one item.")
+
+        published_files = self.manager.get_published_files_from_file_paths(
+            [scene_item["path"]],
+        )
+        item = self.manager.get_file_items([scene_item], published_files)[0]
 
         latest_published_file_before_update = item.latest_published_file
         result = self.manager.get_published_file_history(item)
@@ -744,10 +749,15 @@ class TestBreakdownManager(AppTestBase):
 
         # Use any item from the scene
         try:
-            item = scene_items[0]
+            scene_item = scene_items[0]
         except IndexError:
             # Test data is invalid, expected that scan scene would return at least one item.
             raise InvalidTestData("Expected result to have at least one item.")
+
+        published_files = self.manager.get_published_files_from_file_paths(
+            [scene_item["path"]],
+        )
+        item = self.manager.get_file_items([scene_item], published_files)[0]
 
         latest_published_file_before_update = item.latest_published_file
         possible_extra_fields = [
@@ -791,10 +801,13 @@ class TestBreakdownManager(AppTestBase):
 
         # Use any item from the scene
         try:
-            item = scene_items[0]
+            scene_item = scene_items[0]
         except IndexError:
             # Test data is invalid, expected that scan scene would return at least one item.
             raise InvalidTestData("Expected result to have at least one item.")
+
+        published_files = self.manager.get_published_files_from_file_paths([scene_item["path"]])
+        item = self.manager.get_file_items([scene_item], published_files)[0]
 
         if item.sg_data is None:
             expected_latest_data = {"version_number": 1}
@@ -823,23 +836,25 @@ class TestBreakdownManager(AppTestBase):
         assert item.sg_data == expected_item_sg_data
 
     def test_update_to_specific_version(self):
-        """
-        Test the Breakdown Manager 'update_to_latest_version' method.
-        """
+        """Test the Breakdown Manager 'update_to_latest_version' method."""
 
         scene_items = self.manager.scan_scene()
         assert isinstance(scene_items, list)
         # Make sure there is data to be tested
         assert len(scene_items) > 0
 
+        file_paths = [item["path"] for item in scene_items]
+        published_files = self.manager.get_published_files_from_file_paths(file_paths)
+        file_items = self.manager.get_file_items(scene_items, published_files)
+
         # Use any scene item that has a history
         item = None
         sg_data = None
-        for scene_item in scene_items:
-            history = self.manager.get_published_file_history(scene_item)
+        for file_item in file_items:
+            history = self.manager.get_published_file_history(file_item)
 
             if len(history) > 1:
-                item = scene_item
+                item = file_item
 
                 for history_item in history:
                     if history_item["id"] != item.sg_data["id"]:
