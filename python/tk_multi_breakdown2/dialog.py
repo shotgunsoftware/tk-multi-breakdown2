@@ -130,7 +130,11 @@ class AppDialog(QtGui.QWidget):
         self._dynamic_loading_action.triggered.connect(self._on_toggle_dynamic_loading)
         refresh_button_menu = QtGui.QMenu(self)
         refresh_button_menu.addActions(
-            [refresh_action, self._auto_refresh_option_action, self._dynamic_loading_action]
+            [
+                refresh_action,
+                self._auto_refresh_option_action,
+                self._dynamic_loading_action,
+            ]
         )
         self._ui.refresh_btn.setMenu(refresh_button_menu)
         self._ui.refresh_btn.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
@@ -247,19 +251,45 @@ class AppDialog(QtGui.QWidget):
         # TODO allow this list of filters to be defined in the config.
         self._filter_menu.set_accept_fields(
             [
-                "{sg_data_role}.PublishedFile.created_at".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.created_by.HumanUser.name".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.description".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.entity".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.name".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.project".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.published_file_type".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.sg_status_list".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.tags".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.task".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.task.Task.sg_status_list".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{sg_data_role}.PublishedFile.version_number".format(sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE),
-                "{status_model_role}.status".format(status_model_role=self._file_model.STATUS_FILTER_DATA_ROLE),
+                "{sg_data_role}.PublishedFile.created_at".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.created_by.HumanUser.name".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.description".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.entity".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.name".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.project".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.published_file_type".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.sg_status_list".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.tags".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.task".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.task.Task.sg_status_list".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.version_number".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{status_model_role}.status".format(
+                    status_model_role=self._file_model.STATUS_FILTER_DATA_ROLE
+                ),
             ]
         )
         self._filter_menu.set_filter_model(self._file_proxy_model)
@@ -400,8 +430,12 @@ class AppDialog(QtGui.QWidget):
         self._scene_operations_hook = self._bundle.create_hook_instance(
             scene_operations_hook_path
         )
-        self.__can_register_scene_change_callback = hasattr(self.scene_operations_hook, "register_scene_change_callback")
-        self.__can_unregister_scene_change_callback = hasattr(self.scene_operations_hook, "unregister_scene_change_callback")
+        self.__can_register_scene_change_callback = hasattr(
+            self.scene_operations_hook, "register_scene_change_callback"
+        )
+        self.__can_unregister_scene_change_callback = hasattr(
+            self.scene_operations_hook, "unregister_scene_change_callback"
+        )
         self._listen_for_events(self._auto_refresh)
 
         # -----------------------------------------------------
@@ -521,7 +555,9 @@ class AppDialog(QtGui.QWidget):
 
         self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
         self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
-        self._settings_manager.store(self.DYNAMIC_LOADING_SETTING, self._dynamic_loading)
+        self._settings_manager.store(
+            self.DYNAMIC_LOADING_SETTING, self._dynamic_loading
+        )
 
         if six.PY2:
             self._settings_manager.store(
@@ -944,16 +980,16 @@ class AppDialog(QtGui.QWidget):
     def _reload_file_model(self):
         """
         Reload the file model.
-        
+
         This will scan the scene again to gather any new file data.
         """
 
         if not self._file_model:
             # Cannot reload the model if it does not exist yet.
             return
-        
+
         self._file_model.reload()
-    
+
     def _scene_changed(self, event_type="reload", data=None):
         """
         Handle a scene changed event.
@@ -1000,7 +1036,7 @@ class AppDialog(QtGui.QWidget):
     def _listen_for_events(self, listen):
         """
         Listen for DCC specific events that require the app to update.
-        
+
         :param listen: True will listen for DCC events, else False will to not listen for events.
         :type listen: bool
         """
@@ -1192,7 +1228,7 @@ class AppDialog(QtGui.QWidget):
             if selected_index == changed_index:
                 # The item that changed was the currently selected on, update the details panel.
                 self._setup_details_panel([selected_index])
-                
+
                 # Exit since there the only index was found
                 return
 

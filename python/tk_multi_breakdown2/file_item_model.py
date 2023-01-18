@@ -88,7 +88,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_LOCKED: "Locked",
     }
 
-
     def __init__(
         self,
         parent,
@@ -133,7 +132,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         # to use the QModelIndex.internalPointer data storage (in Python, the internal pointer
         # object is garbage collected and crashes when trying to acces it)
         self.__data = {id(None): self.__root_item}
-
 
         # ------------------------------------------------------------------------------------
 
@@ -297,11 +295,11 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         ptr_id = index.internalId()
         return self.__data.get(ptr_id)
-    
+
     def __set_internal_data(self, file_item):
         """
         Store the layer item object data in the model's internal data storage.
-        
+
         :param layer_item: The layer item obejct to store.
         :type layer_item: LayerTreeItem
         """
@@ -312,7 +310,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
     def __remove_internal_data(self, index):
         """
         Store the layer item object data in the model's internal data storage.
-        
+
         :param layer_item: The layer item obejct to store.
         :type layer_item: LayerTreeItem
         """
@@ -340,7 +338,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         if not self.hasIndex(row, column, parent):
             return QtCore.QModelIndex()
-        
+
         if not parent.isValid():
             parent_item = self.__root_item
         else:
@@ -357,7 +355,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         if not index.isValid():
             return QtCore.QModelIndex()
-        
+
         child_item = self.__get_internal_data(index)
         if not child_item:
             return QtCore.QModelIndex()
@@ -365,7 +363,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         parent_item = child_item.parent_item
         if not parent_item or parent_item is self.__root_item:
             return QtCore.QModelIndex()
-        
+
         row = parent_item.row()
         return self.createIndex(row, 0, parent_item)
 
@@ -381,7 +379,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             parent_item = self.__root_item
         else:
             parent_item = self.__get_internal_data(parent)
-        
+
         return parent_item.child_count()
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
@@ -437,9 +435,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 return file_item.sg_data.get("created_at")
 
             if role == FileTreeItemModel.FILE_ITEM_TAGS_ROLE:
-                return file_item.sg_data.get(
-                    "tags"
-                ) or file_item.sg_data.get("tag_list")
+                return file_item.sg_data.get("tags") or file_item.sg_data.get(
+                    "tag_list"
+                )
 
             if role == FileTreeItemModel.STATUS_ROLE:
                 # NOTE if we ever need to know if the file is up to date or not, while
@@ -536,12 +534,14 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                             locked = False
 
                     return (
-                        FileTreeItemModel.STATUS_LOCKED if locked else FileTreeItemModel.STATUS_UP_TO_DATE
+                        FileTreeItemModel.STATUS_LOCKED
+                        if locked
+                        else FileTreeItemModel.STATUS_UP_TO_DATE
                     )
-                
+
                 # Group has no children, it should not exist.
                 return None
-        
+
         # base model item handling here for role methods
         result = None
 
@@ -559,7 +559,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         else:
             result = None
 
-        return shotgun_model.util.sanitize_qt(result) 
+        return shotgun_model.util.sanitize_qt(result)
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         """Sets the role data for the item at index to value."""
@@ -570,7 +570,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         model_item = self.__get_internal_data(index)
         if not model_item:
             return False
-        
+
         changed = False
         change_roles = [role]
 
@@ -605,12 +605,11 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 if (
                     not file_item.latest_published_file
                     or not value
-                    or file_item.latest_published_file.get("id")
-                    != value.get("id")
+                    or file_item.latest_published_file.get("id") != value.get("id")
                 ):
                     file_item.latest_published_file = value
                     changed = True
-        
+
         if changed:
             self.dataChanged.emit(index, index, change_roles)
 
@@ -627,8 +626,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             parent_item = self.__root_item
         else:
             parent_item = self.__get_internal_data(parent)
-        
-        # Insert the rows now 
+
+        # Insert the rows now
         if row == parent_item.child_count():
             # Append to the parent item
             for _ in range(count):
@@ -660,7 +659,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 parent_item = self.__get_internal_data(parent)
 
             # Update the model internal data
-            del parent_item.child_items[row:row + count]
+            del parent_item.child_items[row : row + count]
             self.__remove_internal_data(index)
 
             success = True
@@ -736,7 +735,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         self.__pending_latest_published_files_data_request = None
         self.__pending_version_requests.clear()
         self.__pending_thumbnail_requests.clear()
-
 
     #########################################################################################################
     # Public FileModel methods
@@ -841,7 +839,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
     def add_item(self, file_item_data):
         """
         Add a new file item to the model from the given data.
-        
+
         :param file_item_data: The data to create the new file item.
         :type file_item_data: dict
 
@@ -862,7 +860,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         file_items = self._manager.get_file_items([file_item_data], published_files)
         if not file_items:
             return False
-        
+
         file_item = file_items[0]
         if not file_item.sg_data:
             # Invalid file item, cannot continue.
@@ -880,7 +878,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             success = self.insertRows(group_row, 1)
             if not success:
                 return False
-            
+
             group_index = self.index(group_row)
             self.setData(group_index, group_by_id, self.GROUP_ID_ROLE)
             self.setData(group_index, group_by_display, self.GROUP_DISPLAY_ROLE)
@@ -906,7 +904,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # Update the internal data with the new file item.
             self.__scene_objects.append(file_item_data)
             self.__file_items.append(file_item)
-        
+
         return success
 
     @sgtk.LogManager.log_timing
@@ -928,12 +926,12 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         index = self.index_from_file_path(file_path)
         if not index.isValid():
             return False
-        
+
         file_item_to_remove = self.data(index, self.FILE_ITEM_ROLE)
         if not file_item_to_remove:
             # Invalid index data
             return False
-        
+
         file_path = file_item_to_remove.path
         for i, obj in enumerate(self.__scene_objects):
             if obj["path"] == file_path:
@@ -945,13 +943,13 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 del self.__file_items[i]
                 break
 
-        parent_index = index.parent() 
+        parent_index = index.parent()
         success = self.removeRows(index.row(), 1, parent_index)
 
         if not success:
             # Failed to remove item, return failure.
             return False
-        
+
         # Check if by remove this item, the item's group is now empty. If so, remove the group
         if not parent_index.isValid():
             # No parent group to check, return success.
@@ -965,9 +963,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # Remove the group since it is now empty. Return the result of removing the group.
             return self.removeRows(parent_index.row(), 1, parent_index.parent())
 
-        # Item removed successfully. 
+        # Item removed successfully.
         return True
-        
+
     def get_group_by_fields(self):
         """
         Get the fields that are available to group the file items by.
@@ -1001,7 +999,10 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             for child_row in range(num_children):
                 child_index = self.index(child_row, 0, group_index)
 
-                if self.data(child_index, FileTreeItemModel.FILE_ITEM_ROLE) == file_item:
+                if (
+                    self.data(child_index, FileTreeItemModel.FILE_ITEM_ROLE)
+                    == file_item
+                ):
                     child_item = self.__get_internal_data(child_index)
                     return child_item
 
@@ -1062,7 +1063,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         new_group_id, new_group_display = self._get_file_group_info(new_file_item_data)
         new_group_item = self._group_items.get(new_group_id)
         if new_group_item is None:
-            new_group_item = FileTreeModelItem(group_id=new_group_id, group_display=new_group_display)
+            new_group_item = FileTreeModelItem(
+                group_id=new_group_id, group_display=new_group_display
+            )
             self._group_items[new_group_id] = new_group_item
             self.__root_item.append_child(new_group_item)
             self.appendRow(new_group_item)
@@ -1124,7 +1127,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             group_by_id, group_by_display = self._get_file_group_info(file_item)
             if self._group_items.get(group_by_id) is None:
-                group_item = FileTreeModelItem(group_id=group_by_id, group_display=group_by_display)
+                group_item = FileTreeModelItem(
+                    group_id=group_by_id, group_display=group_by_display
+                )
                 self._group_items[group_by_id] = group_item
                 self.__set_internal_data(group_item)
             else:
@@ -1190,7 +1195,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 latest_published_file = self._get_latest_published_file_for_item(
                     file_item, published_files_mapping
                 )
-                self.setData(child_index,
+                self.setData(
+                    child_index,
                     latest_published_file,
                     FileTreeItemModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,
                 )
@@ -1469,7 +1475,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             parent_index = QtCore.QModelIndex()
 
         file_item_row = item.row()
-        return self.index(file_item_row, 0, parent_index)                
+        return self.index(file_item_row, 0, parent_index)
 
     # ----------------------------------------------------------------------------------------
     # Background task and Data Retriever callbacks
@@ -1510,7 +1516,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             latest_pf_data = data.get("sg")
             file_item_index = self.__get_index_from_item(file_model_item)
             self.setData(
-                file_item_index, latest_pf_data, FileTreeItemModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE
+                file_item_index,
+                latest_pf_data,
+                FileTreeItemModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE,
             )
 
         elif uid == self.__pending_latest_published_files_data_request:
@@ -1554,7 +1562,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         :param uid: Unique id associated with the task
         :param group_id: The group the task is associated with
-        :param result: The data returned by the task 
+        :param result: The data returned by the task
         """
 
         if uid == self.__pending_published_file_data_request:
@@ -1614,7 +1622,6 @@ class FileModelItem:
         """Initialize the file item."""
 
         self.set_file_item(file_item)
-
 
     def __eq__(self, other):
         """
@@ -1678,7 +1685,7 @@ class FileTreeModelItem(FileModelItem):
 
     def __init__(self, file_item=None, group_id=None, group_display=None):
         """Initialize the file tree item."""
-        
+
         super(FileTreeModelItem, self).__init__(file_item)
 
         self.__group_id = group_id
@@ -1686,7 +1693,6 @@ class FileTreeModelItem(FileModelItem):
 
         self.__child_items = []
         self.__parent_item = None
-
 
     def __eq__(self, other):
         """
@@ -1720,7 +1726,7 @@ class FileTreeModelItem(FileModelItem):
 
     # ----------------------------------------------------------------------
     # Properties
-    
+
     @property
     def group_id(self):
         """Get or set the unique group id for this item."""
@@ -1743,16 +1749,16 @@ class FileTreeModelItem(FileModelItem):
     def child_items(self):
         """Get the layer tree item's child items."""
         return self.__child_items
-    
+
     @property
     def parent_item(self):
         """Get or set the layer tree item's paretn item."""
         return self.__parent_item
-    
+
     @parent_item.setter
     def parent_item(self, value):
         self.__parent_item = value
-    
+
     # ----------------------------------------------------------------------
     # Public methods
 
@@ -1765,7 +1771,7 @@ class FileTreeModelItem(FileModelItem):
         """
 
         self.__child_items.append(child_item)
-    
+
     def child(self, row):
         """
         Return the child item at the specified row.
@@ -1779,18 +1785,18 @@ class FileTreeModelItem(FileModelItem):
         if row < 0 or row >= len(self.__child_items):
             return None
         return self.__child_items[row]
-    
+
     def child_count(self):
         """Return the number of children under this item."""
 
         return len(self.__child_items)
-    
+
     def row(self):
         """Return the item's location within its parent's list of items."""
 
         if self.parent_item is None:
             return 0
-        
+
         return self.__parent_item.child_items.index(self)
 
     def reset(self):
@@ -1798,4 +1804,3 @@ class FileTreeModelItem(FileModelItem):
 
         self.__parent_item = None
         self.__child_items = []
-    

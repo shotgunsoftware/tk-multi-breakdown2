@@ -8,6 +8,14 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+import sys
+
+sys.path.append("C:\\python_libs")
+import ptvsd
+
+ptvsd.enable_attach()
+ptvsd.wait_for_attach()
+
 import datetime
 import os
 import sys
@@ -187,12 +195,12 @@ def bundle(bundle_settings, bundle_hook_methods):
     return app
 
 
-@pytest.mark.parametrize(
-    "execute_in_main_thread",
-    [None, True, False]
-)
+@pytest.mark.parametrize("execute_in_main_thread", [None, True, False])
 def test_scan_scene(
-    bundle, find_publish_return_value, bundle_hook_scan_scene_return_value, execute_in_main_thread
+    bundle,
+    find_publish_return_value,
+    bundle_hook_scan_scene_return_value,
+    execute_in_main_thread,
 ):
     """
     Test the BreakdownManager 'scan_scene' method. This test case aims to strictly test
@@ -209,7 +217,9 @@ def test_scan_scene(
         if execute_in_main_thread is None:
             scene_items = manager.scan_scene()
         else:
-            scene_items = manager.scan_scene(execute_in_main_thread=execute_in_main_thread)
+            scene_items = manager.scan_scene(
+                execute_in_main_thread=execute_in_main_thread
+            )
 
     # Assert the result return type.
     assert isinstance(scene_items, list)
@@ -627,7 +637,9 @@ class TestBreakdownManager(AppTestBase):
                 fields += extra_fields
 
             file_paths = [item["path"] for item in scene_items]
-            published_files = self.manager.get_published_files_from_file_paths(file_paths, extra_fields=extra_fields)
+            published_files = self.manager.get_published_files_from_file_paths(
+                file_paths, extra_fields=extra_fields
+            )
             file_items = self.manager.get_file_items(scene_items, published_files)
 
             found_paths = []
@@ -686,7 +698,7 @@ class TestBreakdownManager(AppTestBase):
             # self.first_publish should be in the scan scene result.
             assert False, "Expected test data to be found in result."
 
-        # Make sure we found the file item 
+        # Make sure we found the file item
         assert item
 
         latest = self.manager.get_latest_published_file(item)
@@ -806,7 +818,9 @@ class TestBreakdownManager(AppTestBase):
             # Test data is invalid, expected that scan scene would return at least one item.
             raise InvalidTestData("Expected result to have at least one item.")
 
-        published_files = self.manager.get_published_files_from_file_paths([scene_item["path"]])
+        published_files = self.manager.get_published_files_from_file_paths(
+            [scene_item["path"]]
+        )
         item = self.manager.get_file_items([scene_item], published_files)[0]
 
         if item.sg_data is None:

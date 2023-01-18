@@ -23,6 +23,7 @@ class BreakdownSceneOperations(HookBaseClass):
 
     This implementation handles detection of Alias references.
     """
+
     def __init__(self, *args, **kwargs):
         """Class constructor."""
 
@@ -31,7 +32,6 @@ class BreakdownSceneOperations(HookBaseClass):
         # Keep track of the scene change callbacks that are registered, so that they can be
         # disconnected at a later time.
         self.__alias_event_callbacks = []
-
 
     def scan_scene(self):
         """
@@ -117,7 +117,7 @@ class BreakdownSceneOperations(HookBaseClass):
     def update_reference(self, path, extra_data, sg_data):
         """
         Update the Alias reference from the given data.
-        
+
         :param path: The new file path to set the Alias reference to.
         :type path: str
         :param extra_data: Additional data containing the existing Alias reference file path,
@@ -157,7 +157,9 @@ class BreakdownSceneOperations(HookBaseClass):
                     self.logger.debug("Translating file to wref...")
 
                     # get the Alias Translations framework to translate the file to wref before importing it
-                    framework = self.load_framework("tk-framework-aliastranslations_v0.x.x")
+                    framework = self.load_framework(
+                        "tk-framework-aliastranslations_v0.x.x"
+                    )
                     if not framework:
                         self.logger.error(
                             "Couldn't load tk-framework-aliastranslations. Skipping reference update for file {}.".format(
@@ -216,7 +218,11 @@ class BreakdownSceneOperations(HookBaseClass):
             events.append(alias_api.AlMessageType.ReferenceFileAdded)
 
         # Create the scene change callback to register with the Alias event watcher.
-        scene_change_cb = lambda result, cb=scene_change_callback: self.__handle_event_callback(result, cb)
+        scene_change_cb = (
+            lambda result, cb=scene_change_callback: self.__handle_event_callback(
+                result, cb
+            )
+        )
 
         # Keep track of the Alias event callbacks that will be registered, so that they can
         # properly be unregistered on shut down.
@@ -231,17 +237,15 @@ class BreakdownSceneOperations(HookBaseClass):
 
         # Unregister the event callbacks from the engine's event watcher
         for callback, events in self.__alias_event_callbacks:
-            self.parent.engine.event_watcher.unregister_alias_callback(
-                callback, events
-            )
+            self.parent.engine.event_watcher.unregister_alias_callback(callback, events)
 
     def __handle_event_callback(self, event_result, scene_change_callback):
         """
         Intermediate callback handler for Alias events.
-        
+
         Process the result returned by the Alias event that triggered the callback, to call
         the scene callback function with the appropriate parameters.
-        
+
         :param event_result: The object returned by the Alias event.
         :type event_result: alias_api.MessageResult
         :param scene_change_callback: The callback to execute.
@@ -255,7 +259,10 @@ class BreakdownSceneOperations(HookBaseClass):
                 data=event_result.reference_file_1_path,
             )
 
-        elif hasattr(alias_api.AlMessageType, "ReferenceFileAdded") and event_result.message_type == alias_api.AlMessageType.ReferenceFileAdded:
+        elif (
+            hasattr(alias_api.AlMessageType, "ReferenceFileAdded")
+            and event_result.message_type == alias_api.AlMessageType.ReferenceFileAdded
+        ):
             # Add the new reference to the model
             file_item_data = {
                 "node_name": event_result.reference_file_1_name,

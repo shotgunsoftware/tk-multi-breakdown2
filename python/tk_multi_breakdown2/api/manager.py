@@ -57,7 +57,7 @@ class BreakdownManager(object):
             return self._bundle.engine.execute_in_main_thread(
                 self._bundle.execute_hook_method, "hook_scene_operations", "scan_scene"
             )
-        
+
         # Execute in the current thread
         return self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
 

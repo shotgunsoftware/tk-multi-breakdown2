@@ -1242,7 +1242,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         :param uid: Unique id associated with the task
         :param group_id: The group the task is associated with
-        :param result: The data returned by the task 
+        :param result: The data returned by the task
         """
 
         if uid == self.__pending_published_file_data_request:

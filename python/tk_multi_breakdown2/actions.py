@@ -184,7 +184,11 @@ class UpdateToLatestVersionAction(Action):
             # The file item object that the model holds will be updated by the manager. The model
             # just needs to emit a signal that the data has changed.
             index = self._get_index_for_item(file_item)
-            self._model.dataChanged.emit(index, index, [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE])
+            self._model.dataChanged.emit(
+                index,
+                index,
+                [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
+            )
 
 
 class UpdateToSpecificVersionAction(Action):
@@ -219,4 +223,8 @@ class UpdateToSpecificVersionAction(Action):
         # The file item object that the model holds will be updated by the manager. The model
         # just needs to emit a signal that the data has changed.
         index = self._get_index_for_item(file_item)
-        self._model.dataChanged.emit(index, index, [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE])
+        self._model.dataChanged.emit(
+            index,
+            index,
+            [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
+        )
