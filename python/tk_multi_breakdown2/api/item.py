@@ -9,6 +9,7 @@
 # not expressly granted therein are reserved by Autodesk, Inc.
 
 
+# TODO create subclass for unpublished and published and non-template? paths
 class FileItem(object):
     """
     Encapsulate details about a single version of a file. Each instance represents a single "version"
@@ -29,11 +30,22 @@ class FileItem(object):
         self._node_name = node_name
         self._node_type = node_type
         self._path = path
-        self._sg_data = sg_data
-        self._extra_data = extra_data
-        self._latest_published_file = None
+
         self._locked = False
         self._thumbnail_path = None
+        self._extra_data = extra_data
+
+        # published data
+        self._sg_data = sg_data
+        self._latest_published_file = None
+
+        # tempalte (unpublished data)
+        # TODO clean this up
+        self.template = None
+        self.template_fields = None
+        self.latest_version_number = None
+        self.all_versions = None
+
 
     def __eq__(self, other):
         """
@@ -43,11 +55,22 @@ class FileItem(object):
         :type other: FileItem
         """
 
+        if self.sg_data:
+            return (
+                self.node_name == other.node_name
+                and self.node_type == other.node_type
+                and self.path == other.path
+                and self.sg_data.get("id") == other.sg_data.get("id")
+            # FIXME cannot just compare the id, need to consider the entity type and project
+            # and self.sg_data.get("project") == other.sg_data.get("project")
+            # and self.sg_data.get("type") == other.sg_data.get("type")
+        )
+
+        # FIXME need to compare templates? 
         return (
             self.node_name == other.node_name
             and self.node_type == other.node_type
             and self.path == other.path
-            and self.sg_data.get("id") == other.sg_data.get("id")
         )
 
     # ----------------------------------------------------------------------------------------
@@ -56,9 +79,20 @@ class FileItem(object):
     @property
     def highest_version_number(self):
         """Get highest version number available in the ShotGrid database for this file."""
+        if self.latest_version_number:
+            return self.latest_version_number
         if self._latest_published_file:
             return self._latest_published_file.get("version_number")
         return None
+
+    @property
+    def version_number(self):
+        """Return the version number for this file."""
+        if self.sg_data:
+            return self.sg_data.get("version_number", -1)
+        if self.template_fields:
+            return self.template_fields.get("version", -1)
+        return -1
 
     @property
     def node_name(self):
@@ -150,3 +184,16 @@ class FileItem(object):
             "extra_data": self.extra_data,
             "sg_data": self.sg_data,
         }
+
+    # def get_sg_data(self):
+    #     """
+    #     """
+
+    #     if self.sg_data:
+    #         return self.sg_data
+        
+    #     if self.template and self.template_fields:
+    #         # Build ShotGrid data dictionary from template fields.
+    #         return self.template_fields
+        
+    #     return {}

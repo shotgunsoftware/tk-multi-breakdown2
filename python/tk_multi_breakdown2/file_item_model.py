@@ -380,6 +380,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         else:
             parent_item = self.__get_internal_data(parent)
 
+        if not parent_item:
+            return 0
+
         return parent_item.child_count()
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
@@ -395,6 +398,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if model_item.file_item:
             # It is a file item
             file_item = model_item.file_item
+
+            if role == QtCore.Qt.DisplayRole:
+                return file_item.node_name
 
             if role == QtCore.Qt.BackgroundRole:
                 return QtGui.QApplication.palette().midlight()
@@ -432,12 +438,16 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 return file_item.sg_data
 
             if role == FileTreeItemModel.FILE_ITEM_CREATED_AT_ROLE:
-                return file_item.sg_data.get("created_at")
+                if file_item.sg_data:
+                    return file_item.sg_data.get("created_at")
+                return None
 
             if role == FileTreeItemModel.FILE_ITEM_TAGS_ROLE:
-                return file_item.sg_data.get("tags") or file_item.sg_data.get(
-                    "tag_list"
-                )
+                if file_item.sg_data:
+                    return file_item.sg_data.get("tags") or file_item.sg_data.get(
+                        "tag_list"
+                    )
+                return None
 
             if role == FileTreeItemModel.STATUS_ROLE:
                 # NOTE if we ever need to know if the file is up to date or not, while
@@ -448,12 +458,14 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                     return FileTreeItemModel.STATUS_LOCKED
 
                 if file_item.highest_version_number:
+                    # if file_item.sg_data:
                     if (
-                        file_item.sg_data["version_number"]
-                        < file_item.highest_version_number
+                        # file_item.sg_data["version_number"]
+                        file_item.version_number < file_item.highest_version_number
                     ):
                         return FileTreeItemModel.STATUS_OUT_OF_SYNC
                     return FileTreeItemModel.STATUS_UP_TO_DATE
+                    # return None
 
                 # Item may still loading, too early to determine the status.
                 return FileTreeItemModel.STATUS_NONE
@@ -862,16 +874,22 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             return False
 
         file_item = file_items[0]
-        if not file_item.sg_data:
-            # Invalid file item, cannot continue.
-            return False
+        # FIXME allow non-published references
+        # if not file_item.sg_data:
+        #     # Invalid file item, cannot continue.
+        #     return False
 
         # Get the latest published file for the new item.
-        item_published_files = self._get_published_files_for_items(file_items)
-        file_item.latest_published_file = item_published_files[0]
+        latest_published_file = None
+        if file_item.sg_data:
+            item_published_files = self._get_published_files_for_items([file_item])
+            if item_published_files:
+                latest_published_file = item_published_files[0]
+        file_item.latest_published_file = latest_published_file
 
         # Now we have all the data necessary to add the new file item to the model.
-        group_by_id, group_by_display = self._get_file_group_info(file_item)
+        # group_by_id, group_by_display = self._get_file_group_info(file_item)
+        group_by_id = self._get_file_group_info(file_item)
         if self._group_items.get(group_by_id) is None:
             # Insert a new row in the model for the new file item grouping
             group_row = self.__root_item.child_count()
@@ -881,7 +899,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             group_index = self.index(group_row)
             self.setData(group_index, group_by_id, self.GROUP_ID_ROLE)
-            self.setData(group_index, group_by_display, self.GROUP_DISPLAY_ROLE)
+            # self.setData(group_index, group_by_display, self.GROUP_DISPLAY_ROLE)
+            self.setData(group_index, group_by_id, self.GROUP_DISPLAY_ROLE)
 
             group_item = self.__get_internal_data(group_index)
             self._group_items[group_by_id] = group_item
@@ -1051,7 +1070,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         # Get the current grouping and remove the file model item from it, and remove the
         # grouping totally if it becomes empty after removing the item.
-        cur_group_id, _ = self._get_file_group_info(cur_file_item_data)
+        # cur_group_id, _ = self._get_file_group_info(cur_file_item_data)
+        cur_group_id = self._get_file_group_info(cur_file_item_data)
         cur_group_item = self._group_items.get(cur_group_id)
         file_model_item = cur_group_item.takeRow(file_model_item_row)
         if not cur_group_item.hasChildren():
@@ -1060,11 +1080,13 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         # Get the new grouping, create the group item if it does not yet exist, and add the
         # file model item to it
-        new_group_id, new_group_display = self._get_file_group_info(new_file_item_data)
+        new_group_id = self._get_file_group_info(new_file_item_data)
+        # new_group_id, new_group_display = self._get_file_group_info(new_file_item_data)
         new_group_item = self._group_items.get(new_group_id)
         if new_group_item is None:
             new_group_item = FileTreeModelItem(
-                group_id=new_group_id, group_display=new_group_display
+                # group_id=new_group_id, group_display=new_group_display
+                group_id=new_group_id, group_display=new_group_id
             )
             self._group_items[new_group_id] = new_group_item
             self.__root_item.append_child(new_group_item)
@@ -1119,16 +1141,21 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         # is more efficient to call appendRows rather than appendRow for each item.
         file_items_by_group = {}
 
+        # FIXME this list of file items will have two per item. Need to pick one..
         for file_item in self.__file_items:
-            # if the item doesn't have any associated shotgun data, it means that the file is not a
-            # Published File so skip it
-            if not file_item.sg_data:
-                continue
 
-            group_by_id, group_by_display = self._get_file_group_info(file_item)
+            # FIXME allow non-published references
+            # # if the item doesn't have any associated shotgun data, it means that the file is not a
+            # # Published File so skip it
+            # if not file_item.sg_data:
+            #     continue
+
+            # group_by_id, group_by_display = self._get_file_group_info(file_item)
+            group_by_id = self._get_file_group_info(file_item)
             if self._group_items.get(group_by_id) is None:
                 group_item = FileTreeModelItem(
-                    group_id=group_by_id, group_display=group_by_display
+                    # group_id=group_by_id, group_display=group_by_display
+                    group_id=group_by_id, group_display=group_by_id
                 )
                 self._group_items[group_by_id] = group_item
                 self.__set_internal_data(group_item)
@@ -1318,6 +1345,12 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :rtype: dict
         """
 
+        if not file_item.sg_data:
+            # TODO if file item has a templated path then we can search the local working
+            # files based on the path template to look for newer versions (see breakdown original
+            # where it gets the template from th path and then gets all other paths for diff versions)
+            return None
+
         name = file_item.sg_data.get("name")
 
         if not file_item.sg_data.get("entity"):
@@ -1359,7 +1392,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :return: None
         """
 
-        if not file_item.sg_data.get("image"):
+        if file_item.sg_data is None or not file_item.sg_data.get("image"):
             return
 
         request_id = self._sg_data_retriever.request_thumbnail(
@@ -1378,6 +1411,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
     def _get_file_group_info(self, file_item):
         """
+        TODO update doc
+
         Get the group by information for the given file item.
 
         :param file_item: The file item to get the group by info from.
@@ -1387,27 +1422,19 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :rtype: tuple<str, str>
         """
 
-        if self.group_by not in file_item.sg_data:
-            return ("", "")
+        if file_item.sg_data is None:
+            return "Unpublished Items"
 
         # Get the group by field data
-        data = file_item.sg_data[self.group_by]
-
-        # Attempt to construct the id for the grouping
-        try:
-            group_by_id = "{type}.{id}".format(
-                type=data.get("type", "NoType"), id=data["id"]
-            )
-        except:
-            # Fall back to just using the data itself as the id
-            group_by_id = str(data)
+        data = file_item.sg_data.get(self.group_by)
 
         # Construct the group display value
+        default_group = "Uncategorized"
         if not data:
-            group_by_display = "None"
+            group_by_display = default_group
 
         elif isinstance(data, dict):
-            group_by_display = data["name"]
+            group_by_display = data.get("name", default_group)
 
         elif isinstance(data, (list, tuple)):
             item_strings = []
@@ -1421,7 +1448,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         else:
             group_by_display = str(data)
 
-        return (group_by_id, group_by_display)
+        return group_by_display
 
     # ----------------------------------------------------------------------------------------
     # Polling methods
@@ -1523,6 +1550,41 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         elif uid == self.__pending_latest_published_files_data_request:
             self.__pending_latest_published_files_data_request = None
+
+            # FIXME hack in finding latest for unpublished files here for now.
+            for file_item in self.__file_items:
+                if not file_item.template or not file_item.template_fields:
+                    continue
+
+                # Search local file system for other versions to find the latest.
+                # TODO implement auto-refresh for unpublished files
+                # NOTE logic taken from Breakdown App
+
+                # skip keys are all abstract keys + 'version' & 'eye'
+                skip_keys = set(["version", "eye"])
+
+                # find all abstract (Sequence) keys from the template to add to skip keys
+                for key_name, key in file_item.template.keys.items():
+                    if key.is_abstract:
+                        skip_keys.add(key_name)
+
+                # then find all files, skipping these keys
+                all_versions = self._app.sgtk.paths_from_template(
+                    file_item.template, file_item.template_fields, skip_keys=skip_keys
+                )
+
+                # now look for the highest version number...
+                highest_version = 0
+                all_version_numbers = []
+                for ver in all_versions:
+                    curr_fields = file_item.template.get_fields(ver)
+                    curr_version = curr_fields["version"]
+                    all_version_numbers.append(curr_version)
+                    if curr_version > highest_version:
+                        highest_version = curr_version
+                file_item.latest_version_number = highest_version
+                file_item.all_versions = sorted(all_version_numbers, reverse=True)
+
             published_files_mapping = self._get_published_files_mapping(
                 data.get("sg", [])
             )
@@ -1580,6 +1642,14 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                     self.__file_items, self._sg_data_retriever
                 )
             )
+            if self.__pending_latest_published_files_data_request is None:
+                if self.__is_reloading:
+                    self._build_model_from_file_items()
+                    if self.dynamic_loading:
+                        # Emit signals that data has finished loading. Any data still loading will
+                        # be dynamically populated as it is retrieved (e.g. thumbnails).
+                        self._finish_reload()
+
 
     def _on_background_task_failed(self, uid, group_id, msg, stack_trace):
         """

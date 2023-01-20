@@ -134,9 +134,17 @@ class BreakdownSceneOperations(HookBaseClass):
 
         # if the new path is not a path to a wref file, we need to handle the conversion
         if ext != ".wref":
-            tk = self.parent.engine.get_tk_from_project_id(sg_data["project"]["id"])
+            if sg_data:
+                tk = self.parent.engine.get_tk_from_project_id(sg_data["project"]["id"])
+                # source_template = tk.template_from_path(path)
+                reference_template = self.parent.engine.get_reference_template(tk, sg_data)
+            else:
+                # Get templates from path
+                tk = sgtk.sgtk_from_path(path)
+                ctx = tk.context_from_path(path)
+                reference_template = self.parent.engine.get_reference_template_from_context(tk, ctx)
+
             source_template = tk.template_from_path(path)
-            reference_template = self.parent.engine.get_reference_template(tk, sg_data)
 
             if source_template and reference_template:
 
@@ -147,7 +155,9 @@ class BreakdownSceneOperations(HookBaseClass):
                 # do the same for the old path in order to get the associated reference path
                 template_fields = source_template.get_fields(old_path)
                 template_fields["alias.extension"] = ext[1:]
-                old_path = reference_template.apply_fields(template_fields)
+                old_reference_path = reference_template.apply_fields(template_fields)
+                if os.path.exists(old_reference_path):
+                    old_path = old_reference_path
 
                 if os.path.exists(reference_path):
                     self.logger.debug("File already converted!")

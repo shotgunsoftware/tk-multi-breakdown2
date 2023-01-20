@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+import copy
+
 import sgtk
 
 from .item import FileItem
@@ -132,13 +134,62 @@ class BreakdownManager(object):
         """
 
         file_items = []
+        file_names = set()
 
         for obj in scene_objects:
-            if obj["path"] in published_files:
-                file_item = FileItem(obj["node_name"], obj["node_type"], obj["path"])
+            file_name = obj["node_name"]
+            file_path = obj["path"]
+
+            unpublished = file_path not in published_files
+            if unpublished and file_name in file_names:
+                continue
+
+            file_item = None
+            if unpublished:
+                # Logic taken from Breakdown app
+
+                # Try to extract SG data from the path by checking for a template.
+                # NOTE we can optimize this by storing the tk by project path so we don't need to do the whole look up each time
+                try:
+                    tk = sgtk.sgtk_from_path(file_path)
+                    matching_template = tk.template_from_path(file_path)
+                except:
+                    matching_template = None
+
+                # TODO see whats different here
+                bundle_sgtk = self._bundle.sgtk
+                bundle_matching_template = self._bundle.sgtk.template_from_path(file_path)
+
+                if matching_template:
+                    # Check for a version number in the path
+                    fields = matching_template.get_fields(file_path)
+                    if "version" in fields:
+                        # Remove all abstract  fields from keys so the default value will get
+                        # used when building a path from the template.
+                        for key_name, key in matching_template.keys.items():
+                            if key_name in fields and key.is_abstract:
+                                del fields[key_name]
+                        
+                        # normalize the eye field?
+                        # fields["eye"] = "%V"
+
+                        # Build the normalized path to find corresponding ShotGrid files
+                        normalized_path = matching_template.apply_fields(fields)
+
+                        node_name = fields.get("name", file_name)
+
+                        file_item = FileItem(node_name, obj["node_type"], normalized_path)
+                        file_item.template = matching_template
+                        file_item.template_fields = fields
+            else:
+                file_item = FileItem(file_name, obj["node_type"], file_path)
                 file_item.extra_data = obj.get("extra_data")
-                file_item.sg_data = published_files[obj["path"]]
+                file_item.sg_data = published_files[file_path]
+
+            if file_item:
                 file_items.append(file_item)
+                # Add the file name to the set to avoid adding more than one file item for the same 
+                file_names.add(file_name)
 
         return file_items
 
@@ -264,12 +315,14 @@ class BreakdownManager(object):
         :param item: Item to update
         """
 
-        if not item.latest_published_file:
-            return
+        # if not item.latest_published_file:
+        #     return
 
-        self.update_to_specific_version(item, item.latest_published_file)
+        version_data = item.latest_published_file or item.latest_version_number
+        self.update_to_specific_version(item, version_data)
+        # self.update_to_specific_version(item, item.latest_published_file)
 
-    def update_to_specific_version(self, item, sg_data):
+    def update_to_specific_version(self, item, version_data):
         """
         Update the item to a specific version.
 
@@ -277,7 +330,27 @@ class BreakdownManager(object):
         :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to
         """
 
-        if not sg_data or not sg_data.get("path", {}).get("local_path", None):
+        # if not sg_data or not sg_data.get("path", {}).get("local_path", None):
+        #     return
+        if not version_data:
+            return
+
+        update_to_path = None
+        if isinstance(version_data, dict):
+            update_to_path = version_data.get("path", {}).get("local_path", None)
+            sg_data = version_data
+        else:
+            if item.template and item.template_fields:
+                # Try to get update path from template.
+                item.template_fields["version"] = version_data
+                update_to_path = item.template.apply_fields(item.template_fields)
+
+                # NOTE should we check if the node name needs to be updated (if it includes the version)
+
+                # TODO handle sg data better
+                sg_data = None
+        
+        if not update_to_path:
             return
 
         # store the current path into the extra_data in case we need to access it later in the hook
@@ -286,7 +359,8 @@ class BreakdownManager(object):
         else:
             item.extra_data["old_path"] = item.path
 
-        item.path = sg_data["path"]["local_path"]
+        # item.path = sg_data["path"]["local_path"]
+        item.path = update_to_path
         self._bundle.execute_hook_method(
             "hook_scene_operations", "update", item=item.to_dict()
         )

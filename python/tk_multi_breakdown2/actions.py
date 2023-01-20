@@ -43,7 +43,7 @@ class ActionManager(object):
         return q_action
 
     @staticmethod
-    def add_update_to_specific_version_action(file_item, model, sg_data, parent=None):
+    def add_update_to_specific_version_action(file_item, model, version_data, parent=None):
         """
         Build a QAction for the "Update to vxx" menu item.
 
@@ -60,15 +60,24 @@ class ActionManager(object):
         :rtype: QtGui.QAction
         """
 
-        if not sg_data.get("version_number"):
+        # if not sg_data.get("version_number"):
+        #     return
+        if isinstance(version_data, dict):
+            version_number = version_data.get("version_number")
+        else:
+            version_number = version_data
+        
+        if version_number is None:
             return
 
         action = UpdateToSpecificVersionAction(
             "Override current reference with Version {version}".format(
-                version=sg_data["version_number"]
+                # version=sg_data["version_number"]
+                version=version_number
             ),
             file_item,
-            sg_data,
+            # sg_data,
+            version_data,
             model,
         )
 
@@ -187,7 +196,14 @@ class UpdateToLatestVersionAction(Action):
             self._model.dataChanged.emit(
                 index,
                 index,
-                [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
+                [
+                    self._model.FILE_ITEM_ROLE,
+                    self._model.FILE_ITEM_SG_DATA_ROLE,
+                    # self._model.FILE_ITEM_NODE_NAME_ROLE,
+                    # self._model.VIEW_ITEM_HEADER_ROLE,
+                    # QtCore.Qt.DisplayRole,
+                    # self._model.VIEW_ITEM_TEXT_ROLE,
+                ],
             )
 
 
@@ -209,7 +225,8 @@ class UpdateToSpecificVersionAction(Action):
         """
 
         super(UpdateToSpecificVersionAction, self).__init__(label, [file_item], model)
-        self._sg_data = sg_data
+        # self._sg_data = sg_data
+        self._version_data = sg_data
 
     @wait_cursor
     def execute(self):
@@ -218,7 +235,8 @@ class UpdateToSpecificVersionAction(Action):
         file_item = self._file_items[0]
 
         # Call the manager to update the file item to the specific version.
-        self._manager.update_to_specific_version(file_item, self._sg_data)
+        # self._manager.update_to_specific_version(file_item, self._sg_data)
+        self._manager.update_to_specific_version(file_item, self._version_data)
 
         # The file item object that the model holds will be updated by the manager. The model
         # just needs to emit a signal that the data has changed.
@@ -226,5 +244,11 @@ class UpdateToSpecificVersionAction(Action):
         self._model.dataChanged.emit(
             index,
             index,
-            [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
+            [
+                self._model.FILE_ITEM_ROLE,
+                self._model.FILE_ITEM_SG_DATA_ROLE,
+                # self._model.VIEW_ITEM_TEXT_ROLE,
+                # self._model.VIEW_ITEM_HEADER_ROLE,
+                # QtCore.Qt.DisplayRole,
+            ],
         )

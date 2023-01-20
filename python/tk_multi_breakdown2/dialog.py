@@ -785,6 +785,9 @@ class AppDialog(QtGui.QWidget):
             file_item = index.data(FileModel.FILE_ITEM_ROLE)
             items.append(file_item)
 
+        if not items:
+            return
+
         # map the point to a global position:
         pnt = widget.mapToGlobal(pnt)
 
@@ -796,6 +799,23 @@ class AppDialog(QtGui.QWidget):
             items, self._file_model, context_menu
         )
         context_menu.addAction(q_action)
+
+        # For unpublished items, there will be no details. So to update to a specific version
+        # add the actions here.
+        if len(items) == 1:
+            version_actions = []
+            file_item = items[0]
+            if file_item.all_versions:
+                for version in file_item.all_versions:
+                    # if version == file_item.version_number or version == file_item.highest_version_number:
+                    #     # Do not add action to update to the current version, or the latest
+                    #     # since there will be a separate action to just update to latest.
+                    #     continue
+                    version_action = ActionManager.add_update_to_specific_version_action(
+                        file_item, self._file_model, version, context_menu
+                    )
+                    version_actions.append(version_action)
+            context_menu.addActions(version_actions)
 
         # Add action to show details for the item that the context menu is shown for.
         show_details_action = QtGui.QAction("Show Details")
@@ -900,27 +920,30 @@ class AppDialog(QtGui.QWidget):
         elif len(selected_items) > 1:
             self._clear_details_panel()
             self._details_overlay.show_message(
-                "Select a single item to see more details."
+                "Select a single item to see Published File details."
             )
 
         else:
-            self._details_overlay.hide()
-
             model_index = selected_items[0]
             file_item = model_index.data(FileModel.FILE_ITEM_ROLE)
-            thumbnail = model_index.data(QtCore.Qt.DecorationRole)
+            if file_item.sg_data:
+                self._details_overlay.hide()
 
-            # display file item details
-            self._ui.file_details.set_text(file_item.sg_data)
-            self._ui.file_details.set_thumbnail(thumbnail)
+                # display file item details
+                thumbnail = model_index.data(QtCore.Qt.DecorationRole)
+                self._ui.file_details.set_text(file_item.sg_data)
+                self._ui.file_details.set_thumbnail(thumbnail)
 
-            # load file history
-            self._file_history_model.load_data(file_item)
+                # load file history
+                self._file_history_model.load_data(file_item)
+            else:
+                self._clear_details_panel()
+                self._details_overlay.show_message(
+                    "Selected item does not have ShotGrid Published File details.<br/>Right-click the item to update the version."
+                )
 
     def _clear_details_panel(self):
-        """
-        Clear the details panel.
-        """
+        """Clear the details panel."""
 
         self._file_history_model.clear()
         self._ui.file_details.clear()

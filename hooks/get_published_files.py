@@ -32,18 +32,30 @@ class GetPublishedFiles(HookBaseClass):
         """
 
         if not items:
-            return {}
+            return None if data_retriever else {}
 
-        # Build the filters to get all published files for at once for all the file items.
+        # Build the query fields and filters to get all published files for at once for all the
+        # file items.
         entities = []
         names = []
         tasks = []
         pf_types = []
+        fields = set(["version_number", "path"])
+        has_sg_data = False
         for file_item in items:
+            if not file_item.sg_data:
+                continue
+
+            has_sg_data = True
             entities.append(file_item.sg_data["entity"])
             names.append(file_item.sg_data["name"])
             tasks.append(file_item.sg_data["task"])
             pf_types.append(file_item.sg_data["published_file_type"])
+            fields = fields.union(set(file_item.sg_data))
+
+        if not has_sg_data:
+            # No SG data to find published files for.
+            return None if data_retriever else {}
 
         # Published files will be found by their entity, name, task and published file type.
         filters = [
@@ -52,9 +64,7 @@ class GetPublishedFiles(HookBaseClass):
             ["task", "in", tasks],
             ["published_file_type", "in", pf_types],
         ]
-
-        # Get the query fields. This assumes all file items in the list have the same fields.
-        fields = list(items[0].sg_data.keys()) + ["version_number", "path"]
+        fields = list(fields)
         order = [{"field_name": "version_number", "direction": "desc"}]
 
         if data_retriever:

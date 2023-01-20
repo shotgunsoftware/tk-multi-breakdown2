@@ -170,7 +170,7 @@ class UIConfigAdvanced(HookClass):
 
         file_item = self.get_file_item(index)
         if file_item:
-            if self._title_template_string:
+            if file_item.sg_data and self._title_template_string:
                 # Search and replace any non-ShotGrid data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._title_template_string
@@ -207,7 +207,7 @@ class UIConfigAdvanced(HookClass):
         file_item = self.get_file_item(index)
 
         if file_item:
-            if self._subtitle_template_string:
+            if file_item.sg_data and self._subtitle_template_string:
                 # Search and replace any non-ShotGrid data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._subtitle_template_string
@@ -337,14 +337,27 @@ class UIConfigAdvanced(HookClass):
 
         file_item = self.get_file_item(index)
         if file_item:
-            if self._details_template_string:
+            if file_item.sg_data and self._details_template_string:
                 # Search and replace any non-ShotGrid data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._details_template_string
                 )
                 return (template_string, file_item.sg_data)
-
-            return file_item.sg_data
+            
+            if file_item.template_fields:
+                return "<br/>".join(
+                        [
+                            "<span style='color:#18A7E3;'>Node</span> {node_name}",
+                            "<span style='color:#18A7E3;'>Version</span> {version}",
+                            "<span style='color:#18A7E3;'>Asset</span> {asset}",
+                            "<span style='color:#18A7E3;'>Step</span> {step}",
+                        ]
+                    ).format(
+                        node_name=file_item.node_name,
+                        version=file_item.template_fields.get("version"),
+                        asset=file_item.template_fields.get("Asset"),
+                        step=file_item.template_fields.get("Step"),
+                    )
 
         return None
 
@@ -360,12 +373,19 @@ class UIConfigAdvanced(HookClass):
         """
 
         file_item = self.get_file_item(index)
-        if file_item and self._short_text_template_string:
-            # Search and replace any non-ShotGrid data fields
-            template_string = _resolve_file_item_tokens(
-                file_item, self._short_text_template_string
-            )
-            return (template_string, file_item.sg_data)
+        if file_item:
+            if file_item.sg_data and self._short_text_template_string:
+                # Search and replace any non-ShotGrid data fields
+                template_string = _resolve_file_item_tokens(
+                    file_item, self._short_text_template_string
+                )
+                return (template_string, file_item.sg_data)
+            
+            if file_item.template_fields:
+                return "<span style='color: rgba(200, 200, 200, 40%);'>{asset} ({step})</span>".format(
+                    asset=file_item.template_fields.get("Asset"),
+                    step=file_item.template_fields.get("Step"),
+                ),
 
         return None
 
