@@ -10,6 +10,11 @@
 
 configuration:
 
+    app_display_mode:
+        type: str
+        default_value: panel
+        description: Specify if the app should launch as `panel` or `dialog`.  Not all engines support panels.
+
     hook_scene_operations:
         type: hook
         default_value: "{self}/{engine_name}_scene_operations.py"
