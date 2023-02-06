@@ -112,11 +112,11 @@ class TestApplication(AppTestBase):
 
         # Ensure that the engine has the app command registered with
         # the correct properties
-        app_cmd = self.engine.commands.get("Scene Breakdown...", None)
+        app_cmd = self.engine.commands.get("Scene Breakdown2...", None)
         assert app_cmd is not None
         cmd_props = app_cmd.get("properties", None)
         assert cmd_props is not None
-        assert cmd_props.get("short_name", "") == "breakdown"
+        assert cmd_props.get("short_name", "") == "breakdown2"
 
     def test_app_hooks_exist(self):
         """
