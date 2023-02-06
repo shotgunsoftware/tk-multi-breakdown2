@@ -36,23 +36,24 @@ class SceneBreakdown2(sgtk.platform.Application):
 
             # Register a menu entry on the ShotGrid menu so that users can launch the panel.
             self.engine.register_command(
-                self.get_setting("display_name"),
+                "Scene Breakdown...",
                 self.create_panel,
                 {"type": "panel", "short_name": "breakdown"},
             )
 
         elif self.get_setting("app_display_mode") == "dialog":
 
+            # Register the app as a dialog
             # Register a menu entry on the ShotGrid menu so that users can launch the dialog.
             self.engine.register_command(
-                self.get_setting("display_name"),
+                "Scene Breakdown...",
                 lambda: self.create_dialog(),
                 {"type": "dialog", "short_name": "breakdown"},
             )
 
         else:
-            self.logger.error("An invalid app_display_mode was configured. "
-                              "`{}` is not a valid app_display_mode setting!".format(self.get_setting("app_display_mode")))
+            self.logger.error("An invalid app_display_mode was configured. `{}` is not a valid app_display_mode "
+                              "setting!".format(self.get_setting("app_display_mode")))
 
     def show_dialog(self):
         """Show the Scene Breakdown 2 App dialog."""
