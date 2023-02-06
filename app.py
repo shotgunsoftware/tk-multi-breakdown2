@@ -29,15 +29,30 @@ class SceneBreakdown2(sgtk.platform.Application):
         self._current_dialog = None
         self._current_panel = None
 
-        # Register the app as a panel.
-        self._unique_panel_id = self.engine.register_panel(self.create_panel)
+        if self.get_setting("app_display_mode") == "panel":
 
-        # Register a menu entry on the ShotGrid menu so that users can launch the panel.
-        self.engine.register_command(
-            self.get_setting("display_name"),
-            self.create_panel,
-            {"type": "panel", "short_name": "breakdown"},
-        )
+            # Register the app as a panel.
+            self._unique_panel_id = self.engine.register_panel(self.create_panel)
+
+            # Register a menu entry on the ShotGrid menu so that users can launch the panel.
+            self.engine.register_command(
+                self.get_setting("display_name"),
+                self.create_panel,
+                {"type": "panel", "short_name": "breakdown"},
+            )
+
+        elif self.get_setting("app_display_mode") == "dialog":
+
+            # Register a menu entry on the ShotGrid menu so that users can launch the dialog.
+            self.engine.register_command(
+                self.get_setting("display_name"),
+                lambda: self.create_dialog(),
+                {"type": "dialog", "short_name": "breakdown"},
+            )
+
+        else:
+            self.logger.error("An invalid app_display_mode was configured. "
+                              "`{}` is not a valid app_display_mode setting!".format(self.get_setting("app_display_mode")))
 
     def show_dialog(self):
         """Show the Scene Breakdown 2 App dialog."""
