@@ -52,8 +52,10 @@ class SceneBreakdown2(sgtk.platform.Application):
             )
 
         else:
-            self.logger.error("An invalid app_display_mode was configured. `{}` is not a valid app_display_mode "
-                              "setting!".format(self.get_setting("app_display_mode")))
+            self.logger.error(
+                            "An invalid app_display_mode was configured. `{}` is not a valid app_display_mode "
+                            "setting!".format(self.get_setting("app_display_mode"))
+                        )
 
     def show_dialog(self):
         """Show the Scene Breakdown 2 App dialog."""
