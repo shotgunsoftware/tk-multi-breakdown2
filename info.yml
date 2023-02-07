@@ -12,7 +12,7 @@ configuration:
 
     display_name:
         type: str
-        default_value: Scene Breakdown2
+        default_value: Scene Breakdown
         description: Specify a name for the app, it's menu item and the ui.
 
     hook_scene_operations:
