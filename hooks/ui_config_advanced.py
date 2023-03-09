@@ -313,6 +313,11 @@ class UIConfigAdvanced(HookClass):
 
         return subtitle
 
+    @staticmethod
+    def get_item_palette():
+        """Returns the brush to use draw the background for this widget"""
+        return QtGui.QApplication.palette().light()
+
     def get_item_details(self, index):
         """
         Returns the data to display for this model index item's detailed text.

@@ -32,6 +32,13 @@ delegates = sgtk.platform.import_framework("tk-framework-qtwidgets", "delegates"
 ViewItemRolesMixin = delegates.ViewItemRolesMixin
 
 
+_APP = sgtk.platform.current_bundle()
+
+# Get the hook instance for configuring the display for model view items.
+ui_config_adv_hook_path = _APP.get_setting("hook_ui_config_advanced")
+UI_CONFIG_ADV_HOOK = _APP.create_hook_instance(ui_config_adv_hook_path)
+
+
 class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
     """
     The FileModel maintains a model of all the files found when parsing the current scene. Details
@@ -39,8 +46,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
     File items are grouped into groups defined by the app configuration.
     """
-
-    UI_CONFIG_ADV_HOOK_PATH = "hook_ui_config_advanced"
 
     # Additional data roles defined for the model
     _BASE_ROLE = QtCore.Qt.UserRole + 32
@@ -291,7 +296,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
 
             if role == QtCore.Qt.BackgroundRole:
-                return QtGui.QApplication.palette().midlight()
+                return UI_CONFIG_ADV_HOOK.get_item_palette()
 
             if role == FileModel.FILE_ITEM_ROLE:
                 # Return a copy of the file item object so that the model data cannot be
@@ -466,7 +471,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
         QtGui.QStandardItemModel.__init__(self, parent)
 
-        self._app = sgtk.platform.current_bundle()
+        self._app = _APP
 
         self._polling = polling
         # Get the app setting for the timeout interval length for polling file item statuses.
@@ -507,21 +512,17 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         # Add additional roles defined by the ViewItemRolesMixin class.
         self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
 
-        # Get the hook instance for configuring the display for model view items.
-        ui_config_adv_hook_path = self._app.get_setting(self.UI_CONFIG_ADV_HOOK_PATH)
-        ui_config_adv_hook = self._app.create_hook_instance(ui_config_adv_hook_path)
-
         # Create a mapping of model item data roles to the method that will be called to retrieve
         # the data for the item. The methods defined for each role must accept two parameters:
         # (1) QStandardItem (2) dict
         self.role_methods = {
-            self.VIEW_ITEM_THUMBNAIL_ROLE: ui_config_adv_hook.get_item_thumbnail,
-            self.VIEW_ITEM_HEADER_ROLE: ui_config_adv_hook.get_item_title,
-            self.VIEW_ITEM_SUBTITLE_ROLE: ui_config_adv_hook.get_item_subtitle,
-            self.VIEW_ITEM_TEXT_ROLE: ui_config_adv_hook.get_item_details,
-            self.VIEW_ITEM_SHORT_TEXT_ROLE: ui_config_adv_hook.get_item_short_text,
-            self.VIEW_ITEM_ICON_ROLE: ui_config_adv_hook.get_item_icons,
-            self.VIEW_ITEM_SEPARATOR_ROLE: ui_config_adv_hook.get_item_separator,
+            self.VIEW_ITEM_THUMBNAIL_ROLE: UI_CONFIG_ADV_HOOK.get_item_thumbnail,
+            self.VIEW_ITEM_HEADER_ROLE: UI_CONFIG_ADV_HOOK.get_item_title,
+            self.VIEW_ITEM_SUBTITLE_ROLE: UI_CONFIG_ADV_HOOK.get_item_subtitle,
+            self.VIEW_ITEM_TEXT_ROLE: UI_CONFIG_ADV_HOOK.get_item_details,
+            self.VIEW_ITEM_SHORT_TEXT_ROLE: UI_CONFIG_ADV_HOOK.get_item_short_text,
+            self.VIEW_ITEM_ICON_ROLE: UI_CONFIG_ADV_HOOK.get_item_icons,
+            self.VIEW_ITEM_SEPARATOR_ROLE: UI_CONFIG_ADV_HOOK.get_item_separator,
         }
 
     @classmethod
