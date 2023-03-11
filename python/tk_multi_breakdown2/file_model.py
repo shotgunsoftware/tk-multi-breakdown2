@@ -296,7 +296,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             """
 
             if role == QtCore.Qt.BackgroundRole:
-                return UI_CONFIG_ADV_HOOK.get_item_palette()
+                return UI_CONFIG_ADV_HOOK.get_item_background_color()
 
             if role == FileModel.FILE_ITEM_ROLE:
                 # Return a copy of the file item object so that the model data cannot be

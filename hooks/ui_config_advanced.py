@@ -314,7 +314,7 @@ class UIConfigAdvanced(HookClass):
         return subtitle
 
     @staticmethod
-    def get_item_palette():
+    def get_item_background_color():
         """Returns the brush to use draw the background for this widget"""
         return QtGui.QApplication.palette().light()
 
