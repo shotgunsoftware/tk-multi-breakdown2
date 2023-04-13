@@ -134,7 +134,7 @@ class BreakdownSceneOperations(HookBaseClass):
 
         # if the new path is not a path to a wref file, we need to handle the conversion
         if ext != ".wref":
-            tk = self.parent.engine.get_tk_from_project_id(sg_data["project"]["id"])
+            tk = self.parent.engine.get_tk_from_project(sg_data["project"])
             source_template = tk.template_from_path(path)
             reference_template = self.parent.engine.get_reference_template(tk, sg_data)
 
