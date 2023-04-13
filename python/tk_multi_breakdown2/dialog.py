@@ -1281,16 +1281,15 @@ class AppDialog(QtGui.QWidget):
         group_rows = self._file_model.rowCount()
 
         for group_row in range(group_rows):
-            group_item = self._file_model.item(group_row, 0)
-            file_item_rows = group_item.rowCount()
-            for file_item_row in range(file_item_rows):
-                file_item = group_item.child(file_item_row)
+            parent_index = self._file_model.index(group_row, 0)
+            file_item_rows = self._file_model.rowCount(parent_index)
 
+            for file_item_row in range(file_item_rows):
+                index = self._file_model.index(file_item_row, 0, parent_index)
                 if (
-                    file_item.data(FileModel.STATUS_ROLE)
+                    self._file_model.data(index, FileModel.STATUS_ROLE)
                     == FileModel.STATUS_OUT_OF_SYNC
                 ):
-                    index = file_item.index()
                     proxy_index = self._file_proxy_model.mapFromSource(index)
                     outdated_selection.select(proxy_index, proxy_index)
 
