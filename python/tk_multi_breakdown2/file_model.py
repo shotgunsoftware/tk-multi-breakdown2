@@ -396,6 +396,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self._file_item.thumbnail_path = thumbnail_path
             self.__thumbnail_icon = QtGui.QIcon(thumbnail_path)
 
+
     def __init__(
         self,
         parent,

@@ -1496,18 +1496,18 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             file_item, file_model_item = self.__pending_thumbnail_requests[uid]
             del self.__pending_thumbnail_requests[uid]
 
-            # Update the file item's thumbnail from the data returned by the request. The
-            # model item will get this data and create the QIcon to display.
-            if self.dynamic_loading:
-                # Set the model item data to emit a signal for the view to update immediately.
-                file_item_index = self.__get_index_from_item(file_model_item)
-                self.setData(
-                    file_item_index, data.get("thumb_path"), QtCore.Qt.DecorationRole
-                )
-            else:
-                # Just set the file item data with the thumbnail path, and the next time its
-                # respective model item is painted it show the thumbnail.
-                file_item.thumbnail_path = data.get("thumb_path")
+            # Update the thumbnail path without emitting any signals. For non-dynamic loading,
+            # the thumbnail udpate will be reflected once all data has been retrieved (not
+            # just thumbnails).
+            # For dynamic loading, we will emit one data changed signal once all thumbnails are
+            # retrieved. Ideally, we would emit a signal as each thumbnail is loaded but tree
+            # views do not handle single updates efficiently (e.g. the whole tree is painted
+            # on each single index update).
+            file_item.thumbnail_path = data.get("thumb_path")
+            if self.dynamic_loading and not self.__pending_thumbnail_requests:
+                top_left = self.index(0, 0)
+                bottom_right = self.index(self.rowCount() - 1, 0)
+                self.dataChanged.emit(top_left, bottom_right)
 
         elif uid in self.__pending_version_requests:
             file_model_item = self.__pending_version_requests[uid]
