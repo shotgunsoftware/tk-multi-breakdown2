@@ -358,8 +358,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             if role == QtCore.Qt.DecorationRole:
                 self.set_thumbnail(value)
                 self.emitDataChanged()
+                return True
 
-            elif role == FileModel.FILE_ITEM_ROLE:
+            if role == FileModel.FILE_ITEM_ROLE:
                 if self.model():
                     cur_group_value = self._file_item.sg_data.get(self.model().group_by)
                     updated_group_value = value.sg_data.get(self.model().group_by)
@@ -374,8 +375,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
 
                 # Emit the standard model data changed
                 self.emitDataChanged()
+                return True
 
-            elif role == FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
+            if role == FileModel.FILE_ITEM_LATEST_PUBLISHED_FILE_ROLE:
                 if (
                     not self._file_item.latest_published_file
                     or not value
@@ -384,9 +386,9 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
                 ):
                     self._file_item.latest_published_file = value
                     self.emitDataChanged()
+                    return True
 
-            else:
-                super(FileModel.FileModelItem, self).setData(value, role)
+            return super(FileModel.FileModelItem, self).setData(value, role)
 
         def set_thumbnail(self, thumbnail_path):
             """Custom method to set the thumbnail data to avoid emitting data changed signals."""
