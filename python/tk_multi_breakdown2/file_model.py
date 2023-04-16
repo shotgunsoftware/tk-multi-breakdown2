@@ -295,9 +295,6 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             :return: The data for the specified role.
             """
 
-            if role == QtCore.Qt.BackgroundRole:
-                return UI_CONFIG_ADV_HOOK.get_item_background_color()
-
             if role == FileModel.FILE_ITEM_ROLE:
                 # Return a copy of the file item object so that the model data cannot be
                 # modified without going through the setData method, so that the model
@@ -523,6 +520,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.VIEW_ITEM_SHORT_TEXT_ROLE: UI_CONFIG_ADV_HOOK.get_item_short_text,
             self.VIEW_ITEM_ICON_ROLE: UI_CONFIG_ADV_HOOK.get_item_icons,
             self.VIEW_ITEM_SEPARATOR_ROLE: UI_CONFIG_ADV_HOOK.get_item_separator,
+            QtCore.Qt.BackgroundRole: UI_CONFIG_ADV_HOOK.get_item_background_colour(),
         }
 
     @classmethod
