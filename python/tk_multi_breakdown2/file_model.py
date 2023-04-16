@@ -510,8 +510,8 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
         self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
 
         # Create a mapping of model item data roles to the method that will be called to retrieve
-        # the data for the item. The methods defined for each role must accept two parameters:
-        # (1) QStandardItem (2) dict
+        # the data for the item. The methods defined for each role must accept one parameter:
+        # (1) The model item index
         self.role_methods = {
             self.VIEW_ITEM_THUMBNAIL_ROLE: UI_CONFIG_ADV_HOOK.get_item_thumbnail,
             self.VIEW_ITEM_HEADER_ROLE: UI_CONFIG_ADV_HOOK.get_item_title,
@@ -520,7 +520,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.VIEW_ITEM_SHORT_TEXT_ROLE: UI_CONFIG_ADV_HOOK.get_item_short_text,
             self.VIEW_ITEM_ICON_ROLE: UI_CONFIG_ADV_HOOK.get_item_icons,
             self.VIEW_ITEM_SEPARATOR_ROLE: UI_CONFIG_ADV_HOOK.get_item_separator,
-            QtCore.Qt.BackgroundRole: UI_CONFIG_ADV_HOOK.get_item_background_colour(),
+            QtCore.Qt.BackgroundRole: UI_CONFIG_ADV_HOOK.get_item_background_colour,
         }
 
     @classmethod

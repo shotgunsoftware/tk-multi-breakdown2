@@ -313,9 +313,15 @@ class UIConfigAdvanced(HookClass):
 
         return subtitle
 
-    @staticmethod
-    def get_item_background_color():
-        """Returns the brush to use to draw the background for this widget"""
+    def get_item_background_color(self, index):
+        """Returns the brush to use to draw the background for this widget
+
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
+
+        :return: The QBrush.
+        :rtype: :class:`sgtk.platform.qt.QtGui.QBrush`
+        """
         return QtGui.QApplication.palette().midlight()
 
     def get_item_details(self, index):
