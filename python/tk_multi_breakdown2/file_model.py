@@ -519,7 +519,7 @@ class FileModel(QtGui.QStandardItemModel, ViewItemRolesMixin):
             self.VIEW_ITEM_SHORT_TEXT_ROLE: ui_config_adv_hook.get_item_short_text,
             self.VIEW_ITEM_ICON_ROLE: ui_config_adv_hook.get_item_icons,
             self.VIEW_ITEM_SEPARATOR_ROLE: ui_config_adv_hook.get_item_separator,
-            QtCore.Qt.BackgroundRole: ui_config_adv_hook.get_item_background_colour,
+            QtCore.Qt.BackgroundRole: ui_config_adv_hook.get_item_background_color,
         }
 
     @classmethod
