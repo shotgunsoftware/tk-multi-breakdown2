@@ -288,6 +288,7 @@ class BreakdownManager(object):
         else:
             item.extra_data["old_path"] = item.path
 
+        # NOTE modifying the file item directly will affect the file item model directly
         item.path = sg_data["path"]["local_path"]
         self._bundle.execute_hook_method(
             "hook_scene_operations", "update", item=item.to_dict()
