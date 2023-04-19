@@ -264,33 +264,54 @@ class BreakdownManager(object):
         Update the item to its latest version.
 
         :param item: Item to update
+        :type item: FileItem
+
+        :return: True if the item requires the data model to update, else False will not
+            trigger a model update.
+        :rtype: bool
         """
 
         if not item.latest_published_file:
-            return
+            return False
 
-        self.update_to_specific_version(item, item.latest_published_file)
+        return self.update_to_specific_version(item, item.latest_published_file)
 
     def update_to_specific_version(self, item, sg_data):
         """
         Update the item to a specific version.
 
         :param item: Item to update
+        :type item: FileItem
         :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to
+        :type sg_data: dict
+
+        :return: True if the item requires the data model to update, else False will not
+            trigger a model update.
+        :rtype: bool
         """
 
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
-            return
+            return False
 
-        # store the current path into the extra_data in case we need to access it later in the hook
-        if not item.extra_data:
-            item.extra_data = {"old_path": item.path}
+        item_dict = item.to_dict()
+        item_dict["path"] = sg_data["path"]["local_path"]
+        if item_dict["extra_data"] is None:
+            item_dict["extra_data"] = {"old_path": item.path}
         else:
-            item.extra_data["old_path"] = item.path
+            item_dict["extra_data"]["old_path"] = item.path
 
-        # NOTE modifying the file item directly will affect the file item model directly
-        item.path = sg_data["path"]["local_path"]
-        self._bundle.execute_hook_method(
-            "hook_scene_operations", "update", item=item.to_dict()
+        do_update = self._bundle.execute_hook_method(
+            "hook_scene_operations", "update", item=item_dict,
         )
-        item.sg_data = sg_data
+        if do_update is None:
+            # Default to True if the hook return value was not explictly set
+            do_update = True
+
+        if do_update:
+            # Only update the file item if specified. Updating the item will affect the data
+            # model directly
+            item.sg_data = sg_data
+            item.path = item_dict["path"]
+            item.extra_data = item_dict["extra_data"]
+        
+        return do_update

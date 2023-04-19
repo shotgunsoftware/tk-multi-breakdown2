@@ -179,16 +179,17 @@ class UpdateToLatestVersionAction(Action):
 
         for file_item in self._file_items:
             # Call the manager to update the file item object to the latest version.
-            self._manager.update_to_latest_version(file_item)
+            do_update = self._manager.update_to_latest_version(file_item)
 
-            # The file item object that the model holds will be updated by the manager. The model
-            # just needs to emit a signal that the data has changed.
-            index = self._get_index_for_item(file_item)
-            self._model.dataChanged.emit(
-                index,
-                index,
-                [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
-            )
+            if do_update:
+                # The file item object that the model holds was updated by the manager. 
+                # Emit a signal that the data has changed.
+                index = self._get_index_for_item(file_item)
+                self._model.dataChanged.emit(
+                    index,
+                    index,
+                    [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
+                )
 
 
 class UpdateToSpecificVersionAction(Action):
@@ -218,13 +219,14 @@ class UpdateToSpecificVersionAction(Action):
         file_item = self._file_items[0]
 
         # Call the manager to update the file item to the specific version.
-        self._manager.update_to_specific_version(file_item, self._sg_data)
+        do_update = self._manager.update_to_specific_version(file_item, self._sg_data)
 
-        # The file item object that the model holds will be updated by the manager. The model
-        # just needs to emit a signal that the data has changed.
-        index = self._get_index_for_item(file_item)
-        self._model.dataChanged.emit(
-            index,
-            index,
-            [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
-        )
+        if do_update:
+            # The file item object that the model holds was updated by the manager. 
+            # Emit a signal that the data has changed.
+            index = self._get_index_for_item(file_item)
+            self._model.dataChanged.emit(
+                index,
+                index,
+                [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
+            )
