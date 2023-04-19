@@ -565,7 +565,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         """Sets the role data for the item at index to value."""
 
         if not index.isValid():
-            return
+            return False
 
         model_item = self.__get_internal_data(index)
         if not model_item:
@@ -612,6 +612,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         if changed:
             self.dataChanged.emit(index, index, change_roles)
+            return True
+
+        return False
 
     # ----------------------------------------------------------------------
     # Override base QAbstractItemModel methods
