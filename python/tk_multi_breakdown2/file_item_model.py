@@ -926,7 +926,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if self.__is_reloading:
             return
 
-        index = self.index_from_file_path(file_path)
+        index = self.index_from_file_path(file_path, check_old_path=True)
         if not index.isValid():
             return False
 
@@ -1011,12 +1011,16 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         return None
 
-    def index_from_file_path(self, file_path):
+    def index_from_file_path(self, file_path, check_old_path=False):
         """
         Traverse the model to get the model item index that matches the given file path.
 
         :param file_path: The file path to find the model index by.
         :type file_path: str
+        :param check_old_path: True will check the item extra data for the old path, which is
+            the path before it was updated. For removing indexes, the path may have been
+            updated before the index could be removed.
+        :type check_old_path: bool
 
         :return: The model index.
         :rtype: QtCore.QModelIndex
@@ -1034,6 +1038,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 file_item = self.data(child_index, FileTreeItemModel.FILE_ITEM_ROLE)
 
                 if file_item.path == file_path:
+                    return child_index
+
+                if check_old_path and file_item.extra_data and file_item.extra_data.get("old_path") == file_path:
                     return child_index
 
         return QtCore.QModelIndex()
