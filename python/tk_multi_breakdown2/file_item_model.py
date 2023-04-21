@@ -204,8 +204,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         ui_config_adv_hook = self._app.create_hook_instance(ui_config_adv_hook_path)
 
         # Create a mapping of model item data roles to the method that will be called to retrieve
-        # the data for the item. The methods defined for each role must accept two parameters:
-        # (1) QStandardItem (2) dict
+        # the data for the item. The methods defined for each role must accept one parameter:
+        # (1) The model item index
         self.role_methods = {
             self.VIEW_ITEM_THUMBNAIL_ROLE: ui_config_adv_hook.get_item_thumbnail,
             self.VIEW_ITEM_HEADER_ROLE: ui_config_adv_hook.get_item_title,
@@ -214,6 +214,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             self.VIEW_ITEM_SHORT_TEXT_ROLE: ui_config_adv_hook.get_item_short_text,
             self.VIEW_ITEM_ICON_ROLE: ui_config_adv_hook.get_item_icons,
             self.VIEW_ITEM_SEPARATOR_ROLE: ui_config_adv_hook.get_item_separator,
+            QtCore.Qt.BackgroundRole: ui_config_adv_hook.get_item_background_color,
         }
 
     @classmethod
@@ -395,9 +396,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if model_item.file_item:
             # It is a file item
             file_item = model_item.file_item
-
-            if role == QtCore.Qt.BackgroundRole:
-                return QtGui.QApplication.palette().midlight()
 
             if role == QtCore.Qt.DecorationRole:
                 if not model_item.thumbnail_icon:

@@ -315,6 +315,22 @@ class UIConfigAdvanced(HookClass):
 
         return subtitle
 
+    def get_item_background_color(self, index):
+        """Returns the brush to use to draw the background for this widget
+
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
+
+        :return: The QBrush.
+        :rtype: :class:`sgtk.platform.qt.QtGui.QBrush`
+        """
+
+        if index.parent().isValid():
+            return QtGui.QApplication.palette().midlight()
+        
+        # Leave the group header background color as is.
+        return None
+
     def get_item_details(self, index):
         """
         Returns the data to display for this model index item's detailed text.
