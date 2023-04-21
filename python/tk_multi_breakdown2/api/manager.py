@@ -301,7 +301,9 @@ class BreakdownManager(object):
             item_dict["extra_data"]["old_path"] = item.path
 
         do_update = self._bundle.execute_hook_method(
-            "hook_scene_operations", "update", item=item_dict,
+            "hook_scene_operations",
+            "update",
+            item=item_dict,
         )
         if do_update is None:
             # Default to True if the hook return value was not explictly set
@@ -313,5 +315,5 @@ class BreakdownManager(object):
             item.sg_data = sg_data
             item.path = item_dict["path"]
             item.extra_data = item_dict["extra_data"]
-        
+
         return do_update

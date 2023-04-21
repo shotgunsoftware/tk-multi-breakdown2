@@ -1040,7 +1040,11 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 if file_item.path == file_path:
                     return child_index
 
-                if check_old_path and file_item.extra_data and file_item.extra_data.get("old_path") == file_path:
+                if (
+                    check_old_path
+                    and file_item.extra_data
+                    and file_item.extra_data.get("old_path") == file_path
+                ):
                     return child_index
 
         return QtCore.QModelIndex()
