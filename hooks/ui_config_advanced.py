@@ -327,7 +327,7 @@ class UIConfigAdvanced(HookClass):
 
         if index.parent().isValid():
             return QtGui.QApplication.palette().midlight()
-        
+
         # Leave the group header background color as is.
         return None
 
