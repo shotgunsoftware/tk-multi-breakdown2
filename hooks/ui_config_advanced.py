@@ -252,7 +252,9 @@ class UIConfigAdvanced(HookClass):
                     if status == source_model.STATUS_OUT_OF_SYNC:
                         source_out_of_sync += 1
 
-                    is_loading = child_index.data(source_model.VIEW_ITEM_LOADING_ROLE)
+                    is_loading = (
+                        child_index.data(source_model.VIEW_ITEM_LOADING_ROLE) or False
+                    )
                     if not is_loading:
                         loaded += 1
 
@@ -312,6 +314,22 @@ class UIConfigAdvanced(HookClass):
                 subtitle = join_char.join(text_items)
 
         return subtitle
+
+    def get_item_background_color(self, index):
+        """Returns the brush to use to draw the background for this widget
+
+        :param index: The model item index
+        :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
+
+        :return: The QBrush.
+        :rtype: :class:`sgtk.platform.qt.QtGui.QBrush`
+        """
+
+        if index.parent().isValid():
+            return QtGui.QApplication.palette().midlight()
+
+        # Leave the group header background color as is.
+        return None
 
     def get_item_details(self, index):
         """

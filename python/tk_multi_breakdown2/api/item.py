@@ -33,6 +33,7 @@ class FileItem(object):
         self._extra_data = extra_data
         self._latest_published_file = None
         self._locked = False
+        self._thumbnail_path = None
 
     def __eq__(self, other):
         """
@@ -49,25 +50,19 @@ class FileItem(object):
             and self.sg_data.get("id") == other.sg_data.get("id")
         )
 
-    ########################################## ####################################################
-    ########################################## ####################################################
+    # ----------------------------------------------------------------------------------------
+    # Properties
+
     @property
     def highest_version_number(self):
-        """
-        :return: The highest version number available in the ShotGrid database for this file
-        """
-
+        """Get highest version number available in the ShotGrid database for this file."""
         if self._latest_published_file:
             return self._latest_published_file.get("version_number")
-
         return None
 
     @property
     def node_name(self):
-        """
-        Get the name of the file node.
-        """
-
+        """Get the name of the file node."""
         return self._node_name
 
     @node_name.setter
@@ -76,10 +71,7 @@ class FileItem(object):
 
     @property
     def node_type(self):
-        """
-        Get the type of the file node.
-        """
-
+        """Get the type of the file node."""
         return self._node_type
 
     @node_type.setter
@@ -88,10 +80,7 @@ class FileItem(object):
 
     @property
     def path(self):
-        """
-        Get the path on disk for this file item.
-        """
-
+        """Get the path on disk for this file item."""
         return self._path
 
     @path.setter
@@ -100,10 +89,7 @@ class FileItem(object):
 
     @property
     def locked(self):
-        """
-        Get whether or not this file item is locked.
-        """
-
+        """Get whether or not this file item is locked."""
         return self._locked
 
     @locked.setter
@@ -112,10 +98,7 @@ class FileItem(object):
 
     @property
     def latest_published_file(self):
-        """
-        Get the latest published file for this file item.
-        """
-
+        """Get the latest published file for this file item."""
         return self._latest_published_file
 
     @latest_published_file.setter
@@ -124,34 +107,38 @@ class FileItem(object):
 
     @property
     def extra_data(self):
-        """
-        Get or set the extra data associated with this item.
-        """
-
+        """Get or set the extra data associated with this item."""
         return self._extra_data
 
     @extra_data.setter
     def extra_data(self, value):
-
         self._extra_data = value
 
     @property
     def sg_data(self):
-        """
-        Get or set the ShotGrid data associated with this item.
-        """
-
+        """Get or set the ShotGrid data associated with this item."""
         return self._sg_data
 
     @sg_data.setter
     def sg_data(self, value):
-
         self._sg_data = value
+
+    @property
+    def thumbnail_path(self):
+        """Get or set the thumbnail path for this item."""
+        return self._thumbnail_path
+
+    @thumbnail_path.setter
+    def thumbnail_path(self, value):
+        self._thumbnail_path = value
+
+    # ----------------------------------------------------------------------------------------
+    # Public methods
 
     def to_dict(self):
         """
         Return the FileItem as a dictionary. Only include the properties needed by the
-        scene operation hook update method.i
+        scene operation hook update method.
 
         :return: The item properties as a dictionary
         """
@@ -161,4 +148,5 @@ class FileItem(object):
             "node_type": self.node_type,
             "path": self.path,
             "extra_data": self.extra_data,
+            "sg_data": self.sg_data,
         }

@@ -29,4 +29,4 @@ def show_dialog(app):
     :rtype: AppDialog
     """
 
-    return app.engine.show_dialog("Scene Breakdown", app, AppDialog)
+    return app.engine.show_dialog(app.get_setting("display_name"), app, AppDialog)

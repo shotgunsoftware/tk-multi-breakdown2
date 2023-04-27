@@ -35,10 +35,6 @@ class BreakdownSceneOperations(HookBaseClass):
 
         super(BreakdownSceneOperations, self).__init__(*args, **kwargs)
 
-        # Keep track of the number of references in the scene, so that the scene can be
-        # updated when the number of references changes (reference added or removed),
-        # since there is no VRED API signal for reference removed (only created).
-        self._num_refs = 0
         # Keep track of the scene change callbacks that are registered, so that they can be
         # disconnected at a later time.
         self._on_references_changed_cb = None
@@ -143,11 +139,12 @@ class BreakdownSceneOperations(HookBaseClass):
         """
 
         # Keep track of the callback so that it can be disconnected later
-        self._on_references_changed_cb = lambda nodes, self=self, cb=scene_change_callback: self._on_references_changed(
-            nodes, cb
-        )
+        self._on_references_changed_cb = lambda nodes, cb=scene_change_callback: cb()
+
         # Set up the signal/slot connection to potentially call the scene change callback
-        # based on how the references have cahnged
+        # based on how the references have cahnged.
+        # NOTE ideally the VRED API would have signals for specific reference change events,
+        # until then, any reference change will trigger a full reload of the app.
         vrReferenceService.referencesChanged.connect(self._on_references_changed_cb)
 
     def unregister_scene_change_callback(self):
@@ -157,29 +154,7 @@ class BreakdownSceneOperations(HookBaseClass):
             vrReferenceService.referencesChanged.disconnect(
                 self._on_references_changed_cb
             )
-
-    def _on_references_changed(self, nodes, callback):
-        """
-        Slot called on receiving VRED API signal 'referencesChanged'.
-
-        Since there is no VRED API signal for when references are removed, listen for the
-        references changed signals and manually check if the number of references has changed.
-        If so, then execute the callback function that the number of references has been
-        updated, indicating that a reference has been added or removed.
-
-        :param nodes: The list of changed reference nodes passed from the 'referencesChanged'
-            signal. When empty, all nodes should be considered to be changed. NOTE: seems like
-            a VRED API bug but the list of nodes seems to always be empty..
-        :type nodes: list
-        :param callback: The function to execute on reference changes.
-        :type callback: function
-        """
-
-        new_num_refs = len(vrReferenceService.getSceneReferences())
-
-        if new_num_refs != self._num_refs:
-            callback()
-            self._num_refs = new_num_refs
+            self._on_references_changed_cb = None
 
 
 def get_reference_by_id(ref_id):
