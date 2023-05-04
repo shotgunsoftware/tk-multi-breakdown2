@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.5 documentation</title>
+  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.6 documentation</title>
   
 
   
@@ -118,7 +118,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.5.<br>
+    <b>tk-multi-breakdown2</b> v0.2.6.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -213,44 +213,128 @@
 
 
 <div class="viewcode-block" id="BreakdownManager"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager">[docs]</a><span class="k">class</span> <span class="nc">BreakdownManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class is used for managing and executing file updates.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class is used for managing and executing file updates.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bundle</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize the manager.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the manager.&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span> <span class="o">=</span> <span class="n">bundle</span>
 
 <div class="viewcode-block" id="BreakdownManager.scan_scene"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.scan_scene">[docs]</a>    <span class="nd">@sgtk</span><span class="o">.</span><span class="n">LogManager</span><span class="o">.</span><span class="n">log_timing</span>
-    <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Scan the current scene to return a list of object we could perform actions on.</span>
+    <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">execute_in_main_thread</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scan the current scene to return a list of scene references.</span>
 
-<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query</span>
-<span class="sd">                             for published files.</span>
-<span class="sd">        :return: A list of :class`FileItem` objects containing the file data.</span>
+<span class="sd">        The return dict value has the following key-values:</span>
+
+<span class="sd">            node (str)</span>
+<span class="sd">                The name of the node which holds the reference.</span>
+<span class="sd">            type (str)</span>
+<span class="sd">                The node type.</span>
+<span class="sd">            path (str)</span>
+<span class="sd">                The reference file path.</span>
+<span class="sd">            extra_data (dict)</span>
+<span class="sd">                Extra data for the reference (optional).</span>
+
+<span class="sd">        :param execute_in_main_thread: True will ensure the hook method is executed in the</span>
+<span class="sd">            main thread, else False will execute in the current thread. Default is True, since</span>
+<span class="sd">            the scan_scene function will need to execute DCC functionality that likely needs</span>
+<span class="sd">            to execute in the main thread (e.g. GUI events).</span>
+<span class="sd">        :type execute_in_main_thread: bool</span>
+
+<span class="sd">        :return: A list of scene references.</span>
+<span class="sd">        :rtype: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">file_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">execute_in_main_thread</span><span class="p">:</span>
+            <span class="c1"># Ensure that the scan scene operation is executed in the main UI thread. Many</span>
+            <span class="c1"># apps are sensitive to these types of operations happening in other threads.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">execute_in_main_thread</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">,</span> <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span> <span class="s2">&quot;scan_scene&quot;</span>
+            <span class="p">)</span>
 
-        <span class="c1"># todo: see if we need to execute this action in the main thread using engine.execute_in_main_thread()</span>
-        <span class="n">scene_objects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
-            <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span> <span class="s2">&quot;scan_scene&quot;</span>
-        <span class="p">)</span>
+        <span class="c1"># Execute in the current thread</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span><span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span> <span class="s2">&quot;scan_scene&quot;</span><span class="p">)</span></div>
 
-        <span class="c1"># only keep the files corresponding to Shotgun Published Files. As some files can come from other projects, we</span>
-        <span class="c1"># cannot rely on templates so we have to query SG instead</span>
-        <span class="n">file_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">scene_objects</span><span class="p">]</span>
+<div class="viewcode-block" id="BreakdownManager.get_published_files_from_file_paths"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths">[docs]</a>    <span class="nd">@sgtk</span><span class="o">.</span><span class="n">LogManager</span><span class="o">.</span><span class="n">log_timing</span>
+    <span class="k">def</span> <span class="nf">get_published_files_from_file_paths</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bg_task_manager</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Query the ShotGrid API to get the published files for the given file paths.</span>
 
+<span class="sd">        :param file_paths: A list of file paths to get the published files from.</span>
+<span class="sd">        :type file_paths: List[str]</span>
+<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query</span>
+<span class="sd">                             when retreiving the published files.</span>
+<span class="sd">        :type extra_fields: List[str]</span>
+<span class="sd">        :param bg_task_manager: (optional) A background task manager to execute the request</span>
+<span class="sd">            async. If not provided, the request will be executed synchronously.</span>
+<span class="sd">        :type: BackgroundTaskManager</span>
+
+<span class="sd">        :return: The task id for the request is returned if executed async, else the published</span>
+<span class="sd">            files data is returned if executed synchronosly.</span>
+<span class="sd">        :rtype: int | dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_paths</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">bg_task_manager</span> <span class="k">else</span> <span class="p">{}</span>
+
+        <span class="c1"># Get the published file fields to pass to the query</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_published_file_fields</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">extra_fields</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fields</span> <span class="o">+=</span> <span class="n">extra_fields</span>
 
-        <span class="n">published_files</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">(</span>
+        <span class="c1"># Option to run this in a background task since this can take some time to execute.</span>
+        <span class="k">if</span> <span class="n">bg_task_manager</span><span class="p">:</span>
+            <span class="c1"># Execute the request async and return the task id for the operation.</span>
+            <span class="k">return</span> <span class="n">bg_task_manager</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span>
+                <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">,</span>
+                <span class="n">task_args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">sgtk</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">],</span>
+                <span class="n">task_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="n">fields</span><span class="p">,</span> <span class="s2">&quot;only_current_project&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># No background task manager provided, execute the request synchronously and return</span>
+        <span class="c1"># the published files data immediately.</span>
+        <span class="k">return</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">sgtk</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span> <span class="n">only_current_project</span><span class="o">=</span><span class="kc">False</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="BreakdownManager.get_file_items"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_file_items">[docs]</a>    <span class="k">def</span> <span class="nf">get_file_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_objects</span><span class="p">,</span> <span class="n">published_files</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the file item objects for the given scene objects.</span>
+
+<span class="sd">        Scene objects that do not have a corresponding ShotGrid Published File will be omitted</span>
+<span class="sd">        from the result (a FileItem will not be created for it).</span>
+
+<span class="sd">        The `scene_objects` dict param expects the key-values:</span>
+
+<span class="sd">            node (str)</span>
+<span class="sd">                The name of the node which holds the reference.</span>
+<span class="sd">            type (str)</span>
+<span class="sd">                The node type.</span>
+<span class="sd">            path (str)</span>
+<span class="sd">                The reference file path.</span>
+<span class="sd">            extra_data (dict)</span>
+<span class="sd">                Extra data for the reference (optional).</span>
+
+<span class="sd">        :param scene_objects: Objects from the DCC. This value can be the result returned by</span>
+<span class="sd">            the `scan_scene` method.</span>
+<span class="sd">        :type scene_objects: dict</span>
+<span class="sd">        :param published_files: The list of published files corresponding to the</span>
+<span class="sd">            `scene_objects`. Any scene objects that do not have a matching published will be</span>
+<span class="sd">            omitted from the result (there will not be a FileItem object created for it). This</span>
+<span class="sd">            can be the result returned by the `sgtk.util.find_publish` method.</span>
+<span class="sd">        :type publishehd_files: List[dict]</span>
+
+<span class="sd">        :return: A list of FileItem objects representing the scene objects.</span>
+<span class="sd">        :rtype: List[FileItem]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">file_items</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">scene_objects</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">published_files</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">published_files</span><span class="p">:</span>
                 <span class="n">file_item</span> <span class="o">=</span> <span class="n">FileItem</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">],</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">],</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">])</span>
                 <span class="n">file_item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_data&quot;</span><span class="p">)</span>
                 <span class="n">file_item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">published_files</span><span class="p">[</span><span class="n">obj</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]]</span>
@@ -259,7 +343,7 @@
         <span class="k">return</span> <span class="n">file_items</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_published_file_fields"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields">[docs]</a>    <span class="k">def</span> <span class="nf">get_published_file_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the fields to pass to the query to retrieve the published files when scanning the</span>
 <span class="sd">        scene.</span>
 
@@ -271,26 +355,66 @@
             <span class="s2">&quot;published_file_fields&quot;</span><span class="p">,</span> <span class="p">[]</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="BreakdownManager.get_latest_published_file"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BreakdownManager.get_latest_published_file"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">data_retriever</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the latest available published file according to the current item context.</span>
 
 <span class="sd">        :param item: :class`FileItem` object we want to get the latest published file</span>
-<span class="sd">        :return:  The latest published file as a ShotGrid entity dictionary</span>
+<span class="sd">        :type item: FileItem</span>
+<span class="sd">        :param data_retreiver: If provided, the api request will be async. The default value</span>
+<span class="sd">            will execute the api request synchronously.</span>
+<span class="sd">        :type data_retriever: ShotgunDataRetriever</span>
+
+<span class="sd">        :return: The latest published file as a ShotGrid entity dictionary if the request was</span>
+<span class="sd">            synchronous, else the request background task id if the request was async.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">data_retriever</span> <span class="k">else</span> <span class="p">{}</span>
 
-        <span class="n">latest_published_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
-            <span class="s2">&quot;hook_get_published_files&quot;</span><span class="p">,</span> <span class="s2">&quot;get_latest_published_file&quot;</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
+            <span class="s2">&quot;hook_get_published_files&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;get_latest_published_file&quot;</span><span class="p">,</span>
+            <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">,</span>
+            <span class="n">data_retriever</span><span class="o">=</span><span class="n">data_retriever</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span> <span class="o">=</span> <span class="n">latest_published_file</span>
 
-        <span class="k">return</span> <span class="n">latest_published_file</span></div>
+        <span class="c1"># Only set the latest published file data if the result was immediately returned.</span>
+        <span class="k">if</span> <span class="n">data_retriever</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span> <span class="o">=</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="BreakdownManager.get_published_files_for_items"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items">[docs]</a>    <span class="k">def</span> <span class="nf">get_published_files_for_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">,</span> <span class="n">data_retriever</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all published files for the given items.</span>
+
+<span class="sd">        The published files returned may then be parsed to determine the latest published</span>
+<span class="sd">        file for each item.</span>
+
+<span class="sd">        :param items: the list of :class`FileItem` we want to get published files for.</span>
+<span class="sd">        :type items: List[FileItem]</span>
+<span class="sd">        :param data_retreiver: If provided, the api request will be async. The default value</span>
+<span class="sd">            will execute the api request synchronously.</span>
+<span class="sd">        :type data_retriever: ShotgunDataRetriever</span>
+
+<span class="sd">        :return: If the request is async, then the request task id is returned, else the</span>
+<span class="sd">            published file data result from the api request.</span>
+<span class="sd">        :rtype: str | dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">data_retriever</span> <span class="k">else</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
+            <span class="s2">&quot;hook_get_published_files&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;get_published_files_for_items&quot;</span><span class="p">,</span>
+            <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span>
+            <span class="n">data_retriever</span><span class="o">=</span><span class="n">data_retriever</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_published_file_history"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history">[docs]</a>    <span class="k">def</span> <span class="nf">get_published_file_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the published history for the selected item. It will gather all the published files with the same context</span>
 <span class="sd">        than the current item (project, name, task, ...)</span>
 
@@ -334,39 +458,63 @@
         <span class="k">return</span> <span class="p">[]</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.update_to_latest_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version">[docs]</a>    <span class="k">def</span> <span class="nf">update_to_latest_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the item to its latest version.</span>
 
 <span class="sd">        :param item: Item to update</span>
+<span class="sd">        :type item: FileItem</span>
+
+<span class="sd">        :return: True if the item requires the data model to update, else False will not</span>
+<span class="sd">            trigger a model update.</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span><span class="p">:</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_to_specific_version</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_to_specific_version</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.update_to_specific_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version">[docs]</a>    <span class="k">def</span> <span class="nf">update_to_specific_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the item to a specific version.</span>
 
 <span class="sd">        :param item: Item to update</span>
+<span class="sd">        :type item: FileItem</span>
 <span class="sd">        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to</span>
+<span class="sd">        :type sg_data: dict</span>
+
+<span class="sd">        :return: True if the item requires the data model to update, else False will not</span>
+<span class="sd">            trigger a model update.</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;local_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="c1"># store the current path into the extra_data in case we need to access it later in the hook</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span><span class="p">:</span>
-            <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;old_path&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
+        <span class="n">item_dict</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">][</span><span class="s2">&quot;local_path&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;old_path&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span><span class="p">[</span><span class="s2">&quot;old_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span>
+            <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">][</span><span class="s2">&quot;old_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span>
 
-        <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">][</span><span class="s2">&quot;local_path&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
-            <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span> <span class="s2">&quot;update&quot;</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="n">do_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
+            <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;update&quot;</span><span class="p">,</span>
+            <span class="n">item</span><span class="o">=</span><span class="n">item_dict</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">sg_data</span></div></div>
+        <span class="k">if</span> <span class="n">do_update</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Default to True if the hook return value was not explictly set</span>
+            <span class="n">do_update</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">do_update</span><span class="p">:</span>
+            <span class="c1"># Only update the file item if specified. Updating the item will affect the data</span>
+            <span class="c1"># model directly</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">sg_data</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">do_update</span></div></div>
 </pre></div>
 
            </div>
@@ -379,7 +527,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 

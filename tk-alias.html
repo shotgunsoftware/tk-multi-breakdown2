@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.2.5 documentation</title>
+  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.2.6 documentation</title>
   
 
   
@@ -131,7 +131,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.5.<br>
+    <b>tk-multi-breakdown2</b> v0.2.6.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -232,14 +232,23 @@
 
 
 <span class="k">class</span> <span class="nc">BreakdownSceneOperations</span><span class="p">(</span><span class="n">HookBaseClass</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Breakdown operations for Alias.</span>
 
 <span class="sd">    This implementation handles detection of Alias references.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class constructor.&quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">BreakdownSceneOperations</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Keep track of the scene change callbacks that are registered, so that they can be</span>
+        <span class="c1"># disconnected at a later time.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+
     <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The scan scene method is executed once at startup and its purpose is</span>
 <span class="sd">        to analyze the current scene and return a list of references that are</span>
 <span class="sd">        to be potentially operated on.</span>
@@ -261,61 +270,47 @@
 <span class="sd">        available. Any such versions are then displayed in the UI as out of date.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="c1"># Get all referencs currently in Alias</span>
+        <span class="n">alias_refs</span> <span class="o">=</span> <span class="n">alias_api</span><span class="o">.</span><span class="n">get_references</span><span class="p">()</span>
+
+        <span class="c1"># The references result to return. This will be a list of references formatted in a</span>
+        <span class="c1"># dictionary with the required key-values:</span>
+        <span class="c1">#   &#39;node_name&#39;: str, &#39;node_type&#39;: str, &#39;path&#39;: str</span>
         <span class="n">refs</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="n">alias_refs</span> <span class="o">=</span> <span class="n">alias_api</span><span class="o">.</span><span class="n">get_references</span><span class="p">()</span>
-        <span class="n">sg_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sg_publish_data</span><span class="p">(</span><span class="n">alias_refs</span><span class="p">)</span>
+        <span class="c1"># The set of file paths already added to the result. The result should contain items</span>
+        <span class="c1"># with unique paths.</span>
+        <span class="n">file_paths</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-        <span class="c1"># Find PublishedFiles associated with the references</span>
+        <span class="c1"># For each Alias reference, add an item to the result for both its source path and path,</span>
+        <span class="c1"># if they both exist. The next step to gather the file items will query for the</span>
+        <span class="c1"># Published Files for each of these reference objects, which will decide if the source</span>
+        <span class="c1"># path or path value should be used for this reference.</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">alias_refs</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">source_path</span> <span class="ow">in</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">node_sg_data</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">source_path</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span> <span class="ow">in</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">node_sg_data</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">node_sg_data</span> <span class="o">=</span> <span class="kc">None</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">node_sg_data</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="s2">&quot;Couldn&#39;t find a ShotGrid Published File entry for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">r</span><span class="o">.</span><span class="n">source_path</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-                <span class="k">continue</span>
-
-            <span class="n">tk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">get_tk_from_project_id</span><span class="p">(</span>
-                <span class="n">node_sg_data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-            <span class="p">)</span>
-            <span class="n">reference_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">get_reference_template</span><span class="p">(</span>
-                <span class="n">tk</span><span class="p">,</span> <span class="n">node_sg_data</span>
-            <span class="p">)</span>
-
-            <span class="c1"># here, we&#39;ve imported a file as reference and we need to use the source path to get the next</span>
-            <span class="c1"># available version</span>
-            <span class="k">if</span> <span class="n">reference_template</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">source_path</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">source_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
                 <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="p">{</span>
                         <span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                         <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="s2">&quot;reference&quot;</span><span class="p">,</span>
                         <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">source_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">),</span>
-                        <span class="s2">&quot;extra_data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;sg_data&quot;</span><span class="p">:</span> <span class="n">node_sg_data</span><span class="p">},</span>
                     <span class="p">}</span>
                 <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
+                <span class="n">file_paths</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">source_path</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
                 <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="p">{</span>
                         <span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                         <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="s2">&quot;reference&quot;</span><span class="p">,</span>
                         <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">),</span>
-                        <span class="s2">&quot;extra_data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;sg_data&quot;</span><span class="p">:</span> <span class="n">node_sg_data</span><span class="p">},</span>
                     <span class="p">}</span>
                 <span class="p">)</span>
+                <span class="n">file_paths</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">refs</span>
 
     <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform replacements given a number of scene items passed from the app.</span>
 
 <span class="sd">        Once a selection has been performed in the main UI and the user clicks</span>
@@ -323,41 +318,46 @@
 
 <span class="sd">        :param item: Dictionary on the same form as was generated by the scan_scene hook above.</span>
 <span class="sd">                     The path key now holds the path that the node should be updated *to* rather than the current path.</span>
+<span class="sd">        :type item: dict</span>
+
+<span class="sd">        :return: False to indicate that a file model update is not necessary (Alias events</span>
+<span class="sd">            will trigger the update).</span>
+<span class="sd">        :rtype: bool</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">]</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
         <span class="n">extra_data</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span>
+        <span class="n">sg_data</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;sg_data&quot;</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;reference&quot;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">update_reference</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_reference</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">update_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+        <span class="c1"># Alias events triggered from any reference update will update the file data model</span>
+        <span class="c1"># Return False to indicate that the file data model does not need to perform an update</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">update_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the Alias reference from the given data.</span>
+
+<span class="sd">        :param path: The new file path to set the Alias reference to.</span>
+<span class="sd">        :type path: str</span>
+<span class="sd">        :param extra_data: Additional data containing the existing Alias reference file path,</span>
+<span class="sd">            which will be updated to the new file path. The existing path is used to look up</span>
+<span class="sd">            the reference to update.</span>
+<span class="sd">        :type extra_data: dict (required key-values: &#39;old_path&#39;: str)</span>
+<span class="sd">        :param sg_data: Additional ShotGrid specific data required to look up reference</span>
+<span class="sd">            templates to perform the reference update.</span>
+<span class="sd">        :type sg_data: dict (required key-values: &#39;project&#39;: dict, &#39;task&#39;: dict)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">old_path</span> <span class="o">=</span> <span class="n">extra_data</span><span class="p">[</span><span class="s2">&quot;old_path&quot;</span><span class="p">]</span>
-        <span class="n">sg_data</span> <span class="o">=</span> <span class="n">extra_data</span><span class="p">[</span><span class="s2">&quot;sg_data&quot;</span><span class="p">]</span>
-
         <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
         <span class="c1"># if the new path is not a path to a wref file, we need to handle the conversion</span>
         <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="s2">&quot;.wref&quot;</span><span class="p">:</span>
-
-            <span class="c1"># get the Alias Translations framework to translate the file to wref before importing it</span>
-            <span class="n">framework</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_framework</span><span class="p">(</span><span class="s2">&quot;tk-framework-aliastranslations_v0.x.x&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">framework</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="s2">&quot;Couldn&#39;t load tk-framework-aliastranslations. Skipping reference update for file </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">path</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-                <span class="k">return</span>
-
-            <span class="n">tk_framework_aliastranslations</span> <span class="o">=</span> <span class="n">framework</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span>
-                <span class="s2">&quot;tk_framework_aliastranslations&quot;</span>
-            <span class="p">)</span>
-
-            <span class="n">tk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">get_tk_from_project_id</span><span class="p">(</span><span class="n">sg_data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+            <span class="n">tk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">get_tk_from_project</span><span class="p">(</span><span class="n">sg_data</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">])</span>
             <span class="n">source_template</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">template_from_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="n">reference_template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">get_reference_template</span><span class="p">(</span><span class="n">tk</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">)</span>
 
@@ -378,12 +378,27 @@
 
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Translating file to wref...&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># get the Alias Translations framework to translate the file to wref before importing it</span>
+                    <span class="n">framework</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_framework</span><span class="p">(</span>
+                        <span class="s2">&quot;tk-framework-aliastranslations_v0.x.x&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">framework</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="s2">&quot;Couldn&#39;t load tk-framework-aliastranslations. Skipping reference update for file </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">path</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="k">return</span>
+
+                    <span class="n">tk_framework_aliastranslations</span> <span class="o">=</span> <span class="n">framework</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span>
+                        <span class="s2">&quot;tk_framework_aliastranslations&quot;</span>
+                    <span class="p">)</span>
                     <span class="n">translator</span> <span class="o">=</span> <span class="n">tk_framework_aliastranslations</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span>
                         <span class="n">path</span><span class="p">,</span> <span class="n">reference_path</span>
                     <span class="p">)</span>
                     <span class="n">translator</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
                     <span class="n">path</span> <span class="o">=</span> <span class="n">reference_path</span>
-
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                     <span class="s2">&quot;Couldn&#39;t convert file to wref, missing templates. Skipping file </span><span class="si">{}</span><span class="s2">...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -401,24 +416,8 @@
         <span class="c1"># get the reference by its uuid if possible, otherwise use its name to find the right instance</span>
         <span class="n">alias_api</span><span class="o">.</span><span class="n">update_reference</span><span class="p">(</span><span class="n">old_path</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_sg_publish_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alias_refs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
-        <span class="n">path_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">alias_refs</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">source_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
-                <span class="n">path_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">source_path</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">path_list</span><span class="p">:</span>
-                <span class="n">path_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">sgtk</span><span class="p">,</span>
-            <span class="n">path_list</span><span class="p">,</span>
-            <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">],</span>
-            <span class="n">only_current_project</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-
     <span class="k">def</span> <span class="nf">register_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register the callback such that it is executed on a scene change event.</span>
 
 <span class="sd">        This hook method is useful to reload the breakdown data when the data in the scene has</span>
@@ -427,24 +426,77 @@
 <span class="sd">        For Alias, the callback is registered with the AliasEngine event watcher to be</span>
 <span class="sd">        triggered on a PostRetrieve event (e.g. when a file is opened).</span>
 
-<span class="sd">        :param callback: The callback to register and execute on scene chagnes.</span>
-<span class="sd">        :type callback: function</span>
+<span class="sd">        :param scene_change_callback: The callback to register and execute on scene chagnes.</span>
+<span class="sd">        :type scene_change_callback: function</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># Trigger the scene change callback for these event messages</span>
+        <span class="c1"># Define the list of Alias event to that will trigger the scene change callback.</span>
         <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">PostRetrieve</span><span class="p">,</span>
             <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileDeleted</span><span class="p">,</span>
+            <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">StageActive</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="c1"># Alias event messages that are only available in version &gt;= 2023.0</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="p">,</span> <span class="s2">&quot;ReferenceFileAdded&quot;</span><span class="p">):</span>
             <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileAdded</span><span class="p">)</span>
 
-        <span class="c1"># No need to set up the unregister_scene_change_callback method since the</span>
-        <span class="c1"># AliasEventWatcher will take care of disconnecting the callbacks</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span><span class="o">.</span><span class="n">register_alias_callback</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="n">scene_change_callback</span><span class="p">(),</span> <span class="n">events</span>
+        <span class="c1"># Create the scene change callback to register with the Alias event watcher.</span>
+        <span class="n">scene_change_cb</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">result</span><span class="p">,</span> <span class="n">cb</span><span class="o">=</span><span class="n">scene_change_callback</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__handle_event_callback</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span> <span class="n">cb</span>
+            <span class="p">)</span>
         <span class="p">)</span>
+
+        <span class="c1"># Keep track of the Alias event callbacks that will be registered, so that they can</span>
+        <span class="c1"># properly be unregistered on shut down.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span> <span class="o">=</span> <span class="p">[(</span><span class="n">scene_change_cb</span><span class="p">,</span> <span class="n">events</span><span class="p">)]</span>
+
+        <span class="c1"># Register the event callbacks to the engine&#39;s event watcher</span>
+        <span class="k">for</span> <span class="n">callback</span><span class="p">,</span> <span class="n">events</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span><span class="o">.</span><span class="n">register_alias_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">events</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">unregister_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister the scene change callbacks by disconnecting any signals.&quot;&quot;&quot;</span>
+
+        <span class="c1"># Unregister the event callbacks from the engine&#39;s event watcher</span>
+        <span class="k">for</span> <span class="n">callback</span><span class="p">,</span> <span class="n">events</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span><span class="o">.</span><span class="n">unregister_alias_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">events</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__handle_event_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_result</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Intermediate callback handler for Alias events.</span>
+
+<span class="sd">        Process the result returned by the Alias event that triggered the callback, to call</span>
+<span class="sd">        the scene callback function with the appropriate parameters.</span>
+
+<span class="sd">        :param event_result: The object returned by the Alias event.</span>
+<span class="sd">        :type event_result: alias_api.MessageResult</span>
+<span class="sd">        :param scene_change_callback: The callback to execute.</span>
+<span class="sd">        :type scene_change_callback: function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">event_result</span><span class="o">.</span><span class="n">message_type</span> <span class="o">==</span> <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileDeleted</span><span class="p">:</span>
+            <span class="c1"># Remove the reference from the model by its path.</span>
+            <span class="n">scene_change_callback</span><span class="p">(</span>
+                <span class="n">event_type</span><span class="o">=</span><span class="s2">&quot;remove&quot;</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">event_result</span><span class="o">.</span><span class="n">reference_file_1_path</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="p">,</span> <span class="s2">&quot;ReferenceFileAdded&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">event_result</span><span class="o">.</span><span class="n">message_type</span> <span class="o">==</span> <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileAdded</span>
+        <span class="p">):</span>
+            <span class="c1"># Add the new reference to the model</span>
+            <span class="n">file_item_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">event_result</span><span class="o">.</span><span class="n">reference_file_1_name</span><span class="p">,</span>
+                <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="s2">&quot;reference&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">event_result</span><span class="o">.</span><span class="n">reference_file_1_path</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">scene_change_callback</span><span class="p">(</span><span class="n">event_type</span><span class="o">=</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">file_item_data</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Requset a full model reload.</span>
+            <span class="n">scene_change_callback</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -469,7 +521,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 

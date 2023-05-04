@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.2.5 documentation</title>
+  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.2.6 documentation</title>
   
 
   
@@ -130,7 +130,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.5.<br>
+    <b>tk-multi-breakdown2</b> v0.2.6.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -241,23 +241,19 @@
 
 
 <span class="k">class</span> <span class="nc">BreakdownSceneOperations</span><span class="p">(</span><span class="n">HookBaseClass</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A hook to perform scene operations in VRED necessary for Breakdown 2 App.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A hook to perform scene operations in VRED necessary for Breakdown 2 App.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Class constructor.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class constructor.&quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">(</span><span class="n">BreakdownSceneOperations</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="c1"># Keep track of the number of references in the scene, so that the scene can be</span>
-        <span class="c1"># updated when the number of references changes (reference added or removed),</span>
-        <span class="c1"># since there is no VRED API signal for reference removed (only created).</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_num_refs</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="c1"># Keep track of the scene change callbacks that are registered, so that they can be</span>
         <span class="c1"># disconnected at a later time.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The scan scene method is executed once at startup and its purpose is</span>
 <span class="sd">        to analyze the current scene and return a list of references that are</span>
 <span class="sd">        to be potentially operated on.</span>
@@ -311,7 +307,7 @@
         <span class="k">return</span> <span class="n">refs</span>
 
     <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform replacements given a number of scene items passed from the app.</span>
 
 <span class="sd">        Once a selection has been performed in the main UI and the user clicks</span>
@@ -342,7 +338,7 @@
             <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">reimportSmartReferences</span><span class="p">([</span><span class="n">ref_node</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">register_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register the callback such that it is executed on a scene change event.</span>
 
 <span class="sd">        This hook method is useful to reload the breakdown data when the data in the scene has</span>
@@ -356,47 +352,26 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Keep track of the callback so that it can be disconnected later</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">cb</span><span class="o">=</span><span class="n">scene_change_callback</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed</span><span class="p">(</span>
-            <span class="n">nodes</span><span class="p">,</span> <span class="n">cb</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cb</span><span class="o">=</span><span class="n">scene_change_callback</span><span class="p">:</span> <span class="n">cb</span><span class="p">()</span>
+
         <span class="c1"># Set up the signal/slot connection to potentially call the scene change callback</span>
-        <span class="c1"># based on how the references have cahnged</span>
+        <span class="c1"># based on how the references have cahnged.</span>
+        <span class="c1"># NOTE ideally the VRED API would have signals for specific reference change events,</span>
+        <span class="c1"># until then, any reference change will trigger a full reload of the app.</span>
         <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">referencesChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">unregister_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Unregister the scene change callbacks by disconnecting any signals.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister the scene change callbacks by disconnecting any signals.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span><span class="p">:</span>
             <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">referencesChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
             <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_on_references_changed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Slot called on receiving VRED API signal &#39;referencesChanged&#39;.</span>
-
-<span class="sd">        Since there is no VRED API signal for when references are removed, listen for the</span>
-<span class="sd">        references changed signals and manually check if the number of references has changed.</span>
-<span class="sd">        If so, then execute the callback function that the number of references has been</span>
-<span class="sd">        updated, indicating that a reference has been added or removed.</span>
-
-<span class="sd">        :param nodes: The list of changed reference nodes passed from the &#39;referencesChanged&#39;</span>
-<span class="sd">            signal. When empty, all nodes should be considered to be changed. NOTE: seems like</span>
-<span class="sd">            a VRED API bug but the list of nodes seems to always be empty..</span>
-<span class="sd">        :type nodes: list</span>
-<span class="sd">        :param callback: The function to execute on reference changes.</span>
-<span class="sd">        :type callback: function</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">new_num_refs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getSceneReferences</span><span class="p">())</span>
-
-        <span class="k">if</span> <span class="n">new_num_refs</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_refs</span><span class="p">:</span>
-            <span class="n">callback</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_num_refs</span> <span class="o">=</span> <span class="n">new_num_refs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="k">def</span> <span class="nf">get_reference_by_id</span><span class="p">(</span><span class="n">ref_id</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a reference node from its name.</span>
 
 <span class="sd">    :param ref_name: Name of the reference we want to get the associated node from</span>
@@ -429,7 +404,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Autodesk
+        &copy; Copyright 2023, Autodesk
 
     </p>
   </div> 
