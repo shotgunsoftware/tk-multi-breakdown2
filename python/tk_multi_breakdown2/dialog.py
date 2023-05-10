@@ -179,6 +179,9 @@ class AppDialog(QtGui.QWidget):
         )
 
         self._file_proxy_model = FileProxyModel(self)
+        self._file_proxy_model.setDynamicSortFilter(True)
+        self._file_proxy_model.setSortRole(QtCore.Qt.DisplayRole)
+        self._file_proxy_model.sort(0, QtCore.Qt.AscendingOrder)
         self._file_proxy_model.setSourceModel(self._file_model)
         self._ui.file_view.setModel(self._file_proxy_model)
 

@@ -397,6 +397,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # It is a file item
             file_item = model_item.file_item
 
+            if role == QtCore.Qt.DisplayRole:
+                return file_item.sg_data.get("name") or file_item.node_name
+
             if role == QtCore.Qt.DecorationRole:
                 if not model_item.thumbnail_icon:
                     model_item.set_thumbnail(file_item.thumbnail_path)
