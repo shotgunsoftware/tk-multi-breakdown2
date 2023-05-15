@@ -82,10 +82,6 @@ class AppDialog(QtGui.QWidget):
         # retrieved async.
         self._dynamic_loading = False
 
-        # Keep track of when a menu is executing. This is to avoid triggering unwanted DCC
-        # event callbacks when menu actions are executed.
-        self.__context_menu_executing = False
-
         # create a single instance of the task manager that manages all
         # asynchronous work/tasks
         self._bg_task_manager = BackgroundTaskManager(self, max_threads=2)
@@ -183,6 +179,9 @@ class AppDialog(QtGui.QWidget):
         )
 
         self._file_proxy_model = FileProxyModel(self)
+        self._file_proxy_model.setDynamicSortFilter(True)
+        self._file_proxy_model.setSortRole(QtCore.Qt.DisplayRole)
+        self._file_proxy_model.sort(0, QtCore.Qt.AscendingOrder)
         self._file_proxy_model.setSourceModel(self._file_model)
         self._ui.file_view.setModel(self._file_proxy_model)
 
@@ -803,12 +802,7 @@ class AppDialog(QtGui.QWidget):
             lambda: self._set_details_panel_visibility(True)
         )
         context_menu.addAction(show_details_action)
-
-        self.__context_menu_executing = True
-        try:
-            context_menu.exec_(pnt)
-        finally:
-            self.__context_menu_executing = False
+        context_menu.exec_(pnt)
 
     def _show_history_item_context_menu(self, view, index, pos):
         """
@@ -861,12 +855,7 @@ class AppDialog(QtGui.QWidget):
 
         menu = QtGui.QMenu()
         menu.addActions(actions)
-
-        self.__context_menu_executing = True
-        try:
-            menu.exec_(view.mapToGlobal(pos))
-        finally:
-            self.__context_menu_executing = False
+        menu.exec_(view.mapToGlobal(pos))
 
     def _set_details_panel_visibility(self, visible):
         """
@@ -999,12 +988,6 @@ class AppDialog(QtGui.QWidget):
         :param data: The data that has changed.
         :type data: str | dict
         """
-
-        if self.__context_menu_executing:
-            # Ignore DCC event callbacks that are triggered from executing a context menu
-            # action. If these actions do require an event callback, the action can manually
-            # execute the callback if needed. This is to avoid unwanted model reloads.
-            return
 
         invalidate_filtering = False
         is_reload = event_type == "reload"

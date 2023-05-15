@@ -119,9 +119,17 @@ class BreakdownSceneOperations(HookBaseClass):
         if node_type == "reference":
             self.update_reference(path, extra_data, sg_data)
 
-        # Alias events triggered from any reference update will update the file data model
-        # Return False to indicate that the file data model does not need to perform an update
-        return False
+        try:
+            api_alias_version = alias_api.__alias_version__
+            major_version = int(api_alias_version.split(".")[0])
+        except:
+            major_version = -1
+
+        if major_version >= 2023:
+            # Alias events triggered from any reference update will update the file data model
+            # Return False to indicate that the file data model does not need to perform an update
+            return False
+        return True
 
     def update_reference(self, path, extra_data, sg_data):
         """
@@ -219,12 +227,15 @@ class BreakdownSceneOperations(HookBaseClass):
         # Define the list of Alias event to that will trigger the scene change callback.
         events = [
             alias_api.AlMessageType.PostRetrieve,
-            alias_api.AlMessageType.ReferenceFileDeleted,
             alias_api.AlMessageType.StageActive,
         ]
+
         # Alias event messages that are only available in version >= 2023.0
         if hasattr(alias_api.AlMessageType, "ReferenceFileAdded"):
             events.append(alias_api.AlMessageType.ReferenceFileAdded)
+            # Only add the deleted event if the added event is available - otherwise
+            # add/remove references doesn't work completely
+            events.append(alias_api.AlMessageType.ReferenceFileDeleted)
 
         # Create the scene change callback to register with the Alias event watcher.
         scene_change_cb = (
@@ -244,9 +255,14 @@ class BreakdownSceneOperations(HookBaseClass):
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
+        event_watcher = self.parent.engine.event_watcher
+        if not event_watcher:
+            # Engine already shutdown and removed event callbacks
+            return
+
         # Unregister the event callbacks from the engine's event watcher
         for callback, events in self.__alias_event_callbacks:
-            self.parent.engine.event_watcher.unregister_alias_callback(callback, events)
+            event_watcher.unregister_alias_callback(callback, events)
 
     def __handle_event_callback(self, event_result, scene_change_callback):
         """
