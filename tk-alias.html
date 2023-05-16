@@ -10,7 +10,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.2.6 documentation</title>
+  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.2.7 documentation</title>
   
 
   
@@ -131,7 +131,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.6.<br>
+    <b>tk-multi-breakdown2</b> v0.2.7.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -333,9 +333,17 @@
         <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;reference&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update_reference</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">)</span>
 
-        <span class="c1"># Alias events triggered from any reference update will update the file data model</span>
-        <span class="c1"># Return False to indicate that the file data model does not need to perform an update</span>
-        <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">api_alias_version</span> <span class="o">=</span> <span class="n">alias_api</span><span class="o">.</span><span class="n">__alias_version__</span>
+            <span class="n">major_version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">api_alias_version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">major_version</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">major_version</span> <span class="o">&gt;=</span> <span class="mi">2023</span><span class="p">:</span>
+            <span class="c1"># Alias events triggered from any reference update will update the file data model</span>
+            <span class="c1"># Return False to indicate that the file data model does not need to perform an update</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">update_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -433,12 +441,15 @@
         <span class="c1"># Define the list of Alias event to that will trigger the scene change callback.</span>
         <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">PostRetrieve</span><span class="p">,</span>
-            <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileDeleted</span><span class="p">,</span>
             <span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">StageActive</span><span class="p">,</span>
         <span class="p">]</span>
+
         <span class="c1"># Alias event messages that are only available in version &gt;= 2023.0</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="p">,</span> <span class="s2">&quot;ReferenceFileAdded&quot;</span><span class="p">):</span>
             <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileAdded</span><span class="p">)</span>
+            <span class="c1"># Only add the deleted event if the added event is available - otherwise</span>
+            <span class="c1"># add/remove references doesn&#39;t work completely</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alias_api</span><span class="o">.</span><span class="n">AlMessageType</span><span class="o">.</span><span class="n">ReferenceFileDeleted</span><span class="p">)</span>
 
         <span class="c1"># Create the scene change callback to register with the Alias event watcher.</span>
         <span class="n">scene_change_cb</span> <span class="o">=</span> <span class="p">(</span>
@@ -458,9 +469,14 @@
     <span class="k">def</span> <span class="nf">unregister_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister the scene change callbacks by disconnecting any signals.&quot;&quot;&quot;</span>
 
+        <span class="n">event_watcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">event_watcher</span><span class="p">:</span>
+            <span class="c1"># Engine already shutdown and removed event callbacks</span>
+            <span class="k">return</span>
+
         <span class="c1"># Unregister the event callbacks from the engine&#39;s event watcher</span>
         <span class="k">for</span> <span class="n">callback</span><span class="p">,</span> <span class="n">events</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span><span class="o">.</span><span class="n">unregister_alias_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">events</span><span class="p">)</span>
+            <span class="n">event_watcher</span><span class="o">.</span><span class="n">unregister_alias_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">events</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__handle_event_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_result</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
