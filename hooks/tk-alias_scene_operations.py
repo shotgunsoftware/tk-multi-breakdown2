@@ -255,9 +255,14 @@ class BreakdownSceneOperations(HookBaseClass):
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
+        event_watcher = self.parent.engine.event_watcher
+        if not event_watcher:
+            # Engine already shutdown and removed event callbacks
+            return
+
         # Unregister the event callbacks from the engine's event watcher
         for callback, events in self.__alias_event_callbacks:
-            self.parent.engine.event_watcher.unregister_alias_callback(callback, events)
+            event_watcher.unregister_alias_callback(callback, events)
 
     def __handle_event_callback(self, event_result, scene_change_callback):
         """
