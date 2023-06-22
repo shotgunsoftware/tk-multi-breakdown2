@@ -1630,7 +1630,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             self._finish_reload()
 
 
-class FileModelItem:
+class FileModelItem(object):
     """Data structure to hold information about an item in the Layer model."""
 
     def __init__(self, file_item):
