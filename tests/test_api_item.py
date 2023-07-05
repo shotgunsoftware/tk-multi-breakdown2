@@ -87,8 +87,8 @@ class TestApiItem:
         Test the to_dict method.
         """
 
-        expected_fields = ["node_name", "node_type", "path", "extra_data"]
-        excluded_fields = ["sg_data", "latest_published_file"]
+        expected_fields = ["node_name", "node_type", "path", "extra_data", "sg_data"]
+        excluded_fields = ["latest_published_file", "locked", "thumbnail_path"]
 
         file_item = FileItem(**file_item_data)
         file_item_dict = file_item.to_dict()

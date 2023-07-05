@@ -16,7 +16,7 @@ from tank_vendor import six
 from .ui.dialog import Ui_Dialog
 from .ui import resources_rc  # Required for accessing icons
 
-from .file_model import FileModel
+from .file_item_model import FileTreeItemModel as FileModel
 from .file_history_model import FileHistoryModel
 from .actions import ActionManager
 from .framework_qtwidgets import (
@@ -58,6 +58,7 @@ class AppDialog(QtGui.QWidget):
     FILTER_MENU_STATE = "filter_menu_state"
     GROUP_BY_SETTING = "group_by"
     AUTO_REFRESH_SETTING = "auto_refresh"
+    DYNAMIC_LOADING_SETTING = "dynamic_loading"
 
     (
         THUMBNAIL_VIEW_MODE,
@@ -74,9 +75,16 @@ class AppDialog(QtGui.QWidget):
 
         self._bundle = sgtk.platform.current_bundle()
 
+        # This property indicates if the app should listen for DCC events to perform data
+        # refreshes automatically.
+        self._auto_refresh = False
+        # This property indicates if the app should load the data in dynamically as it is
+        # retrieved async.
+        self._dynamic_loading = False
+
         # create a single instance of the task manager that manages all
         # asynchronous work/tasks
-        self._bg_task_manager = BackgroundTaskManager(self, max_threads=8)
+        self._bg_task_manager = BackgroundTaskManager(self, max_threads=2)
         self._bg_task_manager.start_processing()
 
         shotgun_globals.register_bg_task_manager(self._bg_task_manager)
@@ -109,29 +117,49 @@ class AppDialog(QtGui.QWidget):
 
         # Set up the refresh button menu
         refresh_action = QtGui.QAction(SGQIcon.refresh(), "Refresh", self)
-        refresh_action.triggered.connect(self._refresh)
-        auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
-        auto_refresh_option_action.setCheckable(True)
-        auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
+        refresh_action.triggered.connect(self._reload_file_model)
+        self._auto_refresh_option_action = QtGui.QAction("Turn On Auto-Refresh", self)
+        self._auto_refresh_option_action.setCheckable(True)
+        self._auto_refresh_option_action.triggered.connect(self._on_toggle_auto_refresh)
+        self._dynamic_loading_action = QtGui.QAction("Turn On Dynamic Loading", self)
+        self._dynamic_loading_action.setCheckable(True)
+        self._dynamic_loading_action.triggered.connect(self._on_toggle_dynamic_loading)
         refresh_button_menu = QtGui.QMenu(self)
-        refresh_button_menu.addActions([refresh_action, auto_refresh_option_action])
+        refresh_button_menu.addActions(
+            [
+                refresh_action,
+                self._auto_refresh_option_action,
+                self._dynamic_loading_action,
+            ]
+        )
         self._ui.refresh_btn.setMenu(refresh_button_menu)
         self._ui.refresh_btn.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
         self._ui.refresh_btn.setIcon(SGQIcon.refresh())
         self._ui.refresh_btn.setCheckable(True)
         self._ui.refresh_btn.clicked.connect(self._on_refresh_clicked)
 
-        # Property indicating if the app should auto-refresh. First check if there a user
-        # setting saved for this property, else default to the config settings.
+        # -----------------------------------------------------
+        # Restore setting required to set up widgets. The rest of the settings will be
+
+        # Restore the auto-refresh option in the refresh menu. First check if there a user
+        # setting saved for this property, else default to the config setting.
         self._auto_refresh = self._settings_manager.retrieve(
             self.AUTO_REFRESH_SETTING, None
         )
         if self._auto_refresh is None:
             self._auto_refresh = self._bundle.get_setting("auto_refresh", True)
-
-        # Initialize the auto-refresh option in the refresh menu
-        auto_refresh_option_action.setChecked(self._auto_refresh)
+        self._auto_refresh_option_action.setChecked(self._auto_refresh)
         self._ui.refresh_btn.setChecked(self._auto_refresh)
+
+        # Restore the dynamic loading option in the refresh menu. This property indicates
+        # if the app should load the data in dynamically as it is retrieved async.
+        self._dynamic_loading = self._settings_manager.retrieve(
+            self.DYNAMIC_LOADING_SETTING, True
+        )
+        self._dynamic_loading_action.setChecked(self._dynamic_loading)
+
+        # restored in the designated retore_state method
+        group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
 
         # -----------------------------------------------------
         # main file view
@@ -139,14 +167,21 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self._ui.file_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-        group_by = self._settings_manager.retrieve(self.GROUP_BY_SETTING, None)
         if group_by is None:
             group_by = self._bundle.get_setting("group_by", None)
+
         self._file_model = FileModel(
-            self, self._bg_task_manager, group_by=group_by, polling=self._auto_refresh
+            self,
+            self._bg_task_manager,
+            group_by=group_by,
+            polling=self._auto_refresh,
+            dynamic_loading=self._dynamic_loading,
         )
 
         self._file_proxy_model = FileProxyModel(self)
+        self._file_proxy_model.setDynamicSortFilter(True)
+        self._file_proxy_model.setSortRole(QtCore.Qt.DisplayRole)
+        self._file_proxy_model.sort(0, QtCore.Qt.AscendingOrder)
         self._file_proxy_model.setSourceModel(self._file_model)
         self._ui.file_view.setModel(self._file_proxy_model)
 
@@ -211,25 +246,58 @@ class AppDialog(QtGui.QWidget):
             FilterItem.FilterOp.IN,
             data_func=list_item_delegate.get_displayed_text,
         )
-        self._filter_menu = FilterMenu(self)
-        self._filter_menu.set_ignore_fields(
+        self._filter_menu = FilterMenu(self, refresh_on_show=False)
+        # TODO allow this list of filters to be defined in the config.
+        self._filter_menu.set_accept_fields(
             [
-                "PublishedFile.Id",
-                "PublishedFile.path",
-                "PublishedFile.published_file_type",
-                "{}.latest_published_file".format(self._file_model.FILE_ITEM_ROLE),
+                "{sg_data_role}.PublishedFile.created_at".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.created_by.HumanUser.name".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.description".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.entity".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.name".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.project".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.published_file_type".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.sg_status_list".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.tags".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.task".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.task.Task.sg_status_list".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{sg_data_role}.PublishedFile.version_number".format(
+                    sg_data_role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ),
+                "{status_model_role}.status".format(
+                    status_model_role=self._file_model.STATUS_FILTER_DATA_ROLE
+                ),
             ]
         )
         self._filter_menu.set_filter_model(self._file_proxy_model)
         self._filter_menu.set_filter_roles(
             [
                 self._file_model.STATUS_FILTER_DATA_ROLE,
-                self._file_model.FILE_ITEM_ROLE,
                 self._file_model.FILE_ITEM_SG_DATA_ROLE,
             ]
         )
-        self._filter_menu_restored = False
-        self._filter_menu.initialize_menu()
         self._ui.filter_btn.setMenu(self._filter_menu)
 
         # Set up the view modes
@@ -312,19 +380,8 @@ class AppDialog(QtGui.QWidget):
         )
         self._set_details_panel_visibility(details_panel_visibility)
 
-        # Restore the splitter state that divides the main view and the details
-        # First try to restore the state from the settings manager
-        splitter_state = self._settings_manager.retrieve(self.SPLITTER_STATE, None)
-        if not splitter_state:
-            # Splitter state was not found in the settings manager, check the raw values settings.
-            splitter_state = self._raw_values_settings.value(self.SPLITTER_STATE)
-
-        if splitter_state:
-            self._ui.details_splitter.restoreState(splitter_state)
-        else:
-            # Splitter state was not restored, default to set details size to 1 (the min value
-            # to show the details, but will be at a minimal size)
-            self._ui.details_splitter.setSizes([800, 1])
+        # Restore the app settings for the user.
+        self.restore_state()
 
         # -----------------------------------------------------
         # Connect signals
@@ -332,7 +389,9 @@ class AppDialog(QtGui.QWidget):
         # Model & Views
         self._file_model.modelAboutToBeReset.connect(self._on_file_model_reset_begin)
         self._file_model.modelReset.connect(self._on_file_model_reset_end)
-        self._file_model.itemChanged.connect(self._on_file_model_item_changed)
+        self._file_model.layoutChanged.connect(self._on_file_model_layout_changed)
+        self._file_model.dataChanged.connect(self._on_file_model_item_changed)
+        self._file_proxy_model.layoutChanged.connect(self._update_file_view_overlay)
 
         self._ui.file_view.selectionModel().selectionChanged.connect(
             self._on_file_selection
@@ -360,7 +419,7 @@ class AppDialog(QtGui.QWidget):
         )
 
         self._ui.size_slider.valueChanged.connect(self._on_view_item_size_slider_change)
-        self._ui.search_widget.search_edited.connect(
+        self._ui.search_widget.search_changed.connect(
             lambda text: self._update_search_text_filter()
         )
 
@@ -370,10 +429,13 @@ class AppDialog(QtGui.QWidget):
         self._scene_operations_hook = self._bundle.create_hook_instance(
             scene_operations_hook_path
         )
-        if hasattr(self.scene_operations_hook, "register_scene_change_callback"):
-            self.scene_operations_hook.register_scene_change_callback(
-                scene_change_callback=self._refresh
-            )
+        self.__can_register_scene_change_callback = hasattr(
+            self.scene_operations_hook, "register_scene_change_callback"
+        )
+        self.__can_unregister_scene_change_callback = hasattr(
+            self.scene_operations_hook, "unregister_scene_change_callback"
+        )
+        self._listen_for_events(self._auto_refresh)
 
         # -----------------------------------------------------
         # Log metric for app usage
@@ -400,7 +462,7 @@ class AppDialog(QtGui.QWidget):
         """
 
         # Refresh the view on showing the app
-        self._refresh()
+        self._reload_file_model()
 
         super(AppDialog, self).showEvent(event)
 
@@ -429,27 +491,13 @@ class AppDialog(QtGui.QWidget):
         """
 
         # First save any app settings
-        self._settings_manager.store(
-            self.FILTER_MENU_STATE, self._filter_menu.save_state()
-        )
-        self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
-        self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
-        if six.PY2:
-            self._settings_manager.store(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
-        else:
-            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
-            # will convert QByteArray objects to str when storing).
-            self._raw_values_settings.setValue(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
+        self.save_state()
 
         # Tell the main app instance that we are closing
         self._bundle._on_dialog_close(self)
 
         # Disconnect any signals that were set up for handlding scene changes
-        if hasattr(self.scene_operations_hook, "unregister_scene_change_callback"):
+        if self.__can_unregister_scene_change_callback:
             self.scene_operations_hook.unregister_scene_change_callback()
 
         # clear the selection in the main views.
@@ -492,6 +540,76 @@ class AppDialog(QtGui.QWidget):
             self._bg_task_manager = None
 
         super(AppDialog, self).closeEvent(event)
+
+    ######################################################################################################
+    # Public methods
+
+    def save_state(self):
+        """
+        Save the app user settings.
+
+        This method should be called when the app is exiting/closing to save the current user
+        settings, so that they can be restored on opening the app for the user next time.
+        """
+
+        self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
+        self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
+        self._settings_manager.store(
+            self.DYNAMIC_LOADING_SETTING, self._dynamic_loading
+        )
+
+        if six.PY2:
+            self._settings_manager.store(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
+        else:
+            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+            # will convert QByteArray objects to str when storing).
+            self._raw_values_settings.setValue(
+                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+            )
+
+        self._settings_manager.store(
+            self.FILTER_MENU_STATE, self._filter_menu.save_state()
+        )
+
+    def restore_state(self):
+        """
+        Restore the app user settings.
+
+        This method should be called on app init, after all widgets have been created to
+        ensure all widgets are available to apply the restored state.
+
+        NOTE some settings may be restored in the init method if they are required at the time
+        of creating the widgets.
+        """
+
+        # Restore the splitter state that divides the main view and the details
+        # First try to restore the state from the settings manager
+        splitter_state = self._settings_manager.retrieve(self.SPLITTER_STATE, None)
+        if not splitter_state:
+            # Splitter state was not found in the settings manager, check the raw values settings.
+            splitter_state = self._raw_values_settings.value(self.SPLITTER_STATE)
+
+        if splitter_state:
+            self._ui.details_splitter.restoreState(splitter_state)
+        else:
+            # Splitter state was not restored, default to set details size to 1 (the min value
+            # to show the details, but will be at a minimal size)
+            self._ui.details_splitter.setSizes([800, 1])
+
+        # Restore the filter menu state
+        menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
+        if not menu_state:
+            menu_state = {
+                "{role}.status".format(
+                    role=self._file_model.STATUS_FILTER_DATA_ROLE
+                ): {},
+                "{role}.PublishedFile.published_file_type.PublishedFileType.code".format(
+                    role=self._file_model.FILE_ITEM_SG_DATA_ROLE
+                ): {},
+            }
+        self._filter_menu.restore_state(menu_state)
 
     ######################################################################################################
     # Protected methods
@@ -684,7 +802,6 @@ class AppDialog(QtGui.QWidget):
             lambda: self._set_details_panel_visibility(True)
         )
         context_menu.addAction(show_details_action)
-
         context_menu.exec_(pnt)
 
     def _show_history_item_context_menu(self, view, index, pos):
@@ -830,48 +947,99 @@ class AppDialog(QtGui.QWidget):
 
         # Set the slider value for the current view, this will also update the viewport.
         self._ui.size_slider.setValue(slider_value)
+        self._on_view_item_size_slider_change(slider_value)
 
         self._settings_manager.store(self.VIEW_MODE_SETTING, mode_index)
 
-    def _refresh_filter_menu(self):
+    def _update_file_view_overlay(self):
+        """Show an overlay message if no items are displayed in the file view."""
+
+        if self._file_model.rowCount() <= 0:
+            # No data in the file model.
+            self._file_model_overlay.show_message("No items found.")
+
+        elif self._file_proxy_model.rowCount() <= 0:
+            # There is data in the model, but it is currently all filtered out.
+            self._file_model_overlay.show_message("Reset filters to see results.")
+
+        else:
+            # There are results, hide the overlay.
+            self._file_model_overlay.hide()
+
+    def _reload_file_model(self):
         """
-        Restore the filter menu. Restore the menu state the first time the menu is refreshed.
+        Reload the file model.
 
-        Ensure that the filter menu button is not enabled while refreshing, and then
-        re-enabled once done refreshing.
+        This will scan the scene again to gather any new file data.
         """
 
-        self._ui.filter_btn.setEnabled(False)
+        if not self._file_model:
+            # Cannot reload the model if it does not exist yet.
+            return
 
-        self._filter_menu.refresh(force=True)
+        self._file_model.reload()
 
-        if not self._filter_menu_restored:
-            menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
+    def _scene_changed(self, event_type="reload", data=None):
+        """
+        Handle a scene changed event.
 
-            if menu_state is None:
-                menu_state = {
-                    "{role}.status".format(
-                        role=self._file_model.STATUS_FILTER_DATA_ROLE
-                    ): {},
-                    "PublishedFile.published_file_type.PublishedFileType.code": {},
-                }
+        :param event_type: The scene change event type. Defaults to "reload".
+        :type event_type: "reload" | "add" | "remove"
+        :param data: The data that has changed.
+        :type data: str | dict
+        """
 
-            self._filter_menu.restore_state(menu_state)
-            self._filter_menu_restored = True
+        invalidate_filtering = False
+        is_reload = event_type == "reload"
 
-        self._ui.filter_btn.setEnabled(True)
+        if is_reload:
+            self._reload_file_model()
+        else:
+            if event_type == "add":
+                if self._file_model:
+                    # Special case handling when adding an item that requires a new group to be
+                    # created, filtering does not accept the newly added item. Set the flag to
+                    # invalidate the proxy model at the end of this operation.
+                    # TODO understand exactly why this happens.
+                    invalidate_filtering = True
 
-    def _refresh(self):
-        """Re-scan the scene and reload the file model."""
+                    self._file_model.add_item(data)
 
-        if self._file_model:
-            self._file_model.reload()
+            elif event_type == "remove":
+                if self._file_model:
+                    self._file_model.remove_item_by_file_path(data)
+
+            # Refresh the filter menu after the data has loaded.
+            self._filter_menu.refresh()
+
+            if invalidate_filtering:
+                self._file_proxy_model.invalidate()
+                self._expand_all_groups()
+
+    def _listen_for_events(self, listen):
+        """
+        Listen for DCC specific events that require the app to update.
+
+        :param listen: True will listen for DCC events, else False will to not listen for events.
+        :type listen: bool
+        """
+
+        if listen:
+            # Start listening to DCC scene change events to trigger reload.
+            if self.__can_register_scene_change_callback:
+                self.scene_operations_hook.register_scene_change_callback(
+                    scene_change_callback=self._scene_changed
+                )
+        else:
+            # Stop listening to DCC events to trigger updates
+            if self.__can_unregister_scene_change_callback:
+                self.scene_operations_hook.unregister_scene_change_callback()
 
     ################################################################################################
     # UI/Widget callbacks
 
     def _on_refresh_clicked(self, checked=False):
-        """Slot triggered when teh refresh button has been clicked."""
+        """Slot triggered when the refresh button has been clicked."""
 
         # The refresh button is checkable, which means that its check state is toggled each
         # the button is clicked, but we want the check state to reflect the auto-refresh state.
@@ -880,7 +1048,7 @@ class AppDialog(QtGui.QWidget):
         self._ui.refresh_btn.setChecked(self._auto_refresh)
 
         # Now handle the button click event
-        self._refresh()
+        self._reload_file_model()
 
     def _on_toggle_auto_refresh(self, checked):
         """
@@ -892,7 +1060,23 @@ class AppDialog(QtGui.QWidget):
 
         self._auto_refresh = checked
         self._ui.refresh_btn.setChecked(self._auto_refresh)
-        self._file_model.poll_for_status_updates(self._auto_refresh)
+
+        # Turn on/off polling for published file updates
+        self._file_model.polling = self._auto_refresh
+
+        # Start/stop listening for DCC change events
+        self._listen_for_events(self._auto_refresh)
+
+    def _on_toggle_dynamic_loading(self, checked):
+        """
+        Slot triggered when the dynamic loading option value changed from the refresh menu.
+
+        :param checked: True if dynamic loading is checked, else False.
+        :type checked: bool
+        """
+
+        self._dynamic_loading = checked
+        self._file_model.dynamic_loading = self._dynamic_loading
 
     def _on_group_by_changed(self, text):
         """
@@ -940,23 +1124,29 @@ class AppDialog(QtGui.QWidget):
         the `modelRest` signal.
         """
 
-        if self._file_model.is_loading():
-            # The model is still loading, don't do anything
-            return
-
-        if self._file_model.rowCount() <= 0:
-            self._file_model_overlay.show_message("No items found.")
-        else:
-            self._file_model_overlay.hide()
-
         # Re-enable buttons that were disabled during reset
         self._ui.group_by_combo_box.setEnabled(True)
         self._ui.group_by_label.setEnabled(True)
         self._ui.refresh_btn.setEnabled(True)
         self._ui.select_all_outdated_button.setEnabled(True)
         self._ui.update_selected_button.setEnabled(True)
-        # Update the filter menu and re-enable the filter butotn
-        self._refresh_filter_menu()
+
+        # Update the details panel
+        selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
+        self._setup_details_panel(selected_indexes)
+
+        # Ensure all the file groupings are expand after a model reset. This is a bit of a
+        # work around for how filtering works - the group indexes are never accepted by the
+        # filter model and only accepted if a child index is accepted. By not explicitly
+        # accepting the group index, this causes the group to collapse, even thoug there are
+        # children in it
+        self._expand_all_groups()
+
+        # Refresh the filter menu after the data has loaded
+        self._filter_menu.refresh()
+
+    def _on_file_model_layout_changed(self):
+        """Callback triggered when the file model's layout has changed."""
 
         # Update the details panel
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
@@ -988,7 +1178,7 @@ class AppDialog(QtGui.QWidget):
         selected_indexes = self._ui.file_view.selectionModel().selectedIndexes()
         self._setup_details_panel(selected_indexes)
 
-    def _on_file_model_item_changed(self, model_item):
+    def _on_file_model_item_changed(self, top_left_index, bottom_right_index, roles):
         """
         Slot triggered when an item in the file_model has changed.
 
@@ -999,21 +1189,31 @@ class AppDialog(QtGui.QWidget):
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
         """
 
-        self._refresh_filter_menu()
+        # Only update the filter menu if the item data changed is relevant. NOTE this could be
+        # optimized to only refresh the menu based on the roles list.
+        if self._filter_menu.has_role(roles):
+            self._filter_menu.refresh()
 
         selected = self._ui.file_view.selectionModel().selectedIndexes()
-
         if not selected or len(selected) > 1:
             return
 
-        changed_index = model_item.index()
         selected_index = selected[0]
         if isinstance(selected_index.model(), QtGui.QSortFilterProxyModel):
             selected_index = selected_index.model().mapToSource(selected_index)
 
-        if selected_index == changed_index:
-            # The item that changed was the currently selected on, update the details panel.
-            self._setup_details_panel([selected_index])
+        # The two indexes are expected to have the same parent.
+        parent_index = top_left_index.parent()
+        start_row = top_left_index.row()
+        end_row = bottom_right_index.row()
+        for row in range(start_row, end_row + 1):
+            changed_index = self._file_model.index(row, 0, parent_index)
+            if selected_index == changed_index:
+                # The item that changed was the currently selected on, update the details panel.
+                self._setup_details_panel([selected_index])
+
+                # Exit since there the only index was found
+                return
 
     def _on_view_item_size_slider_change(self, value):
         """
@@ -1064,16 +1264,15 @@ class AppDialog(QtGui.QWidget):
         group_rows = self._file_model.rowCount()
 
         for group_row in range(group_rows):
-            group_item = self._file_model.item(group_row, 0)
-            file_item_rows = group_item.rowCount()
-            for file_item_row in range(file_item_rows):
-                file_item = group_item.child(file_item_row)
+            parent_index = self._file_model.index(group_row, 0)
+            file_item_rows = self._file_model.rowCount(parent_index)
 
+            for file_item_row in range(file_item_rows):
+                index = self._file_model.index(file_item_row, 0, parent_index)
                 if (
-                    file_item.data(FileModel.STATUS_ROLE)
+                    self._file_model.data(index, FileModel.STATUS_ROLE)
                     == FileModel.STATUS_OUT_OF_SYNC
                 ):
-                    index = file_item.index()
                     proxy_index = self._file_proxy_model.mapFromSource(index)
                     outdated_selection.select(proxy_index, proxy_index)
 

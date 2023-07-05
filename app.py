@@ -36,7 +36,7 @@ class SceneBreakdown2(sgtk.platform.Application):
 
             # Register a menu entry on the ShotGrid menu so that users can launch the panel.
             self.engine.register_command(
-                self.get_setting("display_name"),
+                "{}...".format(self.get_setting("display_name")),
                 self.create_panel,
                 {"type": "panel", "short_name": "breakdown"},
             )
@@ -92,7 +92,7 @@ class SceneBreakdown2(sgtk.platform.Application):
         try:
             widget = self.engine.show_panel(
                 self._unique_panel_id,
-                "Scene Breakdown",
+                self.get_setting("display_name"),
                 self,
                 tk_multi_breakdown2.AppDialog,
             )

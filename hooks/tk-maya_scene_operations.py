@@ -10,6 +10,7 @@
 
 import os
 import maya.cmds as cmds
+import maya.OpenMaya as OpenMaya
 import sgtk
 
 HookBaseClass = sgtk.get_hook_baseclass()
@@ -105,3 +106,49 @@ class BreakdownSceneOperations(HookBaseClass):
             )
             file_name = cmds.getAttr("%s.fileTextureName" % node_name)
             cmds.setAttr("%s.fileTextureName" % node_name, path, type="string")
+
+    def register_scene_change_callback(self, scene_change_callback):
+        """
+        Register the callback such that it is executed on a scene change event.
+
+        This hook method is useful to reload the breakdown data when the data in the scene has
+        changed.
+
+        :param callback: The callback to register and execute on scene chagnes.
+        :type callback: function
+        """
+
+        self.__callback_ids = []
+        scene_events = [
+            OpenMaya.MSceneMessage.kAfterCreateReference,
+            OpenMaya.MSceneMessage.kAfterRemoveReference,
+            OpenMaya.MSceneMessage.kAfterOpen,
+            OpenMaya.MSceneMessage.kAfterNew,
+        ]
+
+        # when registering the Maya callbacks, we need to use a lambda as the addCallback method always return an
+        # argument (None by default)
+        # also, we are not adding these events to the maya scene watcher because this one is destroyed as soon as
+        # the context is switched. So, in case we're opening a new file with the Breakdown2 app is still opened, this
+        # functionality will be broken
+        for ev in scene_events:
+            callback_id = OpenMaya.MSceneMessage.addCallback(
+                ev, lambda x: scene_change_callback()
+            )
+            self.__callback_ids.append(callback_id)
+
+        # adding callbacks for file nodes as well (to handle texture nodes)
+        callback_id = OpenMaya.MDGMessage.addNodeAddedCallback(
+            lambda n, c: scene_change_callback(), "file"
+        )
+        self.__callback_ids.append(callback_id)
+        callback_id = OpenMaya.MDGMessage.addNodeRemovedCallback(
+            lambda n, c: scene_change_callback(), "file"
+        )
+        self.__callback_ids.append(callback_id)
+
+    def unregister_scene_change_callback(self):
+        """Unregister the scene change callbacks by disconnecting any signals."""
+
+        for callback_id in self.__callback_ids:
+            OpenMaya.MSceneMessage.removeCallback(callback_id)
