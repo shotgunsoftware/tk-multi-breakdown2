@@ -40,15 +40,17 @@ class GetPublishedFiles(HookBaseClass):
         tasks = []
         pf_types = []
         for file_item in items:
+            # Required published file fields are name and published file type. There will be
+            # an api error if these are not set.
             names.append(file_item.sg_data["name"])
             pf_types.append(file_item.sg_data["published_file_type"])
+            # Optional fields are linked entity and task.
             entity = file_item.sg_data["entity"]
             if entity:
                 entities.append(entity)
             task = file_item.sg_data["task"]
             if task:
                 tasks.append(task)
-
 
         # Published files will be found by their entity, name, task and published file type.
         filters = [
