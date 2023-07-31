@@ -40,18 +40,25 @@ class GetPublishedFiles(HookBaseClass):
         tasks = []
         pf_types = []
         for file_item in items:
-            entities.append(file_item.sg_data["entity"])
             names.append(file_item.sg_data["name"])
-            tasks.append(file_item.sg_data["task"])
             pf_types.append(file_item.sg_data["published_file_type"])
+            entity = file_item.sg_data["entity"]
+            if entity:
+                entities.append(entity)
+            task = file_item.sg_data["task"]
+            if task:
+                tasks.append(task)
+
 
         # Published files will be found by their entity, name, task and published file type.
         filters = [
-            ["entity", "in", entities],
             ["name", "in", names],
-            ["task", "in", tasks],
             ["published_file_type", "in", pf_types],
         ]
+        if entities:
+            filters.append(["entity", "in", entities])
+        if tasks:
+            filters.append(["task", "in", tasks])
 
         # Get the query fields. This assumes all file items in the list have the same fields.
         fields = list(items[0].sg_data.keys()) + ["version_number", "path"]
