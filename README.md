@@ -4,7 +4,6 @@
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/)
 [![Python 3.9](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 
-
 ## Documentation
 
 This repository is a part of the ShotGrid Pipeline Toolkit.
