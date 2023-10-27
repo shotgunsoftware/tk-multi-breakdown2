@@ -1,56 +1,36 @@
 
 
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Breakdown API &mdash; tk-multi-breakdown2 v0.2.7 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breakdown API &mdash; tk-multi-breakdown2 v0.2.8 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Breakdown Hooks" href="hooks.html" />
     <link rel="prev" title="Breakdown2 API Reference" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
     <a href='http://developer.shotgridsoftware.com'>
     
         <img style='width: 191px;
@@ -64,47 +44,59 @@
     
 
           
-            <a href="index.html" class="icon icon-home"> tk-multi-breakdown2
           
-
-          
+          <a href="index.html" class="icon icon-home">
+            tk-multi-breakdown2
           </a>
-
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
 
-          
-
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
     
-            
-            
-              
-            
-            
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Breakdown API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#breakdownmanager">BreakdownManager</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#fileitem">FileItem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#breakdownmanager">BreakdownManager</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager"><code class="docutils literal notranslate"><span class="pre">BreakdownManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.scan_scene"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.scan_scene()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_files_from_file_paths()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_file_items"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_file_items()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_file_fields()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_latest_published_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_files_for_items()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_file_history()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.update_to_latest_version()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.update_to_specific_version()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#fileitem">FileItem</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem"><code class="docutils literal notranslate"><span class="pre">FileItem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.highest_version_number"><code class="docutils literal notranslate"><span class="pre">FileItem.highest_version_number</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.node_name"><code class="docutils literal notranslate"><span class="pre">FileItem.node_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.node_type"><code class="docutils literal notranslate"><span class="pre">FileItem.node_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.path"><code class="docutils literal notranslate"><span class="pre">FileItem.path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.locked"><code class="docutils literal notranslate"><span class="pre">FileItem.locked</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.latest_published_file"><code class="docutils literal notranslate"><span class="pre">FileItem.latest_published_file</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.extra_data"><code class="docutils literal notranslate"><span class="pre">FileItem.extra_data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.sg_data"><code class="docutils literal notranslate"><span class="pre">FileItem.sg_data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.thumbnail_path"><code class="docutils literal notranslate"><span class="pre">FileItem.thumbnail_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem.to_dict"><code class="docutils literal notranslate"><span class="pre">FileItem.to_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hooks.html">Breakdown Hooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="engine-specific-notes.html">Toolkit Engine Notes</a></li>
 </ul>
 
-            
-          
 
     <a href='genindex.html'>Alphabetic Index</a>
 
@@ -124,7 +116,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.7.<br>
+    <b>tk-multi-breakdown2</b> v0.2.8.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
@@ -147,461 +139,371 @@
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">tk-multi-breakdown2</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Breakdown API</li>
-    
-    
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Breakdown API</li>
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="breakdown-api">
-<span id="id1"></span><h1>Breakdown API<a class="headerlink" href="#breakdown-api" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="breakdownmanager">
-<h2>BreakdownManager<a class="headerlink" href="#breakdownmanager" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="tk_multi_breakdown2.api.BreakdownManager">
-<em class="property">class </em><code class="descclassname">tk_multi_breakdown2.api.</code><code class="descname">BreakdownManager</code><span class="sig-paren">(</span><em>bundle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+             
+  <section id="breakdown-api">
+<span id="id1"></span><h1>Breakdown API<a class="headerlink" href="#breakdown-api" title="Permalink to this heading"></a></h1>
+<section id="breakdownmanager">
+<h2>BreakdownManager<a class="headerlink" href="#breakdownmanager" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tk_multi_breakdown2.api.</span></span><span class="sig-name descname"><span class="pre">BreakdownManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bundle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>This class is used for managing and executing file updates.</p>
 <p>Initialize the manager.</p>
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.scan_scene">
-<code class="descname">scan_scene</code><span class="sig-paren">(</span><em>execute_in_main_thread=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.scan_scene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.scan_scene" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.scan_scene">
+<span class="sig-name descname"><span class="pre">scan_scene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execute_in_main_thread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.scan_scene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.scan_scene" title="Permalink to this definition"></a></dt>
 <dd><p>Scan the current scene to return a list of scene references.</p>
 <p>The return dict value has the following key-values:</p>
 <blockquote>
-<div><dl class="docutils">
-<dt>node (str)</dt>
-<dd>The name of the node which holds the reference.</dd>
-<dt>type (str)</dt>
-<dd>The node type.</dd>
-<dt>path (str)</dt>
-<dd>The reference file path.</dd>
-<dt>extra_data (dict)</dt>
-<dd>Extra data for the reference (optional).</dd>
+<div><dl class="simple">
+<dt>node (str)</dt><dd><p>The name of the node which holds the reference.</p>
+</dd>
+<dt>type (str)</dt><dd><p>The node type.</p>
+</dd>
+<dt>path (str)</dt><dd><p>The reference file path.</p>
+</dd>
+<dt>extra_data (dict)</dt><dd><p>Extra data for the reference (optional).</p>
+</dd>
 </dl>
 </div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>execute_in_main_thread</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – True will ensure the hook method is executed in the
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>execute_in_main_thread</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a>) – True will ensure the hook method is executed in the
 main thread, else False will execute in the current thread. Default is True, since
 the scan_scene function will need to execute DCC functionality that likely needs
-to execute in the main thread (e.g. GUI events).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of scene references.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)">dict</a></td>
-</tr>
-</tbody>
-</table>
+to execute in the main thread (e.g. GUI events).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of scene references.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths">
-<code class="descname">get_published_files_from_file_paths</code><span class="sig-paren">(</span><em>file_paths</em>, <em>extra_fields=None</em>, <em>bg_task_manager=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_files_from_file_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths">
+<span class="sig-name descname"><span class="pre">get_published_files_from_file_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg_task_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_files_from_file_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths" title="Permalink to this definition"></a></dt>
 <dd><p>Query the ShotGrid API to get the published files for the given file paths.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>file_paths</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em>) – A list of file paths to get the published files from.</li>
-<li><strong>extra_fields</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em>) – A list of ShotGrid fields to append to the ShotGrid query
-when retreiving the published files.</li>
-<li><strong>bg_task_manager</strong> – (optional) A background task manager to execute the request
-async. If not provided, the request will be executed synchronously.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_paths</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of file paths to get the published files from.</p></li>
+<li><p><strong>extra_fields</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of ShotGrid fields to append to the ShotGrid query
+when retreiving the published files.</p></li>
+<li><p><strong>bg_task_manager</strong> – (optional) A background task manager to execute the request
+async. If not provided, the request will be executed synchronously.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><p class="first">BackgroundTaskManager</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The task id for the request is returned if executed async, else the published
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>BackgroundTaskManager</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The task id for the request is returned if executed async, else the published
 files data is returned if executed synchronosly.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int | dict</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)">int</a> | <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_file_items">
-<code class="descname">get_file_items</code><span class="sig-paren">(</span><em>scene_objects</em>, <em>published_files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_file_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_file_items" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_file_items">
+<span class="sig-name descname"><span class="pre">get_file_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_objects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">published_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_file_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_file_items" title="Permalink to this definition"></a></dt>
 <dd><p>Get the file item objects for the given scene objects.</p>
 <p>Scene objects that do not have a corresponding ShotGrid Published File will be omitted
 from the result (a FileItem will not be created for it).</p>
 <p>The <cite>scene_objects</cite> dict param expects the key-values:</p>
 <blockquote>
-<div><dl class="docutils">
-<dt>node (str)</dt>
-<dd>The name of the node which holds the reference.</dd>
-<dt>type (str)</dt>
-<dd>The node type.</dd>
-<dt>path (str)</dt>
-<dd>The reference file path.</dd>
-<dt>extra_data (dict)</dt>
-<dd>Extra data for the reference (optional).</dd>
+<div><dl class="simple">
+<dt>node (str)</dt><dd><p>The name of the node which holds the reference.</p>
+</dd>
+<dt>type (str)</dt><dd><p>The node type.</p>
+</dd>
+<dt>path (str)</dt><dd><p>The reference file path.</p>
+</dd>
+<dt>extra_data (dict)</dt><dd><p>Extra data for the reference (optional).</p>
+</dd>
 </dl>
 </div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>scene_objects</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Objects from the DCC. This value can be the result returned by
-the <cite>scan_scene</cite> method.</li>
-<li><strong>published_files</strong> – The list of published files corresponding to the
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene_objects</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Objects from the DCC. This value can be the result returned by
+the <cite>scan_scene</cite> method.</p></li>
+<li><p><strong>published_files</strong> – The list of published files corresponding to the
 <cite>scene_objects</cite>. Any scene objects that do not have a matching published will be
 omitted from the result (there will not be a FileItem object created for it). This
-can be the result returned by the <cite>sgtk.util.find_publish</cite> method.</li>
+can be the result returned by the <cite>sgtk.util.find_publish</cite> method.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of FileItem objects representing the scene objects.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem">FileItem</a>]</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of FileItem objects representing the scene objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem">FileItem</a>]</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields">
-<code class="descname">get_published_file_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_file_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields">
+<span class="sig-name descname"><span class="pre">get_published_file_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_file_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields" title="Permalink to this definition"></a></dt>
 <dd><p>Get the fields to pass to the query to retrieve the published files when scanning the
 scene.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The published file fields.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list&lt;str&gt;</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The published file fields.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list&lt;str&gt;</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">
-<code class="descname">get_latest_published_file</code><span class="sig-paren">(</span><em>item</em>, <em>data_retriever=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_latest_published_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">
+<span class="sig-name descname"><span class="pre">get_latest_published_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_retriever</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_latest_published_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file" title="Permalink to this definition"></a></dt>
 <dd><p>Get the latest available published file according to the current item context.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>item</strong> (<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a>) – :class`FileItem` object we want to get the latest published file</li>
-<li><strong>data_retreiver</strong> – If provided, the api request will be async. The default value
-will execute the api request synchronously.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a>) – :class`FileItem` object we want to get the latest published file</p></li>
+<li><p><strong>data_retreiver</strong> – If provided, the api request will be async. The default value
+will execute the api request synchronously.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The latest published file as a ShotGrid entity dictionary if the request was
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The latest published file as a ShotGrid entity dictionary if the request was
 synchronous, else the request background task id if the request was async.</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items">
-<code class="descname">get_published_files_for_items</code><span class="sig-paren">(</span><em>items</em>, <em>data_retriever=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_files_for_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items">
+<span class="sig-name descname"><span class="pre">get_published_files_for_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_retriever</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_files_for_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items" title="Permalink to this definition"></a></dt>
 <dd><p>Get all published files for the given items.</p>
 <p>The published files returned may then be parsed to determine the latest published
 file for each item.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>items</strong> (<em>List</em><em>[</em><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a><em>]</em>) – the list of :class`FileItem` we want to get published files for.</li>
-<li><strong>data_retreiver</strong> – If provided, the api request will be async. The default value
-will execute the api request synchronously.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>items</strong> (<em>List</em><em>[</em><a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a><em>]</em>) – the list of :class`FileItem` we want to get published files for.</p></li>
+<li><p><strong>data_retreiver</strong> – If provided, the api request will be async. The default value
+will execute the api request synchronously.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">If the request is async, then the request task id is returned, else the
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the request is async, then the request task id is returned, else the
 published file data result from the api request.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str | dict</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)">str</a> | <a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.get_published_file_history">
-<code class="descname">get_published_file_history</code><span class="sig-paren">(</span><em>item</em>, <em>extra_fields=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_file_history"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_published_file_history">
+<span class="sig-name descname"><span class="pre">get_published_file_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_file_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history" title="Permalink to this definition"></a></dt>
 <dd><p>Get the published history for the selected item. It will gather all the published files with the same context
 than the current item (project, name, task, …)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query fields.</li>
-<li><strong>item</strong> – :class`FileItem` object we want to get the published file history</li>
-<li><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query
-for published files.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query fields.</p></li>
+<li><p><strong>item</strong> – :class`FileItem` object we want to get the published file history</p></li>
+<li><p><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query
+for published files.</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of ShotGrid published file dictionary</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of ShotGrid published file dictionary</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version">
-<code class="descname">update_to_latest_version</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.update_to_latest_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version">
+<span class="sig-name descname"><span class="pre">update_to_latest_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.update_to_latest_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version" title="Permalink to this definition"></a></dt>
 <dd><p>Update the item to its latest version.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>item</strong> (<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a>) – Item to update</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the item requires the data model to update, else False will not
-trigger a model update.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version">
-<code class="descname">update_to_specific_version</code><span class="sig-paren">(</span><em>item</em>, <em>sg_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.update_to_specific_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the item to a specific version.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>item</strong> (<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a>) – Item to update</li>
-<li><strong>sg_data</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of ShotGrid data representing the published file we want to update the item to</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if the item requires the data model to update, else False will not
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>item</strong> (<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a>) – Item to update</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the item requires the data model to update, else False will not
 trigger a model update.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version">
+<span class="sig-name descname"><span class="pre">update_to_specific_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.update_to_specific_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version" title="Permalink to this definition"></a></dt>
+<dd><p>Update the item to a specific version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a>) – Item to update</p></li>
+<li><p><strong>sg_data</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Dictionary of ShotGrid data representing the published file we want to update the item to</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the item requires the data model to update, else False will not
+trigger a model update.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
-</div>
-<div class="section" id="fileitem">
-<span id="breakdown-api-manager"></span><h2>FileItem<a class="headerlink" href="#fileitem" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="tk_multi_breakdown2.api.FileItem">
-<em class="property">class </em><code class="descclassname">tk_multi_breakdown2.api.</code><code class="descname">FileItem</code><span class="sig-paren">(</span><em>node_name</em>, <em>node_type</em>, <em>path</em>, <em>sg_data=None</em>, <em>extra_data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/item.html#FileItem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+</section>
+<section id="fileitem">
+<span id="breakdown-api-manager"></span><h2>FileItem<a class="headerlink" href="#fileitem" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tk_multi_breakdown2.api.</span></span><span class="sig-name descname"><span class="pre">FileItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/item.html#FileItem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Encapsulate details about a single version of a file. Each instance represents a single “version”
 but will contain details about the latest available version of the file.</p>
 <p>Class constructor.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>node_name</strong> – Name of the file node</li>
-<li><strong>node_type</strong> – Type of the file node</li>
-<li><strong>path</strong> – Path on disk of this file</li>
-<li><strong>sg_data</strong> – Dictionary of ShotGrid data representing this file in the database</li>
-<li><strong>extra_data</strong> – Dictionary containing additional information about this file</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_name</strong> – Name of the file node</p></li>
+<li><p><strong>node_type</strong> – Type of the file node</p></li>
+<li><p><strong>path</strong> – Path on disk of this file</p></li>
+<li><p><strong>sg_data</strong> – Dictionary of ShotGrid data representing this file in the database</p></li>
+<li><p><strong>extra_data</strong> – Dictionary containing additional information about this file</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.highest_version_number">
-<code class="descname">highest_version_number</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.highest_version_number" title="Permalink to this definition">¶</a></dt>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.highest_version_number">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">highest_version_number</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.highest_version_number" title="Permalink to this definition"></a></dt>
 <dd><p>Get highest version number available in the ShotGrid database for this file.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.node_name">
-<code class="descname">node_name</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.node_name" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.node_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">node_name</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.node_name" title="Permalink to this definition"></a></dt>
 <dd><p>Get the name of the file node.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.node_type">
-<code class="descname">node_type</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.node_type" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.node_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">node_type</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.node_type" title="Permalink to this definition"></a></dt>
 <dd><p>Get the type of the file node.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.path">
-<code class="descname">path</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.path" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.path">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">path</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.path" title="Permalink to this definition"></a></dt>
 <dd><p>Get the path on disk for this file item.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.locked">
-<code class="descname">locked</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.locked" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.locked">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">locked</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.locked" title="Permalink to this definition"></a></dt>
 <dd><p>Get whether or not this file item is locked.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.latest_published_file">
-<code class="descname">latest_published_file</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.latest_published_file" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.latest_published_file">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">latest_published_file</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.latest_published_file" title="Permalink to this definition"></a></dt>
 <dd><p>Get the latest published file for this file item.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.extra_data">
-<code class="descname">extra_data</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.extra_data" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.extra_data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extra_data</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.extra_data" title="Permalink to this definition"></a></dt>
 <dd><p>Get or set the extra data associated with this item.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.sg_data">
-<code class="descname">sg_data</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.sg_data" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.sg_data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sg_data</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.sg_data" title="Permalink to this definition"></a></dt>
 <dd><p>Get or set the ShotGrid data associated with this item.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="tk_multi_breakdown2.api.FileItem.thumbnail_path">
-<code class="descname">thumbnail_path</code><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.thumbnail_path" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.thumbnail_path">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">thumbnail_path</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.thumbnail_path" title="Permalink to this definition"></a></dt>
 <dd><p>Get or set the thumbnail path for this item.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="tk_multi_breakdown2.api.FileItem.to_dict">
-<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/item.html#FileItem.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.to_dict" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/item.html#FileItem.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.to_dict" title="Permalink to this definition"></a></dt>
 <dd><p>Return the FileItem as a dictionary. Only include the properties needed by the
 scene operation hook update method.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The item properties as a dictionary</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The item properties as a dictionary</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
-<span class="target" id="breakdown-api-item"></span></div>
-</div>
+<span class="target" id="breakdown-api-item"></span></section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="hooks.html" class="btn btn-neutral float-right" title="Breakdown Hooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Breakdown2 API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Breakdown2 API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hooks.html" class="btn btn-neutral float-right" title="Breakdown Hooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2023, Autodesk
+    <p>&#169; Copyright 2023, Autodesk.</p>
+  </div>
 
-    </p>
-  </div> 
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
  
 
   <script type="text/javascript">
