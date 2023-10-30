@@ -15,6 +15,11 @@ configuration:
         default_value: Scene Breakdown
         description: Specify a name for the app, its' menu item and the ui.
 
+    panel_mode:
+        type: bool
+        default_value: True
+        description: Specify if the app window should launch as panel or dialog.
+
     hook_scene_operations:
         type: hook
         default_value: "{self}/{engine_name}_scene_operations.py"
