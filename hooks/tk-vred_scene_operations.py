@@ -28,6 +28,19 @@ class BreakdownSceneOperations(HookBaseClass):
         # Keep track of the scene change callbacks that are registered, so that they can be
         # disconnected at a later time.
         self._on_references_changed_cb = None
+        self._on_metadata_chanaged_cb = None
+        self._on_materials_changed_cb = None
+
+    # ----------------------------------------------------------------------------------------
+    # Properties
+
+    @property
+    def vredpy(self):
+        """Get the VRED API module."""
+        return self.parent.engine.vredpy
+
+    # ----------------------------------------------------------------------------------------
+    # Public methods
 
     def scan_scene(self):
         """
@@ -54,10 +67,10 @@ class BreakdownSceneOperations(HookBaseClass):
 
         refs = []
 
-        for r in self._vredpy.vrReferenceService.getSceneReferences():
+        for r in self.vredpy.vrReferenceService.getSceneReferences():
 
             # we only want to keep the top references
-            has_parent = self._vredpy.vrReferenceService.getParentReferences(r)
+            has_parent = self.vredpy.vrReferenceService.getParentReferences(r)
             if has_parent:
                 continue
 
@@ -81,6 +94,27 @@ class BreakdownSceneOperations(HookBaseClass):
                     }
                 )
 
+        # Get Material Asset references
+        # FIXME look for shotgrid nodes by metadata (e.g. go through all nodes)
+        material_nodes = self.vredpy.get_shotgrid_material_nodes()
+        for material_node in material_nodes:
+            material = material_node.getMaterial()
+            if material.isAsset():
+                # Get file path from metadata
+                metadata = self.vredpy.vrMetadataService.getMetadata(material)
+                path = self.vredpy.get_metadata_value(metadata, "path")
+                if path:
+                    refs.append(
+                        {
+                            "node_name": material.getName(),
+                            "node_type": "material",
+                            "path": path,
+                            "extra_data": {
+                                "node_id": material_node.getObjectId()
+                            },
+                        }
+                    )
+
         return refs
 
     def update(self, item):
@@ -94,26 +128,13 @@ class BreakdownSceneOperations(HookBaseClass):
                      The path key now holds the path that the node should be updated *to* rather than the current path.
         """
 
-        node_name = item["node_name"]
         node_type = item["node_type"]
-        path = item["path"]
-        extra_data = item["extra_data"]
 
-        ref_node = self.get_reference_by_id(extra_data["node_id"])
-        if not ref_node:
-            self.logger.error("Couldn't get reference node named {}".format(node_name))
-            return
-
-        new_node_name = os.path.splitext(os.path.basename(path))[0]
-
-        if node_type == "source_reference":
-            ref_node.setSourcePath(path)
-            ref_node.loadSourceReference()
-            ref_node.setName(new_node_name)
-        elif node_type == "smart_reference":
-            ref_node.setSmartPath(path)
-            self._vredpy.vrReferenceService.reimportSmartReferences([ref_node])
-
+        if node_type == "material":
+            self._update_material_asset(item)
+        else:
+            self._update_reference(item)
+        
     def register_scene_change_callback(self, scene_change_callback):
         """
         Register the callback such that it is executed on a scene change event.
@@ -132,27 +153,36 @@ class BreakdownSceneOperations(HookBaseClass):
         self._on_references_changed_cb = (
             lambda nodes=None, cb=scene_change_callback: cb()
         )
+        self._on_metadata_chanaged_cb = lambda changes=None, cb=scene_change_callback: cb()
+        self._on_materials_changed_cb = scene_change_callback
 
         # Set up the signal/slot connection to potentially call the scene change callback
         # based on how the references have cahnged.
         # NOTE ideally the VRED API would have signals for specific reference change events,
         # until then, any reference change will trigger a full reload of the app.
-        if hasattr(self._vredpy, "vrScenegraphService"):
-            self._vredpy.vrScenegraphService.scenegraphChanged.connect(
+        if hasattr(self.vredpy, "vrScenegraphService"):
+            self.vredpy.vrScenegraphService.scenegraphChanged.connect(
                 self._on_references_changed_cb
             )
         else:
-            self._vredpy.vrReferenceService.referencesChanged.connect(
+            self.vredpy.vrReferenceService.referencesChanged.connect(
                 self._on_references_changed_cb
             )
+        if hasattr(self.vredpy, "vrMaterialService"):
+            self._on_materials_changed_cb = scene_change_callback
+            self.vredpy.vrMaterialService.materialsChanged.connect(self._on_materials_changed_cb)
+        if hasattr(self.vredpy, "vrMetadataService"):
+            self._on_metadata_chanaged_cb = lambda changes=None, cb=scene_change_callback: cb()
+            self.vredpy.vrMetadataService.metadataChanged.connect(self._on_metadata_chanaged_cb)
+        
 
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
         if self._on_references_changed_cb:
-            if hasattr(self._vredpy, "vrScenegraphService"):
+            if hasattr(self.vredpy, "vrScenegraphService"):
                 try:
-                    self._vredpy.vrScenegraphService.scenegraphChanged.disconnect(
+                    self.vredpy.vrScenegraphService.scenegraphChanged.disconnect(
                         self._on_references_changed_cb
                     )
                 except RuntimeError:
@@ -162,7 +192,7 @@ class BreakdownSceneOperations(HookBaseClass):
                     self._on_references_changed_cb = None
             else:
                 try:
-                    self._vredpy.vrReferenceService.referencesChanged.disconnect(
+                    self.vredpy.vrReferenceService.referencesChanged.disconnect(
                         self._on_references_changed_cb
                     )
                 except RuntimeError:
@@ -170,15 +200,91 @@ class BreakdownSceneOperations(HookBaseClass):
                     pass
                     self._on_references_changed_cb = None
 
-    def get_reference_by_id(self, ref_id):
+        if self._on_materials_changed_cb:
+            try:
+                self.vredpy.vrMaterialService.materialsChanged.disconnect(
+                    self._on_materials_changed_cb
+                )
+            except RuntimeError:
+                # Signal was never connected
+                pass
+            self._on_materials_changed_cb = None
+
+        if self._on_metadata_chanaged_cb:
+            try:
+                self.vredpy.vrMetadataService.metadataChanged.disconnect(
+                    self._on_metadata_chanaged_cb
+                )
+            except RuntimeError:
+                # Signal was never connected
+                pass
+            self._on_metadata_chanaged_cb = None
+
+    # ----------------------------------------------------------------------------------------
+    # Protected methods
+
+    def _get_reference_by_id(self, ref_id):
         """
         Get a reference node from its name.
 
         :param ref_name: Name of the reference we want to get the associated node from
         :returns: The reference node associated to the reference name
         """
-        ref_list = self._vredpy.vrReferenceService.getSceneReferences()
+        ref_list = self.vredpy.vrReferenceService.getSceneReferences()
         for r in ref_list:
             if r.getObjectId() == ref_id:
                 return r
         return None
+
+    def _update_reference(self, item):
+        """ """
+
+        node_name = item["node_name"]
+        node_type = item["node_type"]
+        path = item["path"]
+        extra_data = item["extra_data"]
+
+        ref_node = self._get_reference_by_id(extra_data["node_id"])
+        if not ref_node:
+            self.logger.error("Couldn't get reference node named {}".format(node_name))
+            return
+
+        new_node_name = os.path.splitext(os.path.basename(path))[0]
+
+        if node_type == "source_reference":
+            ref_node.setSourcePath(path)
+            ref_node.loadSourceReference()
+            ref_node.setName(new_node_name)
+        elif node_type == "smart_reference":
+            ref_node.setSmartPath(path)
+            self.vredpy.vrReferenceService.reimportSmartReferences([ref_node])
+
+    def _update_material_asset(self, item):
+        """Update the VRED Material Asset."""
+
+        path = item["path"]
+        old_path = item["extra_data"]["old_path"]
+
+        # Load the new material asset
+        name = self.vredpy.get_material_asset_name_from_path(path)
+        material_v1 = self.vredpy.vrAssetsModule.loadMaterialAssetByName(name, path)
+        # Convert to v2 material
+        new_material = self.vredpy.get_material_v2(material_v1)
+
+        metadata = [("path", old_path)]
+        old_material = self.vredpy.find_material_by_metadata(metadata)
+        nodes_to_update = self.vredpy.vrMaterialService.findNodesWithMaterial(old_material)
+        if nodes_to_update:
+            self.vredpy.vrMaterialService.applyMaterialToNodes(new_material, nodes_to_update)
+
+        # Add the new material to the ShotGrid material group
+        self.vredpy.add_shotgrid_materials([new_material])
+
+        # Add metadata to material
+        material_metadata = item["sg_data"].copy()
+        material_metadata["path"] = path
+        # self.vredpy.add_metadata_to_material(new_material, {"path": path})
+        self.vredpy.add_metadata_to_material(new_material, material_metadata)
+
+        # Remove the old materials and their metadata
+        self.vredpy.delete_material(old_material)

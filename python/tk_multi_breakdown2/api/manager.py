@@ -299,6 +299,9 @@ class BreakdownManager(object):
             item_dict["extra_data"] = {"old_path": item.path}
         else:
             item_dict["extra_data"]["old_path"] = item.path
+        
+        # NOTE added for Material Asset metadata
+        item_dict["sg_data"] = sg_data
 
         do_update = self._bundle.execute_hook_method(
             "hook_scene_operations",
