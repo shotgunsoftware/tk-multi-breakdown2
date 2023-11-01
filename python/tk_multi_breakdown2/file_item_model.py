@@ -1612,6 +1612,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if uid == self.__pending_published_file_data_request:
             self.__pending_published_file_data_request = None
             self._finish_reload()
+        
+        if msg:
+            raise Exception(msg)
 
     def _on_background_task_group_finished(self, group_id):
         """
