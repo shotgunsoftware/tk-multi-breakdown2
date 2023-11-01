@@ -438,8 +438,13 @@ class AppDialog(QtGui.QWidget):
         self._listen_for_events(self._auto_refresh)
 
         # -----------------------------------------------------
-        # Log metric for app usage
+        # Prepare for app start up
 
+        # Flag indicating if the model data should reload on the app show event. Initialize the
+        # flag to True to load the model the first time the app is shown.
+        self.__update_on_show = True
+
+        # Log metric for app usage
         self._bundle._log_metric_viewed_app()
 
     ######################################################################################################
@@ -461,23 +466,17 @@ class AppDialog(QtGui.QWidget):
         :type event: QtGui.QShowEvent
         """
 
-        # Refresh the view on showing the app
-        self._reload_file_model()
+        # Do not refresh when show event is caused by the window system, only internal events
+        if event.spontaneous():
+            return
+
+        if self.__update_on_show:
+            # There were changes while the app was hiding, reset the flag and refresh the
+            # model data
+            self.__update_on_show = False
+            self._reload_file_model()
 
         super(AppDialog, self).showEvent(event)
-
-    def hideEvent(self, event):
-        """
-        Override the base method.
-
-        :param event: The hide event object.
-        :type event: QtGui.QHideEvent
-        """
-
-        if self._file_model:
-            self._file_model.clear()
-
-        super(AppDialog, self).hideEvent(event)
 
     def closeEvent(self, event):
         """
@@ -988,6 +987,12 @@ class AppDialog(QtGui.QWidget):
         :param data: The data that has changed.
         :type data: str | dict
         """
+
+        if not self.isVisible():
+            # Do not perform any actions while the app is hiding. Record that there was a
+            # change and reload the model next time on show.
+            self.__update_on_show = True
+            return
 
         invalidate_filtering = False
         is_reload = event_type == "reload"

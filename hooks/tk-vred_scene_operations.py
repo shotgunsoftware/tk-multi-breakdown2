@@ -138,9 +138,13 @@ class BreakdownSceneOperations(HookBaseClass):
         # NOTE ideally the VRED API would have signals for specific reference change events,
         # until then, any reference change will trigger a full reload of the app.
         if hasattr(self._vredpy, "vrScenegraphService"):
-            self._vredpy.vrScenegraphService.scenegraphChanged.connect(self._on_references_changed_cb)
+            self._vredpy.vrScenegraphService.scenegraphChanged.connect(
+                self._on_references_changed_cb
+            )
         else:
-            self._vredpy.vrReferenceService.referencesChanged.connect(self._on_references_changed_cb)
+            self._vredpy.vrReferenceService.referencesChanged.connect(
+                self._on_references_changed_cb
+            )
 
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
