@@ -1568,6 +1568,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         elif uid == self.__pending_latest_published_files_data_request:
             self.__pending_latest_published_files_data_request = None
+        
+        if error_msg:
+            raise Exception(error_msg)
 
     def _on_background_task_completed(self, uid, group_id, result):
         """
