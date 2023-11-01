@@ -78,7 +78,7 @@ class GetPublishedFiles(HookBaseClass):
         filters = [
             ["name", "in", names],
             ["published_file_type", "in", pf_types],
-            { 
+            {
                 "filter_operator": "any",
                 "filters": entity_filters,
             },
@@ -87,7 +87,7 @@ class GetPublishedFiles(HookBaseClass):
                 "filters": task_filters,
             },
         ]
-        
+
         # Get the query fields. This assumes all file items in the list have the same fields.
         fields = list(items[0].sg_data.keys()) + ["version_number", "path"]
         order = [{"field_name": "version_number", "direction": "desc"}]

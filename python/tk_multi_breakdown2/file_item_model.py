@@ -1568,7 +1568,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         elif uid == self.__pending_latest_published_files_data_request:
             self.__pending_latest_published_files_data_request = None
-        
+
         if error_msg:
             raise Exception(error_msg)
 
@@ -1612,7 +1612,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if uid == self.__pending_published_file_data_request:
             self.__pending_published_file_data_request = None
             self._finish_reload()
-        
+
         if msg:
             raise Exception(msg)
 
