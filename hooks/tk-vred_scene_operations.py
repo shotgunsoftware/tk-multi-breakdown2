@@ -95,14 +95,14 @@ class BreakdownSceneOperations(HookBaseClass):
                 )
 
         # Get Material Asset references
-        # FIXME look for shotgrid nodes by metadata (e.g. go through all nodes)
-        material_nodes = self.vredpy.get_shotgrid_material_nodes()
+        material_nodes = self.vredpy.vrMaterialService.getMaterialNodes()
         for material_node in material_nodes:
             material = material_node.getMaterial()
             if material.isAsset():
                 # Get file path from metadata
                 metadata = self.vredpy.vrMetadataService.getMetadata(material)
-                path = self.vredpy.get_metadata_value(metadata, "path")
+                path_data = self.vredpy.get_metadata_value(metadata, "path") or {}
+                path = path_data.get("local_path")
                 if path:
                     refs.append(
                         {
@@ -237,7 +237,7 @@ class BreakdownSceneOperations(HookBaseClass):
         return None
 
     def _update_reference(self, item):
-        """ """
+        """Update the reference associated with the given item."""
 
         node_name = item["node_name"]
         node_type = item["node_type"]
@@ -271,19 +271,14 @@ class BreakdownSceneOperations(HookBaseClass):
         # Convert to v2 material
         new_material = self.vredpy.get_material_v2(material_v1)
 
-        metadata = [("path", old_path)]
+        metadata = {"path": {"local_path": old_path}}
         old_material = self.vredpy.find_material_by_metadata(metadata)
         nodes_to_update = self.vredpy.vrMaterialService.findNodesWithMaterial(old_material)
         if nodes_to_update:
             self.vredpy.vrMaterialService.applyMaterialToNodes(new_material, nodes_to_update)
 
-        # Add the new material to the ShotGrid material group
-        self.vredpy.add_shotgrid_materials([new_material])
-
         # Add metadata to material
         material_metadata = item["sg_data"].copy()
-        material_metadata["path"] = path
-        # self.vredpy.add_metadata_to_material(new_material, {"path": path})
         self.vredpy.add_metadata_to_material(new_material, material_metadata)
 
         # Remove the old materials and their metadata

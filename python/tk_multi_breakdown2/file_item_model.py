@@ -381,6 +381,10 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         else:
             parent_item = self.__get_internal_data(parent)
 
+        # NOTE why does this happen to begin with?
+        if not parent_item:
+            return 0
+
         return parent_item.child_count()
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
