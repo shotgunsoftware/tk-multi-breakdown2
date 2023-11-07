@@ -99,7 +99,7 @@ class BreakdownManager(object):
                 task_kwargs={
                     "filters": filters,
                     "fields": fields,
-                    "only_current_project": False
+                    "only_current_project": False,
                 },
             )
 
@@ -163,7 +163,7 @@ class BreakdownManager(object):
         return constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
             "published_file_fields", []
         )
-    
+
     def get_published_file_filters(self):
         """
         Get additional filters to pass to the query to retrieve the published files when
