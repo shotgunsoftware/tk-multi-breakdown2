@@ -14,7 +14,7 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 
 class GetPublishedFiles(HookBaseClass):
-    """"""
+    """Hook to specify the query to retrieve Published Files for the app."""
 
     def get_published_files_for_items(self, items, data_retriever=None):
         """
