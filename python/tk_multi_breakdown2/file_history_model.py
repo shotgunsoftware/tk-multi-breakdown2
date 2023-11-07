@@ -147,7 +147,11 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         self.__parent_sg_data = parent_file.sg_data if parent_file else {}
         self.__parent_locked = parent_file.locked if parent_file else None
-        self.__parent_highest_version_number = parent_file.highest_version_number if parent_file and parent_file.highest_version_number else -1
+        self.__parent_highest_version_number = (
+            parent_file.highest_version_number
+            if parent_file and parent_file.highest_version_number
+            else -1
+        )
 
         fields = constants.PUBLISHED_FILES_FIELDS + self._app.get_setting(
             "published_file_fields", []

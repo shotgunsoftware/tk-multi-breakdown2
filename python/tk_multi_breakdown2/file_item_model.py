@@ -1748,7 +1748,7 @@ class FileTreeModelItem(FileModelItem):
             return self.__parent_item.child_items.index(self)
         except ValueError:
             # This item is not in the list
-            return -1 
+            return -1
 
     def reset(self):
         """Reset the tree item data."""
