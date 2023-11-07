@@ -65,8 +65,10 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         self._app = sgtk.platform.current_bundle()
 
-        # Store parent file item of the items in this model.
-        self._parent_file = None
+        # Store parent file item data
+        self.__parent_sg_data = None
+        self.__parent_locked = None
+        self.__parent_highest_version_number = None
 
         # Add additional roles defined by the ViewItemRolesMixin class.
         self.NEXT_AVAILABLE_ROLE = self.initialize_roles(self.NEXT_AVAILABLE_ROLE)
@@ -88,46 +90,14 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         }
 
     @property
-    def parent_file(self):
-        """
-        Get or set the parent file of the items in this model. Setting the parent file will update
-        the each item's data in the model based on the changes to the parent. If the parent file
-        has changed to a new parent, the load_data method should be called instead of updating
-        this property.
-        """
-        return self._parent_file
-
-    @parent_file.setter
-    def parent_file(self, parent):
-        self._parent_file = parent
-
-        # Update all items in the model. Note that this does not reload the data, it just updates
-        # the history items based on the parent changes. If the parent has changed to a different
-        # objects, then load_data should be called instead.
-        for row in range(self.rowCount()):
-            item = self.item(row)
-            sg_data = item.get_sg_data()
-            self._populate_item(item, sg_data)
-
-    @property
     def parent_entity(self):
-        """
-        Get the ShotGrid entity data dictionary that the parent file item represents.
-        """
-        if not self.parent_file:
-            return None
-
-        return self.parent_file.sg_data
+        """Get the ShotGrid entity data dictionary that the parent file item represents."""
+        return self.__parent_sg_data
 
     @property
     def parent_locked(self):
-        """
-        Get whether or not the parent file is locked to its current version.
-        """
-        if not self.parent_file:
-            return None
-
-        return self.parent_file.locked
+        """Get whether or not the parent file is locked to its current version."""
+        return self.__parent_locked
 
     @property
     def highest_version_number(self):
@@ -135,10 +105,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         Get the highest version number that an item in this model can have. The highest version number
         is retrieved from the parent file.
         """
-        if not self.parent_file:
-            return None
-
-        return self.parent_file.highest_version_number or -1
+        return self.__parent_highest_version_number or -1
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         """
@@ -178,23 +145,20 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         :type sg_data: FileItem
         """
 
-        # Store the parent file item. Do not use the property setter, since that will cause the
-        # _populate_item to be unecessarily called twice per item.
-        self._parent_file = parent_file
-        sg_data = self._parent_file.sg_data
+        self.__parent_sg_data = parent_file.sg_data if parent_file else {}
+        self.__parent_locked = parent_file.locked if parent_file else None
+        self.__parent_highest_version_number = parent_file.highest_version_number if parent_file and parent_file.highest_version_number else -1
 
-        app = sgtk.platform.current_bundle()
-
-        fields = constants.PUBLISHED_FILES_FIELDS + app.get_setting(
+        fields = constants.PUBLISHED_FILES_FIELDS + self._app.get_setting(
             "published_file_fields", []
         )
-        fields += get_ui_published_file_fields(app)
+        fields += get_ui_published_file_fields(self._app)
         filters = [
-            ["project", "is", sg_data["project"]],
-            ["name", "is", sg_data["name"]],
-            ["task", "is", sg_data["task"]],
-            ["entity", "is", sg_data["entity"]],
-            ["published_file_type", "is", sg_data["published_file_type"]],
+            ["project", "is", self.parent_entity["project"]],
+            ["name", "is", self.parent_entity["name"]],
+            ["task", "is", self.parent_entity["task"]],
+            ["entity", "is", self.parent_entity["entity"]],
+            ["published_file_type", "is", self.parent_entity["published_file_type"]],
         ]
 
         ShotgunModel._load_data(
