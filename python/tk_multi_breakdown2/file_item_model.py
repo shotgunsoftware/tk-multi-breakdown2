@@ -591,7 +591,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             # Update the model internal data
             del parent_item.child_items[row : row + count]
-            # self.__remove_internal_data(index)
 
             success = True
         else:
