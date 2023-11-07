@@ -1582,6 +1582,7 @@ class FileModelItem:
     def __hash__(self):
         """Override the base method to allow FileModelItem objects to be hashable."""
 
+        # The file item is guaranteed to be unique by the file_item_id value.
         return hash(self.file_item_id)
 
     # ----------------------------------------------------------------------
@@ -1669,6 +1670,8 @@ class FileTreeModelItem(FileModelItem):
     def __hash__(self):
         """Override the base method to allow FileModelItem objects to be hashable."""
 
+        # The file item is guaranteed to be unique by the combined values of the file_item_id
+        # and the group id.
         return hash((self.file_item_id, self.group_id))
 
     # ----------------------------------------------------------------------
