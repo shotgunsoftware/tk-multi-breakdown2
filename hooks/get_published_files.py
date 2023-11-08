@@ -74,9 +74,7 @@ class GetPublishedFiles(HookBaseClass):
 
         # Published files will be found by their entity, name, task and published file type.
         filters = [
-            ["entity", "in", entities],
             ["name", "in", names],
-            ["task", "in", tasks],
             ["published_file_type", "in", pf_types],
             {
                 "filter_operator": "any",
