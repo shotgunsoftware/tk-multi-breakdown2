@@ -1491,6 +1491,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         elif uid == self.__pending_latest_published_files_data_request:
             self.__pending_latest_published_files_data_request = None
 
+        if error_msg:
+            raise Exception(error_msg)
+
     def _on_background_task_completed(self, uid, group_id, result):
         """
         Callback triggered when the background manager has finished doing some task. The only
@@ -1531,6 +1534,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if uid == self.__pending_published_file_data_request:
             self.__pending_published_file_data_request = None
             self._finish_reload()
+
+        if msg:
+            raise Exception(msg)
 
     def _on_background_task_group_finished(self, group_id):
         """

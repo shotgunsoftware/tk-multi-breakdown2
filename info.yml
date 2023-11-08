@@ -53,6 +53,17 @@ configuration:
         description: List of Published File fields returned when querying ShotGrid for published file history.
                      These fields will also be used when scanning the scene to get the current scene elements.
 
+    published_file_filters:
+        type: list
+        description: List of Published File filters to apply when querying ShotGrid for
+                     published files for the items found in the scene.
+        values:
+            type: shotgun_filter
+        allows_empty: True
+        default_value:
+          - [task, is_not, null]
+          - [entity, is_not, null]
+
     group_by:
         type: str
         default_value: project
