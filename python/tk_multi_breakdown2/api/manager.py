@@ -87,13 +87,20 @@ class BreakdownManager(object):
         if extra_fields is not None:
             fields += extra_fields
 
+        # Get the published file filters to pass to the query
+        filters = self.get_published_file_filters()
+
         # Option to run this in a background task since this can take some time to execute.
         if bg_task_manager:
             # Execute the request async and return the task id for the operation.
             return bg_task_manager.add_task(
                 sgtk.util.find_publish,
                 task_args=[self._bundle.sgtk, file_paths],
-                task_kwargs={"fields": fields, "only_current_project": False},
+                task_kwargs={
+                    "filters": filters,
+                    "fields": fields,
+                    "only_current_project": False,
+                },
             )
 
         # No background task manager provided, execute the request synchronously and return
@@ -156,6 +163,17 @@ class BreakdownManager(object):
         return constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
             "published_file_fields", []
         )
+
+    def get_published_file_filters(self):
+        """
+        Get additional filters to pass to the query to retrieve the published files when
+        scanning the scene.
+
+        :return: The published file filters.
+        :rtype: List[List[dict]]
+        """
+
+        return self._bundle.get_setting("published_file_filters", [])
 
     def get_latest_published_file(self, item, data_retriever=None):
         """
