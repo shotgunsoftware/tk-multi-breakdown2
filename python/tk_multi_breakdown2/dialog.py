@@ -896,6 +896,8 @@ class AppDialog(QtGui.QWidget):
 
             model_index = selected_items[0]
             file_item = model_index.data(FileModel.FILE_ITEM_ROLE)
+            if not file_item:
+                return
             thumbnail = model_index.data(QtCore.Qt.DecorationRole)
 
             # display file item details
