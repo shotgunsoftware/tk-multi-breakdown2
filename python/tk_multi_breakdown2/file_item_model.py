@@ -124,14 +124,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         super(FileTreeItemModel, self).__init__(parent)
 
         # The model data
-        # Create the (invisible) tree root item. All top level layer item will be added as
+        # Create the (invisible) tree root item. All top level file item will be added as
         # children to this root item.
         self.__root_item = FileTreeModelItem(None)
-
-        # Keep a list of all the layer item objects. This is a workaround to not being able
-        # to use the QModelIndex.internalPointer data storage (in Python, the internal pointer
-        # object is garbage collected and crashes when trying to acces it)
-        self.__data = {id(None): self.__root_item}
 
         # ------------------------------------------------------------------------------------
 
@@ -263,76 +258,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         self.__dynamic_loading = value
 
     # ----------------------------------------------------------------------
-    # Helper functions to work around not being able to use QModelIndex.internalPointer
-
-    def __get_ptr_id(self, file_item):
-        """
-        Return a unique id the layer item object to pass to the createIndex method.
-
-        :param layer_item: The layer item to get the id for.
-        :type layer_item: LayerTreeItem
-
-        :return: The id for the layer item.
-        :rtype: int
-        """
-
-        if file_item:
-            ptr_id = file_item
-        else:
-            ptr_id = None
-
-        return id(ptr_id)
-
-    def __get_internal_data(self, index):
-        """
-        Return the layer item object for the index.
-
-        :param index: The index to get the internal data for.
-        :type index: QtCore.QModelIndex
-
-        :return: The layer item object at the specifed index.
-        :rtype: LayerTreeItem
-        """
-
-        ptr_id = index.internalId()
-        return self.__data.get(ptr_id)
-
-    def __set_internal_data(self, file_item):
-        """
-        Store the layer item object data in the model's internal data storage.
-
-        :param layer_item: The layer item obejct to store.
-        :type layer_item: LayerTreeItem
-        """
-
-        ptr_id = self.__get_ptr_id(file_item)
-        self.__data[ptr_id] = file_item
-
-    def __remove_internal_data(self, index):
-        """
-        Store the layer item object data in the model's internal data storage.
-
-        :param layer_item: The layer item obejct to store.
-        :type layer_item: LayerTreeItem
-        """
-
-        ptr_id = index.internalId()
-        del self.__data[ptr_id]
-
-    # ----------------------------------------------------------------------
     # Implement required base QAbstractItemModel methods
-
-    def createIndex(self, row, column, ptr):
-        """
-        Override the base QAbstractItemModel method.
-
-        Intercept the createIndex method to get the id for the ptr and pass this id
-        instead of the ptr itself. This is a workaround to not being able to use the
-        QModelIndex.internalPointer object storage.
-        """
-
-        ptr_id = self.__get_ptr_id(ptr)
-        return super(FileTreeItemModel, self).createIndex(row, column, ptr_id)
 
     def index(self, row, column=0, parent=QtCore.QModelIndex()):
         """Return the index of hte item in the model specified by the given row, column and parent index."""
@@ -343,13 +269,13 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if not parent.isValid():
             parent_item = self.__root_item
         else:
-            parent_item = self.__get_internal_data(parent)
+            parent_item = parent.internalPointer()
 
         child_item = parent_item.child(row)
         if child_item:
             return self.createIndex(row, column, child_item)
 
-        return self.createIndex(row, column, None)
+        return self.createIndex(row, column, self.__root_item)
 
     def parent(self, index):
         """Return the parent of the model item with the given index."""
@@ -357,7 +283,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if not index.isValid():
             return QtCore.QModelIndex()
 
-        child_item = self.__get_internal_data(index)
+        child_item = index.internalPointer()
         if not child_item:
             return QtCore.QModelIndex()
 
@@ -379,8 +305,11 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if not parent.isValid():
             parent_item = self.__root_item
         else:
-            parent_item = self.__get_internal_data(parent)
+            parent_item = parent.internalPointer()
 
+        assert parent_item
+        if not parent_item:
+            return -1
         return parent_item.child_count()
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
@@ -389,7 +318,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if not index.isValid():
             return None
 
-        model_item = self.__get_internal_data(index)
+        model_item = index.internalPointer()
         if not model_item:
             return None
 
@@ -568,7 +497,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if not index.isValid():
             return False
 
-        model_item = self.__get_internal_data(index)
+        model_item = index.internalPointer()
         if not model_item:
             return False
 
@@ -629,7 +558,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if not parent.isValid():
             parent_item = self.__root_item
         else:
-            parent_item = self.__get_internal_data(parent)
+            parent_item = parent.internalPointer()
 
         # Insert the rows now
         if row == parent_item.child_count():
@@ -638,13 +567,11 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 item = FileTreeModelItem()
                 parent_item.append_child(item)
                 item.parent_item = parent_item
-                self.__set_internal_data(item)
         else:
             for i in range(count):
                 item = FileTreeModelItem()
                 parent_item.child_items.insert(row + i, item)
                 item.parent_item = parent_item
-                self.__set_internal_data(item)
 
         self.endInsertRows()
 
@@ -660,11 +587,10 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             if not parent.isValid():
                 parent_item = self.__root_item
             else:
-                parent_item = self.__get_internal_data(parent)
+                parent_item = parent.internalPointer()
 
             # Update the model internal data
             del parent_item.child_items[row : row + count]
-            self.__remove_internal_data(index)
 
             success = True
         else:
@@ -716,7 +642,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         """
 
         self.__root_item.reset()
-        self.__data = {id(None): self.__root_item}
 
         self.__scene_objects = []
         self.__file_items = []
@@ -887,7 +812,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             self.setData(group_index, group_by_id, self.GROUP_ID_ROLE)
             self.setData(group_index, group_by_display, self.GROUP_DISPLAY_ROLE)
 
-            group_item = self.__get_internal_data(group_index)
+            group_item = group_index.internalPointer()
             self._group_items[group_by_id] = group_item
         else:
             # Get the existing group item to add the new file model item to.
@@ -902,7 +827,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             self.setData(item_index, file_item, self.FILE_ITEM_ROLE)
 
             # Request the thumbnail data
-            file_model_item = self.__get_internal_data(item_index)
+            file_model_item = item_index.internalPointer()
             self._request_thumbnail(file_model_item, file_item)
 
             # Update the internal data with the new file item.
@@ -997,7 +922,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         for group_row in range(row_count):
             group_index = self.index(group_row, 0)
-            group_item = self.__get_internal_data(group_index)
+            group_item = group_index.internalPointer()
 
             num_children = group_item.child_count()
             for child_row in range(num_children):
@@ -1007,8 +932,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                     self.data(child_index, FileTreeItemModel.FILE_ITEM_ROLE)
                     == file_item
                 ):
-                    child_item = self.__get_internal_data(child_index)
-                    return child_item
+                    return child_index.internalPointer()
 
         return None
 
@@ -1031,7 +955,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         for group_row in range(row_count):
             group_index = self.index(group_row, 0)
-            group_item = self.__get_internal_data(group_index)
+            group_item = group_index.internalPointer()
 
             num_children = group_item.child_count()
             for child_row in range(num_children):
@@ -1146,7 +1070,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                     group_id=group_by_id, group_display=group_by_display
                 )
                 self._group_items[group_by_id] = group_item
-                self.__set_internal_data(group_item)
             else:
                 group_item = self._group_items[group_by_id]
 
@@ -1158,7 +1081,6 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 )
 
             file_model_item = FileTreeModelItem(file_item=file_item)
-            self.__set_internal_data(file_model_item)
 
             # Make async requests to get the item thumbnail data while the model data is being
             # processed.
@@ -1201,7 +1123,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         for row in range(row_count):
             group_index = self.index(row, 0)
-            group_item = self.__get_internal_data(group_index)
+            group_item = group_index.internalPointer()
             child_row_count = group_item.child_count()
 
             for child_row in range(child_row_count):
@@ -1229,7 +1151,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             if not index.isValid():
                 return False
 
-            model_item = self.__get_internal_data(index)
+            model_item = index.internalPointer()
             if model_item in [v[1] for v in self.__pending_thumbnail_requests.values()]:
                 return True
 
@@ -1637,7 +1559,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
 
 class FileModelItem:
-    """Data structure to hold information about an item in the Layer model."""
+    """Data structure to hold information about an item in the File model."""
 
     def __init__(self, file_item):
         """Initialize the file item."""
@@ -1662,6 +1584,12 @@ class FileModelItem:
             return False
 
         return self.file_item_id == other.file_item_id
+
+    def __hash__(self):
+        """Override the base method to allow FileModelItem objects to be hashable."""
+
+        # The file item is guaranteed to be unique by the file_item_id value.
+        return hash(self.file_item_id)
 
     # ----------------------------------------------------------------------
     # Properties
@@ -1745,6 +1673,13 @@ class FileTreeModelItem(FileModelItem):
         # They are both file items, compare their file ids.
         return self.file_item_id == other.file_item_id
 
+    def __hash__(self):
+        """Override the base method to allow FileModelItem objects to be hashable."""
+
+        # The file item is guaranteed to be unique by the combined values of the file_item_id
+        # and the group id.
+        return hash((self.file_item_id, self.group_id))
+
     # ----------------------------------------------------------------------
     # Properties
 
@@ -1768,12 +1703,12 @@ class FileTreeModelItem(FileModelItem):
 
     @property
     def child_items(self):
-        """Get the layer tree item's child items."""
+        """Get the file tree item's child items."""
         return self.__child_items
 
     @property
     def parent_item(self):
-        """Get or set the layer tree item's paretn item."""
+        """Get or set the file tree item's paretn item."""
         return self.__parent_item
 
     @parent_item.setter
@@ -1788,7 +1723,7 @@ class FileTreeModelItem(FileModelItem):
         Add a child item to this item.
 
         :param child_item: The child item to add.
-        :type child_item: LayerTreeItem
+        :type child_item: FileTreeModelItem
         """
 
         self.__child_items.append(child_item)
@@ -1801,7 +1736,7 @@ class FileTreeModelItem(FileModelItem):
         :type row: int
 
         :return: The child item.
-        :rtype: LayerTreeItem
+        :rtype: FileTreeModelItem
         """
         if row < 0 or row >= len(self.__child_items):
             return None
@@ -1818,7 +1753,11 @@ class FileTreeModelItem(FileModelItem):
         if self.parent_item is None:
             return 0
 
-        return self.__parent_item.child_items.index(self)
+        try:
+            return self.__parent_item.child_items.index(self)
+        except ValueError:
+            # This item is not in the list
+            return -1
 
     def reset(self):
         """Reset the tree item data."""
