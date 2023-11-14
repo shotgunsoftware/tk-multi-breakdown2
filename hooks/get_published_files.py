@@ -14,7 +14,7 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 
 class GetPublishedFiles(HookBaseClass):
-    """"""
+    """Hook to specify the query to retrieve Published Files for the app."""
 
     def get_published_files_for_items(self, items, data_retriever=None):
         """
@@ -38,19 +38,54 @@ class GetPublishedFiles(HookBaseClass):
         entities = []
         names = []
         tasks = []
+        none_entity = False
+        none_task = False
         pf_types = []
         for file_item in items:
-            entities.append(file_item.sg_data["entity"])
+            # Required published file fields are name and published file type. There will be
+            # an api error if these are not set.
             names.append(file_item.sg_data["name"])
-            tasks.append(file_item.sg_data["task"])
             pf_types.append(file_item.sg_data["published_file_type"])
+
+            # Optional fields are linked entity and task.
+            entity = file_item.sg_data["entity"]
+            if entity:
+                entities.append(entity)
+            else:
+                none_entity = True
+
+            task = file_item.sg_data["task"]
+            if task:
+                tasks.append(task)
+            else:
+                none_task = True
+
+        # Build the entity filters
+        entity_filters = []
+        if entities:
+            entity_filters.append(["entity", "in", entities])
+        if none_entity:
+            entity_filters.append(["entity", "is", None])
+
+        # Build the task filters
+        task_filters = []
+        if tasks:
+            task_filters.append(["task", "in", tasks])
+        if none_task:
+            task_filters.append(["task", "is", None])
 
         # Published files will be found by their entity, name, task and published file type.
         filters = [
-            ["entity", "in", entities],
             ["name", "in", names],
-            ["task", "in", tasks],
             ["published_file_type", "in", pf_types],
+            {
+                "filter_operator": "any",
+                "filters": entity_filters,
+            },
+            {
+                "filter_operator": "any",
+                "filters": task_filters,
+            },
         ]
 
         # Get the query fields. This assumes all file items in the list have the same fields.
