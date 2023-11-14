@@ -11,18 +11,6 @@
 import os
 import sgtk
 
-try:
-    import builtins
-except ImportError:
-    try:
-        import __builtins__ as builtins
-    except ImportError:
-        import __builtin__ as builtins
-
-builtins.vrNodeService = vrNodeService
-builtins.vrReferenceService = vrReferenceService
-builtins.vrFileIOService = vrFileIOService
-
 
 HookBaseClass = sgtk.get_hook_baseclass()
 
@@ -34,6 +22,8 @@ class BreakdownSceneOperations(HookBaseClass):
         """Class constructor."""
 
         super(BreakdownSceneOperations, self).__init__(*args, **kwargs)
+
+        self._vredpy = self.parent.engine.vredpy
 
         # Keep track of the scene change callbacks that are registered, so that they can be
         # disconnected at a later time.
@@ -64,10 +54,10 @@ class BreakdownSceneOperations(HookBaseClass):
 
         refs = []
 
-        for r in vrReferenceService.getSceneReferences():
+        for r in self._vredpy.vrReferenceService.getSceneReferences():
 
             # we only want to keep the top references
-            has_parent = vrReferenceService.getParentReferences(r)
+            has_parent = self._vredpy.vrReferenceService.getParentReferences(r)
             if has_parent:
                 continue
 
@@ -109,7 +99,7 @@ class BreakdownSceneOperations(HookBaseClass):
         path = item["path"]
         extra_data = item["extra_data"]
 
-        ref_node = get_reference_by_id(extra_data["node_id"])
+        ref_node = self.get_reference_by_id(extra_data["node_id"])
         if not ref_node:
             self.logger.error("Couldn't get reference node named {}".format(node_name))
             return
@@ -122,7 +112,7 @@ class BreakdownSceneOperations(HookBaseClass):
             ref_node.setName(new_node_name)
         elif node_type == "smart_reference":
             ref_node.setSmartPath(path)
-            vrReferenceService.reimportSmartReferences([ref_node])
+            self._vredpy.vrReferenceService.reimportSmartReferences([ref_node])
 
     def register_scene_change_callback(self, scene_change_callback):
         """
@@ -139,33 +129,56 @@ class BreakdownSceneOperations(HookBaseClass):
         """
 
         # Keep track of the callback so that it can be disconnected later
-        self._on_references_changed_cb = lambda nodes, cb=scene_change_callback: cb()
+        self._on_references_changed_cb = (
+            lambda nodes=None, cb=scene_change_callback: cb()
+        )
 
         # Set up the signal/slot connection to potentially call the scene change callback
         # based on how the references have cahnged.
         # NOTE ideally the VRED API would have signals for specific reference change events,
         # until then, any reference change will trigger a full reload of the app.
-        vrReferenceService.referencesChanged.connect(self._on_references_changed_cb)
+        if hasattr(self._vredpy, "vrScenegraphService"):
+            self._vredpy.vrScenegraphService.scenegraphChanged.connect(
+                self._on_references_changed_cb
+            )
+        else:
+            self._vredpy.vrReferenceService.referencesChanged.connect(
+                self._on_references_changed_cb
+            )
 
     def unregister_scene_change_callback(self):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
         if self._on_references_changed_cb:
-            vrReferenceService.referencesChanged.disconnect(
-                self._on_references_changed_cb
-            )
-            self._on_references_changed_cb = None
+            if hasattr(self._vredpy, "vrScenegraphService"):
+                try:
+                    self._vredpy.vrScenegraphService.scenegraphChanged.disconnect(
+                        self._on_references_changed_cb
+                    )
+                except RuntimeError:
+                    # Signal was never connected
+                    pass
+                finally:
+                    self._on_references_changed_cb = None
+            else:
+                try:
+                    self._vredpy.vrReferenceService.referencesChanged.disconnect(
+                        self._on_references_changed_cb
+                    )
+                except RuntimeError:
+                    # Signal was never connected
+                    pass
+                    self._on_references_changed_cb = None
 
+    def get_reference_by_id(self, ref_id):
+        """
+        Get a reference node from its name.
 
-def get_reference_by_id(ref_id):
-    """
-    Get a reference node from its name.
-
-    :param ref_name: Name of the reference we want to get the associated node from
-    :returns: The reference node associated to the reference name
-    """
-    ref_list = vrReferenceService.getSceneReferences()
-    for r in ref_list:
-        if r.getObjectId() == ref_id:
-            return r
-    return None
+        :param ref_name: Name of the reference we want to get the associated node from
+        :returns: The reference node associated to the reference name
+        """
+        ref_list = self._vredpy.vrReferenceService.getSceneReferences()
+        for r in ref_list:
+            if r.getObjectId() == ref_id:
+                return r
+        return None
