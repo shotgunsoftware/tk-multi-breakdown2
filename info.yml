@@ -55,8 +55,9 @@ configuration:
 
     published_file_filters:
         type: list
-        description: List of Published File filters to apply when querying ShotGrid for
-                     published files for the items found in the scene.
+        description: List of filters that will be applied when querying ShotGrid for Published Files based on
+                     the items found in the scene. To show Published Files without a Task, remove the default
+                     filter to exclude Published Files that do not have a Task, and similarly for Link entity.
         values:
             type: shotgun_filter
         allows_empty: True
