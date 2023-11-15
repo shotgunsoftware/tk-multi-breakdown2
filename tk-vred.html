@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.2.8 documentation</title>
+  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.2.9 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -30,7 +30,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='http://developers.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -93,12 +93,12 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.8.<br>
+    <b>tk-multi-breakdown2</b> v0.2.9.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://developers.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
@@ -151,18 +151,6 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sgtk</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">builtins</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">__builtins__</span> <span class="k">as</span> <span class="nn">builtins</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="kn">import</span> <span class="nn">__builtin__</span> <span class="k">as</span> <span class="nn">builtins</span>
-
-<span class="n">builtins</span><span class="o">.</span><span class="n">vrNodeService</span> <span class="o">=</span> <span class="n">vrNodeService</span>
-<span class="n">builtins</span><span class="o">.</span><span class="n">vrReferenceService</span> <span class="o">=</span> <span class="n">vrReferenceService</span>
-<span class="n">builtins</span><span class="o">.</span><span class="n">vrFileIOService</span> <span class="o">=</span> <span class="n">vrFileIOService</span>
-
 
 <span class="n">HookBaseClass</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">get_hook_baseclass</span><span class="p">()</span>
 
@@ -174,6 +162,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Class constructor.&quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">(</span><span class="n">BreakdownSceneOperations</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">vredpy</span>
 
         <span class="c1"># Keep track of the scene change callbacks that are registered, so that they can be</span>
         <span class="c1"># disconnected at a later time.</span>
@@ -204,10 +194,10 @@
 
         <span class="n">refs</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getSceneReferences</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getSceneReferences</span><span class="p">():</span>
 
             <span class="c1"># we only want to keep the top references</span>
-            <span class="n">has_parent</span> <span class="o">=</span> <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getParentReferences</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">has_parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getParentReferences</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">has_parent</span><span class="p">:</span>
                 <span class="k">continue</span>
 
@@ -249,7 +239,7 @@
         <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
         <span class="n">extra_data</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span>
 
-        <span class="n">ref_node</span> <span class="o">=</span> <span class="n">get_reference_by_id</span><span class="p">(</span><span class="n">extra_data</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">])</span>
+        <span class="n">ref_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_reference_by_id</span><span class="p">(</span><span class="n">extra_data</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">])</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ref_node</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t get reference node named </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_name</span><span class="p">))</span>
             <span class="k">return</span>
@@ -262,7 +252,7 @@
             <span class="n">ref_node</span><span class="o">.</span><span class="n">setName</span><span class="p">(</span><span class="n">new_node_name</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;smart_reference&quot;</span><span class="p">:</span>
             <span class="n">ref_node</span><span class="o">.</span><span class="n">setSmartPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">reimportSmartReferences</span><span class="p">([</span><span class="n">ref_node</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">reimportSmartReferences</span><span class="p">([</span><span class="n">ref_node</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">register_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -279,36 +269,59 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Keep track of the callback so that it can be disconnected later</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">cb</span><span class="o">=</span><span class="n">scene_change_callback</span><span class="p">:</span> <span class="n">cb</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cb</span><span class="o">=</span><span class="n">scene_change_callback</span><span class="p">:</span> <span class="n">cb</span><span class="p">()</span>
+        <span class="p">)</span>
 
         <span class="c1"># Set up the signal/slot connection to potentially call the scene change callback</span>
         <span class="c1"># based on how the references have cahnged.</span>
         <span class="c1"># NOTE ideally the VRED API would have signals for specific reference change events,</span>
         <span class="c1"># until then, any reference change will trigger a full reload of the app.</span>
-        <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">referencesChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="p">,</span> <span class="s2">&quot;vrScenegraphService&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrScenegraphService</span><span class="o">.</span><span class="n">scenegraphChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">referencesChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">unregister_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister the scene change callbacks by disconnecting any signals.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span><span class="p">:</span>
-            <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">referencesChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="p">,</span> <span class="s2">&quot;vrScenegraphService&quot;</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrScenegraphService</span><span class="o">.</span><span class="n">scenegraphChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                    <span class="c1"># Signal was never connected</span>
+                    <span class="k">pass</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">referencesChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                    <span class="c1"># Signal was never connected</span>
+                    <span class="k">pass</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="kc">None</span>
 
+    <span class="k">def</span> <span class="nf">get_reference_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a reference node from its name.</span>
 
-<span class="k">def</span> <span class="nf">get_reference_by_id</span><span class="p">(</span><span class="n">ref_id</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get a reference node from its name.</span>
-
-<span class="sd">    :param ref_name: Name of the reference we want to get the associated node from</span>
-<span class="sd">    :returns: The reference node associated to the reference name</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ref_list</span> <span class="o">=</span> <span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getSceneReferences</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ref_list</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">()</span> <span class="o">==</span> <span class="n">ref_id</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">r</span>
-    <span class="k">return</span> <span class="kc">None</span>
+<span class="sd">        :param ref_name: Name of the reference we want to get the associated node from</span>
+<span class="sd">        :returns: The reference node associated to the reference name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ref_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getSceneReferences</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ref_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">()</span> <span class="o">==</span> <span class="n">ref_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">r</span>
+        <span class="k">return</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>

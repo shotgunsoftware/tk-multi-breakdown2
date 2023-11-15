@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Breakdown API &mdash; tk-multi-breakdown2 v0.2.8 documentation</title>
+  <title>Breakdown API &mdash; tk-multi-breakdown2 v0.2.9 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -31,7 +31,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='http://developers.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -66,6 +66,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_files_from_file_paths()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_file_items"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_file_items()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_file_fields()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_filters"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_file_filters()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_latest_published_file()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_files_for_items()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history"><code class="docutils literal notranslate"><span class="pre">BreakdownManager.get_published_file_history()</span></code></a></li>
@@ -116,12 +117,12 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.8.<br>
+    <b>tk-multi-breakdown2</b> v0.2.9.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://developers.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
@@ -278,6 +279,21 @@ scene.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list&lt;str&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_published_file_filters">
+<span class="sig-name descname"><span class="pre">get_published_file_filters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_file_filters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_file_filters" title="Permalink to this definition"></a></dt>
+<dd><p>Get additional filters to pass to the query to retrieve the published files when
+scanning the scene.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The published file filters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[List[<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)">dict</a>]]</p>
 </dd>
 </dl>
 </dd></dl>

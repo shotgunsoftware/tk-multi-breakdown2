@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.8 documentation</title>
+  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.9 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -28,7 +28,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developer.shotgridsoftware.com'>
+    <a href='http://developers.shotgridsoftware.com'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -80,12 +80,12 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.8.<br>
+    <b>tk-multi-breakdown2</b> v0.2.9.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developer.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://developers.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
@@ -213,13 +213,20 @@
         <span class="k">if</span> <span class="n">extra_fields</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fields</span> <span class="o">+=</span> <span class="n">extra_fields</span>
 
+        <span class="c1"># Get the published file filters to pass to the query</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_published_file_filters</span><span class="p">()</span>
+
         <span class="c1"># Option to run this in a background task since this can take some time to execute.</span>
         <span class="k">if</span> <span class="n">bg_task_manager</span><span class="p">:</span>
             <span class="c1"># Execute the request async and return the task id for the operation.</span>
             <span class="k">return</span> <span class="n">bg_task_manager</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span>
                 <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">,</span>
                 <span class="n">task_args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">sgtk</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">],</span>
-                <span class="n">task_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="n">fields</span><span class="p">,</span> <span class="s2">&quot;only_current_project&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+                <span class="n">task_kwargs</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="n">filters</span><span class="p">,</span>
+                    <span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="n">fields</span><span class="p">,</span>
+                    <span class="s2">&quot;only_current_project&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="p">},</span>
             <span class="p">)</span>
 
         <span class="c1"># No background task manager provided, execute the request synchronously and return</span>
@@ -282,6 +289,17 @@
         <span class="k">return</span> <span class="n">constants</span><span class="o">.</span><span class="n">PUBLISHED_FILES_FIELDS</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span>
             <span class="s2">&quot;published_file_fields&quot;</span><span class="p">,</span> <span class="p">[]</span>
         <span class="p">)</span></div>
+
+<div class="viewcode-block" id="BreakdownManager.get_published_file_filters"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_filters">[docs]</a>    <span class="k">def</span> <span class="nf">get_published_file_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get additional filters to pass to the query to retrieve the published files when</span>
+<span class="sd">        scanning the scene.</span>
+
+<span class="sd">        :return: The published file filters.</span>
+<span class="sd">        :rtype: List[List[dict]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;published_file_filters&quot;</span><span class="p">,</span> <span class="p">[])</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_latest_published_file"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">data_retriever</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
