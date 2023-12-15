@@ -91,7 +91,7 @@ class BreakdownSceneOperations(HookBaseClass):
 
         :param item: The item data used to perform the reference update.
         :type item: dict | List[dict]
-        
+
         :return: The items that were updated or True when `item` is a single item.
         :rtype: List[dict] | True
         """
@@ -99,14 +99,14 @@ class BreakdownSceneOperations(HookBaseClass):
         if isinstance(item, list):
             return self.update_items(item)
         return self.update_item(item)
-    
+
     def update_items(self, items):
         """
         Update the references given the item data.
 
         :param item: The item data used to perform the reference updates.
         :type item: List[dict]
-        
+
         :return: The items that were updated.
         :rtype: List[dict]
         """
@@ -120,7 +120,9 @@ class BreakdownSceneOperations(HookBaseClass):
             node_id = item.get("extra_data", {}).get("node_id")
             ref_node = self.get_reference_by_id(node_id)
             if not ref_node:
-                self.logger.error("Couldn't get reference node named {}".format(item["node_name"]))
+                self.logger.error(
+                    "Couldn't get reference node named {}".format(item["node_name"])
+                )
                 continue
             # Update the current reference based on the item data
             node_type = item["node_type"]
@@ -140,7 +142,9 @@ class BreakdownSceneOperations(HookBaseClass):
         if refs_to_load:
             self._vredpy.vrReferenceService.loadSourceReferences(refs_to_load)
         if smart_refs_to_import:
-            self._vredpy.vrReferenceService.reimportSmartReferences(smart_refs_to_import)
+            self._vredpy.vrReferenceService.reimportSmartReferences(
+                smart_refs_to_import
+            )
 
         # Return the list of items that were updated
         return updated_items
@@ -151,7 +155,7 @@ class BreakdownSceneOperations(HookBaseClass):
 
         :param item: The item data used to perform the reference update.
         :type item: dict
-        
+
         :return: True if the item was updated, else False.
         :rtype: True
         """
@@ -159,7 +163,9 @@ class BreakdownSceneOperations(HookBaseClass):
         node_id = item.get("extra_data", {}).get("node_id")
         ref_node = self.get_reference_by_id(node_id)
         if not ref_node:
-            self.logger.error("Couldn't get reference node named {}".format(item["node_name"]))
+            self.logger.error(
+                "Couldn't get reference node named {}".format(item["node_name"])
+            )
             return False
 
         node_type = item["node_type"]
@@ -176,7 +182,7 @@ class BreakdownSceneOperations(HookBaseClass):
             self._vredpy.vrReferenceService.reimportSmartReferences([ref_node])
             return True
 
-        # Return False to indicate the item was not updated 
+        # Return False to indicate the item was not updated
         return False
 
     def register_scene_change_callback(self, scene_change_callback):

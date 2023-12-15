@@ -407,7 +407,9 @@ class AppDialog(QtGui.QWidget):
         self._ui.select_all_outdated_button.clicked.connect(
             self._on_select_all_outdated
         )
-        self._ui.update_selected_button.clicked.connect(self._on_update_selected_to_latest)
+        self._ui.update_selected_button.clicked.connect(
+            self._on_update_selected_to_latest
+        )
 
         for i, view_mode in enumerate(self.view_modes):
             view_mode["button"].clicked.connect(
@@ -774,7 +776,9 @@ class AppDialog(QtGui.QWidget):
 
         # build the actions
         update_to_latest_action = QtGui.QAction("Update to Latest")
-        update_to_latest_action.triggered.connect(lambda checked=False: self._on_update_selected_to_latest())
+        update_to_latest_action.triggered.connect(
+            lambda checked=False: self._on_update_selected_to_latest()
+        )
         context_menu.addAction(update_to_latest_action)
 
         # Add action to show details for the item that the context menu is shown for.

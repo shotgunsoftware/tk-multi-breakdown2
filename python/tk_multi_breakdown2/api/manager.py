@@ -299,7 +299,9 @@ class BreakdownManager(object):
             # Fallback to updating items one by one.
             updated_items = []
             for item in items:
-                do_update = self.update_to_specific_version(item, item.latest_published_file)
+                do_update = self.update_to_specific_version(
+                    item, item.latest_published_file
+                )
                 if do_update:
                     updated_items.append(item)
             return updated_items
