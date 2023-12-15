@@ -407,7 +407,7 @@ class AppDialog(QtGui.QWidget):
         self._ui.select_all_outdated_button.clicked.connect(
             self._on_select_all_outdated
         )
-        self._ui.update_selected_button.clicked.connect(self._on_update_selected)
+        self._ui.update_selected_button.clicked.connect(self._on_update_selected_to_latest)
 
         for i, view_mode in enumerate(self.view_modes):
             view_mode["button"].clicked.connect(
@@ -1287,7 +1287,7 @@ class AppDialog(QtGui.QWidget):
             selection_model.select(outdated_selection, QtGui.QItemSelectionModel.Select)
             self._ui.file_view.scrollTo(outdated_selection.indexes()[0])
 
-    def _on_update_selected(self):
+    def _on_update_selected_to_latest(self):
         """
         Callback triggere when the "Update Selected" button is clicked. This will update
         all selected items to the latest version.
