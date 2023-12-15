@@ -175,19 +175,17 @@ class UpdateToLatestVersionAction(Action):
         if not self._file_items:
             return
 
-        for file_item in self._file_items:
-            # Call the manager to update the file item object to the latest version.
-            do_update = self._manager.update_to_latest_version(file_item)
+        items_to_update = self._manager.update_to_latest_version(self._file_items)
 
-            if do_update:
-                # The file item object that the model holds was updated by the manager.
-                # Emit a signal that the data has changed.
-                index = self._get_index_for_item(file_item)
-                self._model.dataChanged.emit(
-                    index,
-                    index,
-                    [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
-                )
+        for file_item in items_to_update:
+            # The file item object that the model holds was updated by the manager.
+            # Emit a signal that the data has changed.
+            index = self._get_index_for_item(file_item)
+            self._model.dataChanged.emit(
+                index,
+                index,
+                [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
+            )
 
 
 class UpdateToSpecificVersionAction(Action):

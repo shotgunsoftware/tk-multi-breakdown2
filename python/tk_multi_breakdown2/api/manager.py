@@ -9,6 +9,7 @@
 # not expressly granted therein are reserved by Autodesk, Inc.
 
 import sgtk
+from tank.errors import TankHookMethodDoesNotExistError
 
 from .item import FileItem
 from .. import constants
@@ -277,22 +278,89 @@ class BreakdownManager(object):
         # Return empty list indicating no publish file history was found.
         return []
 
-    def update_to_latest_version(self, item):
+    def update_to_latest_version(self, items):
         """
         Update the item to its latest version.
 
-        :param item: Item to update
-        :type item: FileItem
+        :param items: The item or items to update.
+        :type items: FileItem | List[FileItem]
 
-        :return: True if the item requires the data model to update, else False will not
-            trigger a model update.
-        :rtype: bool
+        :return: The list of file item objects that were updated to the latest version.
+        :rtype: List[FileItem]
         """
 
-        if not item.latest_published_file:
-            return False
+        if not isinstance(items, list):
+            items = [items]
 
-        return self.update_to_specific_version(item, item.latest_published_file)
+        # First try to execute the hook method to update items in batch for performance.
+        try:
+            return self.update_items_to_latest_version(items)
+        except TankHookMethodDoesNotExistError:
+            # Fallback to updating items one by one.
+            updated_items = []
+            for item in items:
+                do_update = self.update_to_specific_version(item, item.latest_published_file)
+                if do_update:
+                    updated_items.append(item)
+            return updated_items
+
+    def update_items_to_latest_version(self, items):
+        """
+        Update the list of items to their respective latest version.
+
+        :param items: The item or items to update.
+        :type items: FileItem | List[FileItem]
+
+        :return: The list of file item objectggs that were updated to the latest version.
+        :rtype: List[FileItem]
+        """
+
+        hook_path = self._bundle.get_setting("hook_scene_operations")
+        scene_operation_hook = self._bundle.create_hook_instance(hook_path)
+        if not hasattr(scene_operation_hook, "update_items"):
+            raise TankHookMethodDoesNotExistError
+
+        # Prepare the items to update
+        items_by_dict = {}
+        for item in items:
+            sg_data = item.latest_published_file
+            if not sg_data or not sg_data.get("path", {}).get("local_path", None):
+                continue
+            item_dict = item.to_dict()
+            item_dict["path"] = sg_data["path"]["local_path"]
+            if item_dict["extra_data"] is None:
+                item_dict["extra_data"] = {"old_path": item.path}
+            else:
+                item_dict["extra_data"]["old_path"] = item.path
+            items_by_dict[item] = item_dict
+
+        # Execute the hook to perform the update operation.
+        items_to_update = self._bundle.execute_hook_method(
+            "hook_scene_operations",
+            "update_items",
+            items=items_by_dict.values(),
+        )
+
+        # Update the FileItem objects model data directly, if specified.
+        if items_to_update is None:
+            # Default to updating all items
+            items_to_update = items
+
+        # The returned items are the FileItem dict representations. We will need to map these
+        # back to their FileItem object.
+        updated_items = []
+        if items_to_update:
+            # Only update the file item if specified. Updating the item will affect the data
+            # model directly
+            for item, item_dict in items_by_dict.items():
+                if item_dict not in items_to_update:
+                    continue
+                item.sg_data = sg_data
+                item.path = item_dict["path"]
+                item.extra_data = item_dict["extra_data"]
+                updated_items.append(item)
+
+        return updated_items
 
     def update_to_specific_version(self, item, sg_data):
         """
