@@ -766,23 +766,6 @@ class AppDialog(QtGui.QWidget):
         :param pnt: The position for the context menu relative to the source widget.
         """
 
-        # get all the selected items
-        selection_model = self._ui.file_view.selectionModel()
-        if not selection_model:
-            return
-
-        indexes = selection_model.selectedIndexes()
-        if not indexes:
-            return
-
-        items = []
-        for index in indexes:
-            if isinstance(index.model(), QtGui.QSortFilterProxyModel):
-                index = index.model().mapToSource(index)
-
-            file_item = index.data(FileModel.FILE_ITEM_ROLE)
-            items.append(file_item)
-
         # map the point to a global position:
         pnt = widget.mapToGlobal(pnt)
 
@@ -790,10 +773,9 @@ class AppDialog(QtGui.QWidget):
         context_menu = QtGui.QMenu(self)
 
         # build the actions
-        q_action = ActionManager.add_update_to_latest_action(
-            items, self._file_model, context_menu
-        )
-        context_menu.addAction(q_action)
+        update_to_latest_action = QtGui.QAction("Update to Latest")
+        update_to_latest_action.triggered.connect(lambda checked=False: self._on_update_selected_to_latest())
+        context_menu.addAction(update_to_latest_action)
 
         # Add action to show details for the item that the context menu is shown for.
         show_details_action = QtGui.QAction("Show Details")
