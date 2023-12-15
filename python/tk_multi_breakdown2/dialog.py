@@ -82,6 +82,9 @@ class AppDialog(QtGui.QWidget):
         # retrieved async.
         self._dynamic_loading = False
 
+        # Flag to indicate when an action is executing that affects multiple items.
+        self.__executing_bulk_action = False
+
         # create a single instance of the task manager that manages all
         # asynchronous work/tasks
         self._bg_task_manager = BackgroundTaskManager(self, max_threads=2)
@@ -1182,9 +1185,9 @@ class AppDialog(QtGui.QWidget):
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
         """
 
-        # Only update the filter menu if the item data changed is relevant. NOTE this could be
-        # optimized to only refresh the menu based on the roles list.
-        if self._filter_menu.has_role(roles):
+        # Only update the filter menu if the item data changed is relevant, and not in the
+        # middle of executing a bulk action
+        if not self.__executing_bulk_action and self._filter_menu.has_role(roles):
             self._filter_menu.refresh()
 
         selected = self._ui.file_view.selectionModel().selectedIndexes()
@@ -1293,14 +1296,17 @@ class AppDialog(QtGui.QWidget):
 
         # Turn off event handling while executing the action, we do not want the UI to handle
         # events while performating the action.
+        self.__executing_bulk_action = True
         if self._auto_refresh:
             self._listen_for_events(False)
         try:
             ActionManager.execute_update_to_latest_action(file_items, self._file_model)
         finally:
+            self.__executing_bulk_action = False
             # Turn on event handling if it was on before
             if self._auto_refresh:
                 self._listen_for_events(self._auto_refresh)
+            self._filter_menu.refresh()
 
     def _update_search_text_filter(self):
         """
