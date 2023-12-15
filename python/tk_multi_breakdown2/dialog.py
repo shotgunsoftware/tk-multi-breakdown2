@@ -1287,7 +1287,16 @@ class AppDialog(QtGui.QWidget):
             file_item = index.data(FileModel.FILE_ITEM_ROLE)
             file_items.append(file_item)
 
-        ActionManager.execute_update_to_latest_action(file_items, self._file_model)
+        # Turn off event handling while executing the action, we do not want the UI to handle
+        # events while performating the action.
+        if self._auto_refresh:
+            self._listen_for_events(False)
+        try:
+            ActionManager.execute_update_to_latest_action(file_items, self._file_model)
+        finally:
+            # Turn on event handling if it was on before
+            if self._auto_refresh:
+                self._listen_for_events(self._auto_refresh)
 
     def _update_search_text_filter(self):
         """
