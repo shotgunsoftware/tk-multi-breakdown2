@@ -100,6 +100,7 @@ def file_item_data(request):
         "extra_data": extra_data,
     }
 
+
 @pytest.fixture
 def file_item_data_list(request):
     """
@@ -121,7 +122,8 @@ def file_item_data_list(request):
         node_name = "".join(random.choice(any_char) for i in range(10))
         node_type = random.choice(["reference", "file"])
         path = "/".join(
-            "".join(random.choice(letters_and_digits) for i in range(8)) for j in range(5)
+            "".join(random.choice(letters_and_digits) for i in range(8))
+            for j in range(5)
         )
         sg_data = {
             "version_number": random.randint(1, 1000),

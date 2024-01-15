@@ -417,7 +417,9 @@ def test_update_to_latest_version_bulk(bundle, file_item_data_list):
         item.latest_published_file = latest
         # Add all items to attempt to update, but only expect the valid ones to be updated.
         items.append(item)
-        if item.latest_published_file and item.latest_published_file.get("path", {}).get("local_path", None):
+        if item.latest_published_file and item.latest_published_file.get(
+            "path", {}
+        ).get("local_path", None):
             expected_updated_items.append(item)
 
     manager = BreakdownManager(bundle)
