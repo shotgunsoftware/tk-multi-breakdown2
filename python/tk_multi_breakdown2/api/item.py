@@ -48,6 +48,9 @@ class FileItem(object):
         :type other: FileItem
         """
 
+        if not isinstance(other, FileItem):
+            return False
+
         return (
             self.node_name == other.node_name
             and self.node_type == other.node_type

@@ -336,6 +336,10 @@ class BreakdownManager(object):
                 item_dict["extra_data"]["old_path"] = item.path
             items_by_dict[item] = item_dict
 
+        # No items to update, return empty list to indicate no further action.
+        if not items_by_dict:
+            return []
+
         # Execute the hook to perform the update operation.
         items_to_update = self._bundle.execute_hook_method(
             "hook_scene_operations",
@@ -355,9 +359,9 @@ class BreakdownManager(object):
             # Only update the file item if specified. Updating the item will affect the data
             # model directly
             for item, item_dict in items_by_dict.items():
-                if item_dict not in items_to_update:
+                if item not in items_to_update:
                     continue
-                item.sg_data = sg_data
+                item.sg_data = item.latest_published_file
                 item.path = item_dict["path"]
                 item.extra_data = item_dict["extra_data"]
                 updated_items.append(item)
