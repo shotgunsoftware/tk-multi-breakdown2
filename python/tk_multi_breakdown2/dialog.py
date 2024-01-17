@@ -82,6 +82,9 @@ class AppDialog(QtGui.QWidget):
         # retrieved async.
         self._dynamic_loading = False
 
+        # Flag to indicate when an action is executing that affects multiple items.
+        self.__executing_bulk_action = False
+
         # create a single instance of the task manager that manages all
         # asynchronous work/tasks
         self._bg_task_manager = BackgroundTaskManager(self, max_threads=2)
@@ -407,7 +410,9 @@ class AppDialog(QtGui.QWidget):
         self._ui.select_all_outdated_button.clicked.connect(
             self._on_select_all_outdated
         )
-        self._ui.update_selected_button.clicked.connect(self._on_update_selected)
+        self._ui.update_selected_button.clicked.connect(
+            self._on_update_selected_to_latest
+        )
 
         for i, view_mode in enumerate(self.view_modes):
             view_mode["button"].clicked.connect(
@@ -766,23 +771,6 @@ class AppDialog(QtGui.QWidget):
         :param pnt: The position for the context menu relative to the source widget.
         """
 
-        # get all the selected items
-        selection_model = self._ui.file_view.selectionModel()
-        if not selection_model:
-            return
-
-        indexes = selection_model.selectedIndexes()
-        if not indexes:
-            return
-
-        items = []
-        for index in indexes:
-            if isinstance(index.model(), QtGui.QSortFilterProxyModel):
-                index = index.model().mapToSource(index)
-
-            file_item = index.data(FileModel.FILE_ITEM_ROLE)
-            items.append(file_item)
-
         # map the point to a global position:
         pnt = widget.mapToGlobal(pnt)
 
@@ -790,10 +778,11 @@ class AppDialog(QtGui.QWidget):
         context_menu = QtGui.QMenu(self)
 
         # build the actions
-        q_action = ActionManager.add_update_to_latest_action(
-            items, self._file_model, context_menu
+        update_to_latest_action = QtGui.QAction("Update to Latest")
+        update_to_latest_action.triggered.connect(
+            lambda checked=False: self._on_update_selected_to_latest()
         )
-        context_menu.addAction(q_action)
+        context_menu.addAction(update_to_latest_action)
 
         # Add action to show details for the item that the context menu is shown for.
         show_details_action = QtGui.QAction("Show Details")
@@ -1196,9 +1185,9 @@ class AppDialog(QtGui.QWidget):
         :type model_item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
         """
 
-        # Only update the filter menu if the item data changed is relevant. NOTE this could be
-        # optimized to only refresh the menu based on the roles list.
-        if self._filter_menu.has_role(roles):
+        # Only update the filter menu if the item data changed is relevant, and not in the
+        # middle of executing a bulk action
+        if not self.__executing_bulk_action and self._filter_menu.has_role(roles):
             self._filter_menu.refresh()
 
         selected = self._ui.file_view.selectionModel().selectedIndexes()
@@ -1287,7 +1276,7 @@ class AppDialog(QtGui.QWidget):
             selection_model.select(outdated_selection, QtGui.QItemSelectionModel.Select)
             self._ui.file_view.scrollTo(outdated_selection.indexes()[0])
 
-    def _on_update_selected(self):
+    def _on_update_selected_to_latest(self):
         """
         Callback triggere when the "Update Selected" button is clicked. This will update
         all selected items to the latest version.
@@ -1305,7 +1294,19 @@ class AppDialog(QtGui.QWidget):
             file_item = index.data(FileModel.FILE_ITEM_ROLE)
             file_items.append(file_item)
 
-        ActionManager.execute_update_to_latest_action(file_items, self._file_model)
+        # Turn off event handling while executing the action, we do not want the UI to handle
+        # events while performating the action.
+        self.__executing_bulk_action = True
+        if self._auto_refresh:
+            self._listen_for_events(False)
+        try:
+            ActionManager.execute_update_to_latest_action(file_items, self._file_model)
+        finally:
+            self.__executing_bulk_action = False
+            # Turn on event handling if it was on before
+            if self._auto_refresh:
+                self._listen_for_events(self._auto_refresh)
+            self._filter_menu.refresh()
 
     def _update_search_text_filter(self):
         """

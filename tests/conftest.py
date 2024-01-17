@@ -99,3 +99,54 @@ def file_item_data(request):
         "sg_data": sg_data,
         "extra_data": extra_data,
     }
+
+
+@pytest.fixture
+def file_item_data_list(request):
+    """
+    Return a list of dicts that can be used to create a new FileItem objects.
+
+    :param request: pytest fixture that provides information for the test function
+    that requested this fixture.
+    """
+
+    param = request.param if hasattr(request, "param") else (False, False)
+    n = param[0] if param[0] is True else 5
+
+    file_items = []
+    for i in range(n):
+        # Random character sets to generate random data from
+        any_char = string.ascii_letters + string.digits + string.punctuation
+        letters_and_digits = string.ascii_letters + string.digits
+
+        node_name = "".join(random.choice(any_char) for i in range(10))
+        node_type = random.choice(["reference", "file"])
+        path = "/".join(
+            "".join(random.choice(letters_and_digits) for i in range(8))
+            for j in range(5)
+        )
+        sg_data = {
+            "version_number": random.randint(1, 1000),
+            "path": {"local_path": "some/path"},
+            "some_field": "".join(random.choice(any_char) for i in range(10)),
+        }
+        extra_data = {
+            "extra_field__key": random.randint(1, 1000),
+            "field": "".join(random.choice(any_char) for i in range(10)),
+        }
+        latest_published_file = {
+            "version_number": sg_data["version_number"] + 1,
+            "path": {"local_path": "latest/version/path"},
+            "some_field": "".join(random.choice(any_char) for i in range(10)),
+        }
+        item = {
+            "node_name": node_name,
+            "node_type": node_type,
+            "path": path,
+            "sg_data": sg_data,
+            "extra_data": extra_data,
+            "latest_published_file": latest_published_file,
+        }
+        file_items.append(item)
+
+    return file_items

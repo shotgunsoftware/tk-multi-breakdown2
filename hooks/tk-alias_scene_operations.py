@@ -115,21 +115,9 @@ class BreakdownSceneOperations(HookBaseClass):
         path = item["path"]
         extra_data = item["extra_data"]
         sg_data = item["sg_data"]
-
         if node_type == "reference":
-            self.update_reference(path, extra_data, sg_data)
-
-        try:
-            api_alias_version = alias_api.__alias_version__
-            major_version = int(api_alias_version.split(".")[0])
-        except:
-            major_version = -1
-
-        if major_version >= 2023:
-            # Alias events triggered from any reference update will update the file data model
-            # Return False to indicate that the file data model does not need to perform an update
-            return False
-        return True
+            return self.update_reference(path, extra_data, sg_data)
+        return False
 
     def update_reference(self, path, extra_data, sg_data):
         """
@@ -144,6 +132,9 @@ class BreakdownSceneOperations(HookBaseClass):
         :param sg_data: Additional ShotGrid specific data required to look up reference
             templates to perform the reference update.
         :type sg_data: dict (required key-values: 'project': dict, 'task': dict)
+
+        :return: True if the reference was updated, False otherwise.
+        :rtype: bool
         """
 
         old_path = extra_data["old_path"]
@@ -183,7 +174,7 @@ class BreakdownSceneOperations(HookBaseClass):
                                 path
                             )
                         )
-                        return
+                        return False
 
                     tk_framework_aliastranslations = framework.import_module(
                         "tk_framework_aliastranslations"
@@ -199,16 +190,17 @@ class BreakdownSceneOperations(HookBaseClass):
                         path
                     )
                 )
-                return
+                return False
 
         if not old_path or not os.path.exists(old_path):
             self.logger.info(
                 "Couldn't find old reference path. Skipping file {}".format(path)
             )
-            return
+            return False
 
         # get the reference by its uuid if possible, otherwise use its name to find the right instance
         alias_api.update_reference(old_path, path)
+        return True
 
     def register_scene_change_callback(self, scene_change_callback):
         """

@@ -35,6 +35,11 @@ class FileItem(object):
         self._locked = False
         self._thumbnail_path = None
 
+    def __hash__(self):
+        """Override the base method to allow FileItem objects to be hashable."""
+
+        return hash((self.node_name, self.node_type, self.path, self.sg_data.get("id")))
+
     def __eq__(self, other):
         """
         Override the equality operator to allow comparing FileItem objects.
@@ -42,6 +47,9 @@ class FileItem(object):
         :param other: The other FileItem to compare this one with.
         :type other: FileItem
         """
+
+        if not isinstance(other, FileItem):
+            return False
 
         return (
             self.node_name == other.node_name

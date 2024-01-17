@@ -8,6 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+import copy
 import datetime
 import os
 import sys
@@ -328,6 +329,7 @@ def test_get_published_file_history(bundle, file_item_data):
     "file_item_data",
     [
         (False, False),
+        ({"version_number": 1, "path": {"missing_local_path": "some path"}}, False),
         ({"version_number": 1, "path": {"local_path": "some path"}}, False),
         (False, True),
         ({"version_number": 234, "path": {"local_path": "another path"}}, True),
@@ -338,43 +340,99 @@ def test_get_published_file_history(bundle, file_item_data):
 def test_update_to_latest_version(bundle, file_item_data):
     """
     Test the Breakdown Manager 'update_to_latest_version' method. This test case
-    only validates teh BreakdownManager's functionality, and assumes that the
+    only validates the BreakdownManager's functionality, and assumes that the
     bundle's hook method to update the item functions correctly.
     """
+
+    manager = BreakdownManager(bundle)
 
     item = FileItem(**file_item_data)
     item_sg_data = file_item_data.get("sg_data", None)
     if item_sg_data is None:
-        expected_latest_data = {"version_number": 1}
+        expected_item_path = item.path
+        expected_item_sg_data = item.sg_data
+        # Assert nothing has been updated due to missing sg_data
+        updated_items = manager.update_to_latest_version(item)
+        assert updated_items == []
+        assert item.path == expected_item_path
+        assert item.sg_data == expected_item_sg_data
     else:
-        expected_latest_data = item_sg_data
+        expected_latest_data = copy.deepcopy(item_sg_data)
         expected_latest_data["version_number"] = (
             item_sg_data.get("version_number", 0) + 1
         )
 
-    # Set the item's latest published file
-    item.latest_published_file = expected_latest_data
+        # Set the item's latest published file
+        item.latest_published_file = expected_latest_data
 
-    if item.latest_published_file.get("path", {}).get("local_path", None):
-        # Data is valid, expect the item to be updated to the latest
-        expected_item_path = expected_latest_data["path"]["local_path"]
-        expected_item_sg_data = expected_latest_data
-    else:
-        # Data is invalid, nothing should be updated
-        expected_item_path = item.path
-        expected_item_sg_data = item.sg_data
+        if item.latest_published_file.get("path", {}).get("local_path", None):
+            # Data is valid, expect the item to be updated to the latest
+            expected_item_path = expected_latest_data["path"]["local_path"]
+            expected_item_sg_data = expected_latest_data
+            expected_updated_items = [item]
+        else:
+            # Data is invalid, nothing should be updated
+            expected_item_path = item.path
+            expected_item_sg_data = item.sg_data
+            expected_updated_items = []
+
+        # Call the method that is to be tested.
+        updated_items = manager.update_to_latest_version(item)
+        assert updated_items == expected_updated_items
+        assert item.path == expected_item_path
+        assert item.sg_data == expected_item_sg_data
+
+
+def test_update_to_latest_version_bulk(bundle, file_item_data_list):
+    """
+    Test the Breakdown Manager 'update_to_latest_version' method. This test case
+    only validates the BreakdownManager's functionality, and assumes that the
+    bundle's hook method to update the item functions correctly.
+    """
+
+    # Extend the data list to include some invalid items
+    bad_file_items = [
+        {
+            "node_name": "bad item",
+            "node_type": "reference",
+            "path": "/path/to/bad/item",
+            "sg_data": None,
+            "latest_published_file": None,
+        },
+        {
+            "node_name": "bad item 2",
+            "node_type": "reference",
+            "path": "/path/to/bad/item2",
+            "sg_data": {"missing_data": "no path"},
+            "latest_published_file": None,
+        },
+    ]
+    file_item_data_list.extend(bad_file_items)
+
+    items = []
+    expected_updated_items = []
+    for file_item_data in file_item_data_list:
+        latest = file_item_data.pop("latest_published_file")
+        item = FileItem(**file_item_data)
+        item.latest_published_file = latest
+        # Add all items to attempt to update, but only expect the valid ones to be updated.
+        items.append(item)
+        if item.latest_published_file and item.latest_published_file.get(
+            "path", {}
+        ).get("local_path", None):
+            expected_updated_items.append(item)
 
     manager = BreakdownManager(bundle)
-    # Call the method that is to be tested.
-    manager.update_to_latest_version(item)
-    assert item.path == expected_item_path
-    assert item.sg_data == expected_item_sg_data
+    updated_items = manager.update_to_latest_version(items)
+    assert len(updated_items) == len(expected_updated_items)
+    for item in expected_updated_items:
+        assert item in updated_items
 
 
 def test_update_to_latest_version_no_latest(bundle, file_item_data):
     """
     Test the Breakdown Manager 'update_to_latest_version' method. This test case
-    only validates teh BreakdownManager's functionality, and assumes that the
+    only validates the BreakdownManager's functionality, and assumes that the
     bundle's hook method to update the item functions correctly.
     """
 
@@ -422,7 +480,7 @@ def test_update_to_latest_version_no_latest(bundle, file_item_data):
 def test_update_to_specific_version(bundle, file_item_data, sg_data):
     """
     Test the Breakdown Manager 'update_to_latest_version' method. This test case
-    only validates teh BreakdownManager's functionality, and assumes that the
+    only validates the BreakdownManager's functionality, and assumes that the
     bundle's hook method to update the item functions correctly.
     """
 
