@@ -252,7 +252,7 @@ class AppDialog(QtGui.QWidget):
             FilterItem.FilterOp.IN,
             data_func=list_item_delegate.get_displayed_text,
         )
-        self._filter_menu = FilterMenu(self, refresh_on_show=False)
+        self._filter_menu = FilterMenu(self, refresh_on_show=False, dock_widget=self._ui.content_filter_scroll_area)
         # TODO allow this list of filters to be defined in the config.
         self._filter_menu.set_accept_fields(
             [
