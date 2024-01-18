@@ -13,8 +13,8 @@ from sgtk.platform.qt import QtGui, QtCore
 from tank.errors import TankHookMethodDoesNotExistError
 from tank_vendor import six
 
-from .ui.dialog import Ui_Dialog
 from .ui import resources_rc  # Required for accessing icons
+from .dialog_ui import DialogUI
 
 from .file_item_model import FileTreeItemModel as FileModel
 from .file_history_model import FileHistoryModel
@@ -22,7 +22,6 @@ from .actions import ActionManager
 from .framework_qtwidgets import (
     FilterItem,
     FilterMenu,
-    FilterMenuButton,  # Keep this import even if the linter says its unused
     ShotgunOverlayWidget,
     ViewItemDelegate,
     ThumbnailViewItemDelegate,
@@ -103,10 +102,9 @@ class AppDialog(QtGui.QWidget):
         )
 
         # -----------------------------------------------------
-        # Load in the UI from the design file
+        # Get the UI from the DialogUI class
 
-        self._ui = Ui_Dialog()
-        self._ui.setupUi(self)
+        self._ui = DialogUI.ui(self)
 
         # -----------------------------------------------------
         # Set up buttons
@@ -137,8 +135,6 @@ class AppDialog(QtGui.QWidget):
         )
         self._ui.refresh_btn.setMenu(refresh_button_menu)
         self._ui.refresh_btn.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
-        self._ui.refresh_btn.setIcon(SGQIcon.refresh())
-        self._ui.refresh_btn.setCheckable(True)
         self._ui.refresh_btn.clicked.connect(self._on_refresh_clicked)
 
         # -----------------------------------------------------
