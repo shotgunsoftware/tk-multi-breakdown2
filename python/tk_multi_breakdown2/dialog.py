@@ -60,8 +60,10 @@ class AppDialog(QtGui.QWidget):
     GRID_SIZE_SCALE_VALUE = "view_item_grid_size_scale"
     THUMBNAIL_SIZE_SCALE_VALUE = "view_item_thumb_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
+    SETTINGS_WIDGET_GEOMETRY = "breakdown2_dialog_geometry"
     SPLITTER_STATE = "splitter_state"
     FILTER_MENU_STATE = "filter_menu_state"
+    FILTER_MENU_DOCKED_SETTING = "filter_menu_docked_state"
     GROUP_BY_SETTING = "group_by"
     AUTO_REFRESH_SETTING = "auto_refresh"
     DYNAMIC_LOADING_SETTING = "dynamic_loading"
@@ -559,10 +561,16 @@ class AppDialog(QtGui.QWidget):
         settings, so that they can be restored on opening the app for the user next time.
         """
 
+        self._settings_manager.store(
+            self.SETTINGS_WIDGET_GEOMETRY, self.saveGeometry(), pickle_setting=False,
+        )
         self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
         self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
         self._settings_manager.store(
             self.DYNAMIC_LOADING_SETTING, self._dynamic_loading
+        )
+        self._settings_manager.store(
+            self.FILTER_MENU_DOCKED_SETTING, self._filter_menu.docked,
         )
 
         if six.PY2:
@@ -591,6 +599,12 @@ class AppDialog(QtGui.QWidget):
         of creating the widgets.
         """
 
+        widget_geometry = self._settings_manager.retrieve(
+            self.SETTINGS_WIDGET_GEOMETRY, None
+        )
+        if widget_geometry:
+            self.restoreGeometry(widget_geometry)
+
         # Restore the splitter state that divides the main view and the details
         # First try to restore the state from the settings manager
         splitter_state = self._settings_manager.retrieve(self.SPLITTER_STATE, None)
@@ -617,6 +631,10 @@ class AppDialog(QtGui.QWidget):
                 ): {},
             }
         self._filter_menu.restore_state(menu_state)
+
+        menu_docked = self._settings_manager.retrieve(self.FILTER_MENU_DOCKED_SETTING, False)
+        if menu_docked:
+            self._filter_menu.dock_filters()
 
     ######################################################################################################
     # Protected methods
