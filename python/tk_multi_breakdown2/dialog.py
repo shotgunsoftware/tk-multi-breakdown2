@@ -8,12 +8,19 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+# try:
+#     import sys
+#     sys.path.append("C:\\python_libs")
+#     import ptvsd
+#     ptvsd.enable_attach()
+#     ptvsd.wait_for_attach()
+# except:
+    # pass
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 from tank.errors import TankHookMethodDoesNotExistError
 from tank_vendor import six
 
-from .ui import resources_rc  # Required for accessing icons
 from .dialog_ui import DialogUI
 
 from .file_item_model import FileTreeItemModel as FileModel
@@ -643,19 +650,11 @@ class AppDialog(QtGui.QWidget):
         delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
 
-        # Create an icon for the expand header action
-        expand_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/tree_arrow_expanded.png")
-        expand_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/icons/tree_arrow_collapsed.png"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.On,
-        )
-
         # Add LEFT side actions: group header expand and status icon
         delegate.add_actions(
             [
                 {
-                    "icon": expand_icon,
+                    "icon": SGQIcon.tree_arrow(),
                     "show_always": True,
                     "padding": 0,
                     "features": QtGui.QStyleOptionButton.Flat,
@@ -678,9 +677,7 @@ class AppDialog(QtGui.QWidget):
         # Add the menu actions buton on top right
         delegate.add_action(
             {
-                "icon": QtGui.QIcon(
-                    ":/tk-multi-breakdown2/icons/tree_arrow_expanded.png"
-                ),
+                "icon": SGQIcon.tree_arrow(),
                 "padding": 0,
                 "callback": self._actions_menu_requested,
             },
@@ -748,9 +745,7 @@ class AppDialog(QtGui.QWidget):
         # Add the menu actions button.
         delegate.add_action(
             {
-                "icon": QtGui.QIcon(
-                    ":/tk-multi-breakdown2/icons/tree_arrow_expanded.png"
-                ),
+                "icon": SGQIcon.tree_arrow(),
                 "padding": 0,
                 "callback": self._show_history_item_context_menu,
             },

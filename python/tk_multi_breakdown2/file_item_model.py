@@ -16,9 +16,9 @@ from sgtk.platform.qt import QtGui, QtCore
 
 from tank_vendor import six
 
-from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
 from .decorators import wait_cursor
+from .framework_qtwidgets import SGQIcon
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
@@ -71,10 +71,12 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_LOCKED,
     ) = range(4)
 
+    # File item status icon paths. Use path instead of QIcons here so that this data can be
+    # serialized (e.g. for save/restore state)
     FILE_ITEM_STATUS_ICON_PATHS = {
-        STATUS_UP_TO_DATE: ":/tk-multi-breakdown2/icons/main-uptodate.png",
-        STATUS_OUT_OF_SYNC: ":/tk-multi-breakdown2/icons/main-outofdate.png",
-        STATUS_LOCKED: ":/tk-multi-breakdown2/icons/main-override.png",
+        STATUS_UP_TO_DATE: SGQIcon.resource_path("check_mark_green", SGQIcon.SIZE_20x20),
+        STATUS_OUT_OF_SYNC: SGQIcon.resource_path("refresh_red", SGQIcon.SIZE_20x20),
+        STATUS_LOCKED: SGQIcon.resource_path("lock", SGQIcon.SIZE_20x20),
     }
     FILE_ITEM_STATUS_ICONS = {
         STATUS_UP_TO_DATE: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE),
