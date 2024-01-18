@@ -36,11 +36,6 @@ function build_res {
     build_qt "${PYTHON_BASE}/pyside-rcc -py3" "$1.qrc" "$1_rc"
 }
 
-
-# build UI's:
-echo "building user interfaces..."
-build_ui dialog
-
 # build resources
 echo "building resources..."
 build_res resources
