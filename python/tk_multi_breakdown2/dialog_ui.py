@@ -53,19 +53,17 @@ class DialogUI():
     def ui(parent):
         """Return the UI components for the Dialog."""
 
-        # TODO repalce Qt widgets with SG* widget wrappers
-
         app_layout = QtGui.QVBoxLayout(parent)
-        # app_layout.setSpacing(15)
 
         # Top toolbar
         top_toolbar_widget = QtGui.QWidget(parent)
         top_toolbar_layout = QtGui.QHBoxLayout(top_toolbar_widget)
+        top_toolbar_layout.setSpacing(15)
+        top_toolbar_layout.setContentsMargins(0, 0, 0, 5)
         # Refresh button
         refresh_btn = sg_qwidgets.SGQToolButton()
         refresh_btn.setObjectName("refresh_btn")
         refresh_btn.setIcon(SGQIcon.refresh())
-        # refresh_btn.setMaximumWidth(32)
         refresh_btn.setCheckable(True)
         top_toolbar_layout.addWidget(refresh_btn)
         # Group by label and combobox
@@ -147,6 +145,7 @@ class DialogUI():
         content_filter_layout.setContentsMargins(0, 0, 0, 0)
         # filter scroll area
         content_filter_scroll_area = QtGui.QScrollArea(details_splitter)
+        content_filter_scroll_area.setObjectName("content_filter_scroll_area")
         content_filter_scroll_area.setWidgetResizable(True)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         content_filter_scroll_area.setSizePolicy(sizePolicy)
@@ -217,11 +216,11 @@ class DialogUI():
         bottom_spacer_item = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         bottom_toolbar_layout.addItem(bottom_spacer_item)
         # select all outdated
-        select_all_outdated_button = QtGui.QPushButton("Select All Outdated", bottom_toolbar_widget)
+        select_all_outdated_button = sg_qwidgets.SGQPushButton("Select All Outdated", bottom_toolbar_widget)
         select_all_outdated_button.setMinimumSize(QtCore.QSize(125, 0))
         bottom_toolbar_layout.addWidget(select_all_outdated_button)
         # update selected
-        update_selected_button = QtGui.QPushButton("Update Selected", bottom_toolbar_widget)
+        update_selected_button = sg_qwidgets.SGQPushButton("Update Selected", bottom_toolbar_widget)
         update_selected_button.setMinimumSize(QtCore.QSize(125, 0))
         bottom_toolbar_layout.addWidget(update_selected_button)
 

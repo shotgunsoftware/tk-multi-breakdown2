@@ -10,44 +10,47 @@ agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 not expressly granted therein are reserved by Autodesk, Inc.
 */
 
-QToolButton#filter_btn,
-QToolButton#details_button,
-QToolButton#thumbnail_view_btn,
-QToolButton#grid_view_btn,
-QToolButton#list_view_btn,
-QToolButton#refresh_btn
+SGQPushButton
+{
+  border: none;
+  outline: none;
+  padding: 6px;
+  background-color: palette(button);
+}
+SGQPushButton:hover
+{
+  background-color: palette(light);
+}
+
+SGQToolButton
 {
   border: none;
   outline: none;
   padding: 4px;
 }
-QToolButton#refresh_btn {
-  padding-right: 18px;
-}
-
-QToolButton#thumbnail_view_btn:checked,
-QToolButton#grid_view_btn:checked,
-QToolButton#list_view_btn:checked,
-QToolButton#filter_btn:hover,
-QToolButton#details_button:hover,
-QToolButton#thumbnail_view_btn:hover,
-QToolButton#grid_view_btn:hover,
-QToolButton#list_view_btn:hover,
-QToolButton#refresh_btn:hover
+SGQToolButton:checked,
+SGQToolButton:hover
 {
   background-color: palette(light);
   border-radius: 4px;
 }
-
-QToolButton[popupMode="2"] {
-  padding-right: 20px;
+SGQToolButton#refresh_btn {
+  padding-right: 18px;
 }
-
-QToolButton::menu-button {
+SGQToolButton::menu-button {
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
   width: 16px;
 }
-QToolButton::menu-button:hover {
+SGQToolButton::menu-button:hover {
   background-color: palette(midlight);
+}
+
+QFrame#content_filter_scroll_area {
+  border: none;
+  outline: none;
+}
+SGQFrame#filter_menu_group_hline {
+  color: palette(light);
+  margin: 2px;
 }
