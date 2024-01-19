@@ -246,7 +246,9 @@ class AppDialog(QtGui.QWidget):
             FilterItem.FilterOp.IN,
             data_func=list_item_delegate.get_displayed_text,
         )
-        self._filter_menu = FilterMenu(self, refresh_on_show=False, dock_widget=self._ui.content_filter_scroll_area)
+        self._filter_menu = FilterMenu(
+            self, refresh_on_show=False, dock_widget=self._ui.content_filter_scroll_area
+        )
         # TODO allow this list of filters to be defined in the config.
         self._filter_menu.set_accept_fields(
             [
@@ -554,7 +556,9 @@ class AppDialog(QtGui.QWidget):
         """
 
         self._settings_manager.store(
-            self.SETTINGS_WIDGET_GEOMETRY, self.saveGeometry(), pickle_setting=False,
+            self.SETTINGS_WIDGET_GEOMETRY,
+            self.saveGeometry(),
+            pickle_setting=False,
         )
         self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
         self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
@@ -562,7 +566,8 @@ class AppDialog(QtGui.QWidget):
             self.DYNAMIC_LOADING_SETTING, self._dynamic_loading
         )
         self._settings_manager.store(
-            self.FILTER_MENU_DOCKED_SETTING, self._filter_menu.docked,
+            self.FILTER_MENU_DOCKED_SETTING,
+            self._filter_menu.docked,
         )
 
         if six.PY2:
@@ -624,7 +629,9 @@ class AppDialog(QtGui.QWidget):
             }
         self._filter_menu.restore_state(menu_state)
 
-        menu_docked = self._settings_manager.retrieve(self.FILTER_MENU_DOCKED_SETTING, False)
+        menu_docked = self._settings_manager.retrieve(
+            self.FILTER_MENU_DOCKED_SETTING, False
+        )
         if menu_docked:
             self._filter_menu.dock_filters()
 

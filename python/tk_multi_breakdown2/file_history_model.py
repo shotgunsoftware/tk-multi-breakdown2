@@ -47,7 +47,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     ) = range(2)
 
     STATUS_BADGES = {
-        STATUS_UP_TO_DATE: SGQIcon.resource_path("check_mark_green", SGQIcon.SIZE_16x16),
+        STATUS_UP_TO_DATE: SGQIcon.resource_path(
+            "check_mark_green", SGQIcon.SIZE_16x16
+        ),
         STATUS_OUT_OF_DATE: SGQIcon.resource_path("check_mark_red", SGQIcon.SIZE_16x16),
     }
     LOCKED_ICON = SGQIcon.resource_path("lock", SGQIcon.SIZE_16x16)

@@ -22,7 +22,7 @@ from .framework_qtwidgets import (
 )
 
 
-class DialogUI():
+class DialogUI:
     """The main App dialog UI."""
 
     ui_fields = [
@@ -47,7 +47,6 @@ class DialogUI():
         "search_widget",
     ]
     UI = namedtuple("UI", ui_fields)
-
 
     @staticmethod
     def ui(parent):
@@ -75,7 +74,9 @@ class DialogUI():
         group_by_hlayout.addWidget(group_by_combo_box)
         top_toolbar_layout.addLayout(group_by_hlayout)
         # Spacer
-        spacer_item = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacer_item = QtGui.QSpacerItem(
+            40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum
+        )
         top_toolbar_layout.addItem(spacer_item)
         # View mode buttons
         view_mode_hlayout = QtGui.QHBoxLayout()
@@ -119,7 +120,7 @@ class DialogUI():
         details_button.setCheckable(True)
         details_button.setAutoRaise(False)
         top_toolbar_layout.addWidget(details_button)
-        # 
+        #
         app_layout.addWidget(top_toolbar_widget)
 
         # Main content
@@ -129,7 +130,9 @@ class DialogUI():
         content_layout.setContentsMargins(0, 0, 0, 0)
         # content splitter
         details_splitter = QtGui.QSplitter(content_widget)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(details_splitter.sizePolicy().hasHeightForWidth())
@@ -137,7 +140,9 @@ class DialogUI():
         details_splitter.setOrientation(QtCore.Qt.Horizontal)
         # filtering
         content_filter_widget = QtGui.QWidget()
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         content_filter_widget.setSizePolicy(sizePolicy)
         # filter widget layout
         content_filter_layout = QtGui.QVBoxLayout(content_filter_widget)
@@ -147,19 +152,25 @@ class DialogUI():
         content_filter_scroll_area = QtGui.QScrollArea(details_splitter)
         content_filter_scroll_area.setObjectName("content_filter_scroll_area")
         content_filter_scroll_area.setWidgetResizable(True)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         content_filter_scroll_area.setSizePolicy(sizePolicy)
         content_filter_scroll_area.setWidget(content_filter_widget)
         # list view
         file_view = GroupedItemView(details_splitter)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(file_view.sizePolicy().hasHeightForWidth())
         file_view.setSizePolicy(sizePolicy)
         # details
         details_panel = QtGui.QGroupBox(details_splitter)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(details_panel.sizePolicy().hasHeightForWidth())
@@ -171,7 +182,9 @@ class DialogUI():
         details_vlayout.setContentsMargins(0, 0, 0, 0)
         details_vlayout.setSpacing(0)
         file_details = ShotgunFolderWidget(details_panel)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(file_details.sizePolicy().hasHeightForWidth())
@@ -194,7 +207,9 @@ class DialogUI():
 
         # slider
         size_slider = QtGui.QSlider(bottom_toolbar_widget)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(size_slider.sizePolicy().hasHeightForWidth())
@@ -204,7 +219,8 @@ class DialogUI():
         size_slider.setMaximum(300)
         size_slider.setOrientation(QtCore.Qt.Horizontal)
         # TODO move to style sheet .qss
-        size_slider.setStyleSheet(" QSlider::handle:horizontal {\n"
+        size_slider.setStyleSheet(
+            " QSlider::handle:horizontal {\n"
             # "    border: 1px solid palette(base);\n"
             # "     border-radius: 3px;\n"
             "     width: 8px;\n"
@@ -213,14 +229,20 @@ class DialogUI():
         )
         bottom_toolbar_layout.addWidget(size_slider)
         # spacer
-        bottom_spacer_item = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        bottom_spacer_item = QtGui.QSpacerItem(
+            40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum
+        )
         bottom_toolbar_layout.addItem(bottom_spacer_item)
         # select all outdated
-        select_all_outdated_button = sg_qwidgets.SGQPushButton("Select All Outdated", bottom_toolbar_widget)
+        select_all_outdated_button = sg_qwidgets.SGQPushButton(
+            "Select All Outdated", bottom_toolbar_widget
+        )
         select_all_outdated_button.setMinimumSize(QtCore.QSize(125, 0))
         bottom_toolbar_layout.addWidget(select_all_outdated_button)
         # update selected
-        update_selected_button = sg_qwidgets.SGQPushButton("Update Selected", bottom_toolbar_widget)
+        update_selected_button = sg_qwidgets.SGQPushButton(
+            "Update Selected", bottom_toolbar_widget
+        )
         update_selected_button.setMinimumSize(QtCore.QSize(125, 0))
         bottom_toolbar_layout.addWidget(update_selected_button)
 

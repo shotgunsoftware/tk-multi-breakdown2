@@ -72,7 +72,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
     # File item status icon paths. Use path instead of QIcons here so that this data can be
     # serialized (e.g. for save/restore state)
     FILE_ITEM_STATUS_ICON_PATHS = {
-        STATUS_UP_TO_DATE: SGQIcon.resource_path("check_mark_green", SGQIcon.SIZE_20x20),
+        STATUS_UP_TO_DATE: SGQIcon.resource_path(
+            "check_mark_green", SGQIcon.SIZE_20x20
+        ),
         STATUS_OUT_OF_SYNC: SGQIcon.resource_path("refresh_red", SGQIcon.SIZE_20x20),
         STATUS_LOCKED: SGQIcon.resource_path("lock", SGQIcon.SIZE_20x20),
     }
