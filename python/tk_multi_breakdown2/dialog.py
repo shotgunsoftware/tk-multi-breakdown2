@@ -186,7 +186,9 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
-        self._filter_widget_overlay = ShotgunOverlayWidget(self._ui.content_filter_scroll_area)
+        self._filter_widget_overlay = ShotgunOverlayWidget(
+            self._ui.content_filter_scroll_area
+        )
 
         # Set up group combobox
         group_by_fields = self._bundle.get_setting("group_by_fields")
@@ -302,7 +304,9 @@ class AppDialog(QtGui.QWidget):
             ]
         )
         self._ui.filter_btn.setMenu(self._filter_menu)
-        self._filter_menu.menu_about_to_be_refreshed.connect(lambda: self._filter_widget_overlay.start_spin())
+        self._filter_menu.menu_about_to_be_refreshed.connect(
+            lambda: self._filter_widget_overlay.start_spin()
+        )
         self._filter_menu.menu_refreshed.connect(self._on_filter_menu_refreshed)
 
         # Set up the view modes
