@@ -186,6 +186,7 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
+        self._filter_widget_overlay = ShotgunOverlayWidget(self._ui.content_filter_scroll_area)
 
         # Set up group combobox
         group_by_fields = self._bundle.get_setting("group_by_fields")
@@ -301,6 +302,8 @@ class AppDialog(QtGui.QWidget):
             ]
         )
         self._ui.filter_btn.setMenu(self._filter_menu)
+        self._filter_menu.menu_about_to_be_refreshed.connect(lambda: self._filter_widget_overlay.start_spin())
+        self._filter_menu.menu_refreshed.connect(self._on_filter_menu_refreshed)
 
         # Set up the view modes
         self.view_modes = [
@@ -963,6 +966,7 @@ class AppDialog(QtGui.QWidget):
         else:
             # There are results, hide the overlay.
             self._file_model_overlay.hide()
+            self._filter_widget_overlay.hide()
 
     def _reload_file_model(self):
         """
@@ -1148,6 +1152,19 @@ class AppDialog(QtGui.QWidget):
 
         # Refresh the filter menu after the data has loaded
         self._filter_menu.refresh()
+
+    def _on_filter_menu_refreshed(self):
+        """Callback triggered when the filter menu has finished refreshing."""
+
+        if self._file_model.rowCount() <= 0:
+            # No data in the file model to generate any filters.
+            self._filter_widget_overlay.show_message("No filter data.")
+        elif self._filter_menu.is_empty():
+            # There is data in the model, but no filters were generated from the data.
+            self._filter_widget_overlay.show_message("No filters found.")
+        else:
+            # There are filters to show, hide the overlay.
+            self._filter_widget_overlay.hide()
 
     def _on_file_model_layout_changed(self):
         """Callback triggered when the file model's layout has changed."""
