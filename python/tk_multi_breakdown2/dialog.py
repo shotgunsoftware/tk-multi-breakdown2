@@ -970,7 +970,6 @@ class AppDialog(QtGui.QWidget):
         else:
             # There are results, hide the overlay.
             self._file_model_overlay.hide()
-            self._filter_widget_overlay.hide()
 
     def _reload_file_model(self):
         """
