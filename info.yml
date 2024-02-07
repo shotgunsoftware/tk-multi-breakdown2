@@ -29,7 +29,7 @@ configuration:
         type: hook
         default_value: "{self}/get_published_files.py"
         description: Specificy a hook that, if desired, defines how Pubilshed File entites are retrieved
-                     from the ShotGrid API.
+                     from the Flow Production Tracking API.
 
     hook_ui_config:
         type: hook
@@ -50,14 +50,16 @@ configuration:
         type: list
         values: {type: str}
         allows_empty: True
-        description: List of Published File fields returned when querying ShotGrid for published file history.
-                     These fields will also be used when scanning the scene to get the current scene elements.
+        description: List of Published File fields returned when querying Flow Production Tracking for published
+                     file history. These fields will also be used when scanning the scene to get the current scene
+                     elements.
 
     published_file_filters:
         type: list
-        description: List of filters that will be applied when querying ShotGrid for Published Files based on
-                     the items found in the scene. To show Published Files without a Task, remove the default
-                     filter to exclude Published Files that do not have a Task, and similarly for Link entity.
+        description: List of filters that will be applied when querying Flow Production Tracking for Published
+                     Files based on the items found in the scene. To show Published Files without a Task, remove
+                     the default filter to exclude Published Files that do not have a Task, and similarly for Link
+                     entity.
         values:
             type: shotgun_filter
         allows_empty: True
@@ -94,9 +96,9 @@ configuration:
                      perform the background file item status checks.
 
 
-# The ShotGrid fields that this app needs in order to operate correctly
+# The Flow Production Tracking fields that this app needs in order to operate correctly
 requires_shotgun_fields:
-# linked_projects.Asset is required for references in multiple ShotGrid rojects
+# linked_projects.Asset is required for references in multiple Flow Production Tracking rojects
 
 # More verbose description of this item
 display_name: "Scene Breakdown"
