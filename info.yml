@@ -98,7 +98,7 @@ configuration:
 
 # The Flow Production Tracking fields that this app needs in order to operate correctly
 requires_shotgun_fields:
-# linked_projects.Asset is required for references in multiple Flow Production Tracking rojects
+# linked_projects.Asset is required for references in multiple Flow Production Tracking projects
 
 # More verbose description of this item
 display_name: "Scene Breakdown"
