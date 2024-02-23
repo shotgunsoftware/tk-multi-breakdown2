@@ -107,7 +107,7 @@ class BreakdownManager(object):
         # No background task manager provided, execute the request synchronously and return
         # the published files data immediately.
         return sgtk.util.find_publish(
-            self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
+            self._bundle.sgtk, file_paths, filters=filters, fields=fields, only_current_project=False
         )
 
     def get_file_items(self, scene_objects, published_files):
