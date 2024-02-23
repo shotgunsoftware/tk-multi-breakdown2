@@ -164,6 +164,8 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             ["entity", "is", self.parent_entity["entity"]],
             ["published_file_type", "is", self.parent_entity["published_file_type"]],
         ]
+        # get extra filters from the app settings
+        filters.extend(self._app.get_setting("history_published_file_filters", []))
 
         ShotgunModel._load_data(
             self,

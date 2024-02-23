@@ -65,6 +65,17 @@ configuration:
           - [task, is_not, null]
           - [entity, is_not, null]
 
+    history_published_file_filters:
+        type: list
+        description: List of filters that will be applied when querying ShotGrid for the historyPublished Files
+                     based on the items found in the scene. To show Published Files without a Task, remove the
+                     default filter to exclude Published Files that do not have a Task, and similarly for
+                     Link entity.
+        values:
+            type: shotgun_filter
+        allows_empty: True
+        default_value: []
+
     group_by:
         type: str
         default_value: project
