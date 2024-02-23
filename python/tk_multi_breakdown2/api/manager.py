@@ -264,6 +264,8 @@ class BreakdownManager(object):
             ["published_file_type", "is", item.sg_data["published_file_type"]],
         ]
 
+        filters.extend(self.get_published_file_filters())
+
         pfs = self._bundle.shotgun.find(
             "PublishedFile",
             filters=filters,
