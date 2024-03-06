@@ -24,10 +24,11 @@ class BreakdownManager(object):
         self._bundle = bundle
 
     @sgtk.LogManager.log_timing
-    def scan_scene(self, execute_in_main_thread=True):
+    def get_scene_objects(self, execute_in_main_thread=True):
         """
-        Scan the current scene to return a list of scene references.
+        Get the current scene objects by executing the scan_scene hook method.
 
+        A list of dictionaries representing the scene references will be returned.
         The return dict value has the following key-values:
 
             node (str)
@@ -46,7 +47,7 @@ class BreakdownManager(object):
         :type execute_in_main_thread: bool
 
         :return: A list of scene references.
-        :rtype: dict
+        :rtype: List[dict]
         """
 
         if execute_in_main_thread:
@@ -58,6 +59,28 @@ class BreakdownManager(object):
 
         # Execute in the current thread
         return self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
+        
+    @sgtk.LogManager.log_timing
+    def scan_scene(self, extra_fields=None, execute_in_main_thread=True):
+        """
+        Scan the current scene to return a list of scene references.
+
+        A list of FileItem objects representing the scene references will be returned.
+
+        :param execute_in_main_thread: True will ensure the hook method is executed in the
+            main thread, else False will execute in the current thread. Default is True, since
+            the scan_scene function will need to execute DCC functionality that likely needs
+            to execute in the main thread (e.g. GUI events).
+        :type execute_in_main_thread: bool
+
+        :return: A list of scene references.
+        :rtype: List[FileItem]
+        """
+
+        scene_objects = self.get_scene_objects(execute_in_main_thread=execute_in_main_thread)
+        file_paths = [o["path"] for o in scene_objects]
+        published_files = self.get_published_files_from_file_paths(file_paths, extra_fields=extra_fields)
+        return self.get_file_items(scene_objects, published_files)
 
     @sgtk.LogManager.log_timing
     def get_published_files_from_file_paths(
@@ -88,7 +111,7 @@ class BreakdownManager(object):
         if extra_fields is not None:
             fields += extra_fields
 
-        # Get the published file filters to pass to the query
+        # Get the published file filters defined in the config to pass to the query
         filters = self.get_published_file_filters()
 
         # Option to run this in a background task since this can take some time to execute.

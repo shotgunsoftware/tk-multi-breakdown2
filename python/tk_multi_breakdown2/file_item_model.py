@@ -693,7 +693,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             # Run the scan scene method in the main thread (not a background task) since this
             # may cause issues for certain DCCs
-            self.__scene_objects = self._manager.scan_scene()
+            self.__scene_objects = self._manager.get_scene_objects()
 
             # Make an async request to get the published files for the references in the scene.
             # This will omit any objects from the scene that do not have a ShotGrid Published
