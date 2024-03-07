@@ -59,7 +59,7 @@ class BreakdownManager(object):
 
         # Execute in the current thread
         return self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
-        
+
     @sgtk.LogManager.log_timing
     def scan_scene(self, extra_fields=None, execute_in_main_thread=True):
         """
@@ -77,9 +77,13 @@ class BreakdownManager(object):
         :rtype: List[FileItem]
         """
 
-        scene_objects = self.get_scene_objects(execute_in_main_thread=execute_in_main_thread)
+        scene_objects = self.get_scene_objects(
+            execute_in_main_thread=execute_in_main_thread
+        )
         file_paths = [o["path"] for o in scene_objects]
-        published_files = self.get_published_files_from_file_paths(file_paths, extra_fields=extra_fields)
+        published_files = self.get_published_files_from_file_paths(
+            file_paths, extra_fields=extra_fields
+        )
         return self.get_file_items(scene_objects, published_files)
 
     @sgtk.LogManager.log_timing
@@ -130,7 +134,11 @@ class BreakdownManager(object):
         # No background task manager provided, execute the request synchronously and return
         # the published files data immediately.
         return sgtk.util.find_publish(
-            self._bundle.sgtk, file_paths, filters=filters, fields=fields, only_current_project=False
+            self._bundle.sgtk,
+            file_paths,
+            filters=filters,
+            fields=fields,
+            only_current_project=False,
         )
 
     def get_file_items(self, scene_objects, published_files):
