@@ -620,6 +620,7 @@ class TestBreakdownManager(AppTestBase):
                 self.project_root,
                 self.third_publish_path_cache.replace("/", os.path.sep),
             ): self.first_publish_latest,
+            # NOTE do not add these, since the config will filter them out
             # os.path.join(
             #     self.project_root,
             #     self.fourth_publish_path_cache.replace("/", os.path.sep),
