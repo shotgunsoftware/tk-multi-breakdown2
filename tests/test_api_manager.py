@@ -26,7 +26,6 @@ base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python
 app_dir = os.path.abspath(os.path.join(base_dir, "tk_multi_breakdown2"))
 api_dir = os.path.abspath(os.path.join(app_dir, "api"))
 sys.path.extend([base_dir, app_dir, api_dir])
-from tk_multi_breakdown2 import constants
 from tk_multi_breakdown2.api import BreakdownManager
 from tk_multi_breakdown2.api.item import FileItem
 
@@ -98,7 +97,15 @@ def bundle_settings():
     The settings for the BreakdownManager class variable '_bundle'.
     """
 
-    return {"published_file_fields": ["test_field1", "test_field2", "test_field3"]}
+    return {
+        "published_file_fields": ["test_field1", "test_field2", "test_field3"],
+        "published_file_filters": [
+            [],
+        ],
+        "history_published_file_filters": [
+            [],
+        ],
+    }
 
 
 @pytest.fixture(scope="module")
@@ -189,6 +196,45 @@ def bundle(bundle_settings, bundle_hook_methods):
 
 
 @pytest.mark.parametrize("execute_in_main_thread", [None, True, False])
+def test_get_scene_objects(
+    bundle,
+    find_publish_return_value,
+    bundle_hook_scan_scene_return_value,
+    execute_in_main_thread,
+):
+    """
+    Test the BreakdownManager 'get_scene_objects' method. This test case aims to strictly test
+    the functionality of the BreakdownManager, and not the data returned by the hooks
+    or Shotgun query.
+    """
+
+    manager = BreakdownManager(bundle)
+
+    # Patch the method call 'sgtk.util.find_publish' in the BreakdownManager get_scene_objects to
+    # return the mock data 'find_publish_return_value'.
+    with patch("sgtk.util.find_publish", return_value=find_publish_return_value):
+        # Call the method that is to be tested.
+        if execute_in_main_thread is None:
+            scene_items = manager.get_scene_objects()
+        else:
+            scene_items = manager.get_scene_objects(
+                execute_in_main_thread=execute_in_main_thread
+            )
+
+    # Assert the result return type.
+    assert isinstance(scene_items, list)
+
+    # Assert that the scene items are of the right type and have the expected data.
+    for index, item in enumerate(scene_items):
+        assert isinstance(item, dict)
+
+        expected_scene_item = bundle_hook_scan_scene_return_value[index]
+        assert item.get("node_name") == expected_scene_item["node_name"]
+        assert item.get("node_type") == expected_scene_item["node_type"]
+        assert item.get("extra_data") == expected_scene_item.get("extra_data")
+
+
+@pytest.mark.parametrize("execute_in_main_thread", [None, True, False])
 def test_scan_scene(
     bundle,
     find_publish_return_value,
@@ -219,13 +265,12 @@ def test_scan_scene(
 
     # Assert that the scene items are of the right type and have the expected data.
     for index, item in enumerate(scene_items):
-        # assert isinstance(item, FileItem)
-        assert isinstance(item, dict)
+        assert isinstance(item, FileItem)
 
         expected_scene_item = bundle_hook_scan_scene_return_value[index]
-        assert item.get("node_name") == expected_scene_item["node_name"]
-        assert item.get("node_type") == expected_scene_item["node_type"]
-        assert item.get("extra_data") == expected_scene_item.get("extra_data")
+        assert item.node_name == expected_scene_item["node_name"]
+        assert item.node_type == expected_scene_item["node_type"]
+        assert item.extra_data == expected_scene_item.get("extra_data")
 
 
 @pytest.mark.parametrize(
@@ -260,70 +305,6 @@ def test_get_latest_published_file(bundle, file_item_data):
     else:
         # Assert that the item's latest_published_file property was updated correctly.
         assert scene_item.latest_published_file == latest
-
-
-@pytest.mark.parametrize(
-    "file_item_data",
-    [
-        (False, False),
-        (
-            {
-                "project": "dummy project",
-                "name": "some name",
-                "task": "dummy task",
-                "entity": "dummy entity",
-                "published_file_type": "some type",
-            },
-            False,
-        ),
-        (False, True),
-        (
-            {
-                "project": "dummy project",
-                "name": "some name",
-                "task": "dummy task",
-                "entity": "dummy entity",
-                "published_file_type": "some type",
-            },
-            True,
-        ),
-    ],
-    indirect=["file_item_data"],
-)
-def test_get_published_file_history(bundle, file_item_data):
-    """
-    Test the BreakdownManager 'get_published_file_history' method. This test case
-    only validates the BreakdownManager's functionality, and assume that the
-    publish file history returned by the bundle's hook is correct.
-    """
-
-    manager = BreakdownManager(bundle)
-    item = FileItem(**file_item_data)
-    latest_published_file_before_update = item.latest_published_file
-    extra_fields = ["another_field", "and another"]
-
-    # Call the method that is to be tested.
-    result = manager.get_published_file_history(item, extra_fields)
-
-    # Get the expected latest published file to validate the result
-    expected_latest = {"version_number": -1}
-    for result_item in result:
-        if result_item["version_number"] > expected_latest["version_number"]:
-            expected_latest = result_item
-
-    if not item.sg_data:
-        # Assert the result is an empty list and that the latest published file
-        # is unchanged, if the item is invalid (e.g. has no 'sg_data')
-        assert result == []
-        assert item.latest_published_file == latest_published_file_before_update
-
-    else:
-        if result:
-            assert item.latest_published_file == expected_latest
-        else:
-            # No publish file history was found, assert that latest published file is unchanged
-            assert item.latest_published_file == latest_published_file_before_update
-
 
 @pytest.mark.parametrize(
     "file_item_data",
@@ -526,12 +507,17 @@ class TestBreakdownManager(AppTestBase):
             content="Test Breakdown2 Concept", entity=self.version
         )
 
+        self.pf = {"id": 888, "type": self.published_file_type, "name": "Test File"}
+        self.add_to_sg_mock_db(self.pf)
+
         # These path caches should match the "path" value of the items returned by the
         # bundle's hook scene operation 'scan_scene", if it is intended to be found in
         # the BreakdownManager's 'scan_scene'.
         self.first_publish_path_cache = "foo/bar/hello"
         self.second_publish_path_cache = "foo/bar/world"
         self.third_publish_path_cache = "foo/bar/again"
+        self.fourth_publish_path_cache = "foo/bar/ignore"
+        self.fifth_publish_path_cache = "foo/bar/ignore_history"
 
         # Add a published file to the mock database
         self.first_publish = self.create_published_file(
@@ -548,6 +534,7 @@ class TestBreakdownManager(AppTestBase):
             task=self.task,
             entity=self.version,
             version_number=1,
+            published_file_type=self.pf,
         )
         # Add another published file to the mock database
         self.second_publish = self.create_published_file(
@@ -564,6 +551,7 @@ class TestBreakdownManager(AppTestBase):
             task=self.task,
             entity=self.version,
             version_number=2,
+            published_file_type=self.pf,
         )
         # Update the first pubilshed file added to the database.
         self.first_publish_latest = self.create_published_file(
@@ -580,6 +568,42 @@ class TestBreakdownManager(AppTestBase):
             task=self.task,
             entity=self.version,
             version_number=2,
+            published_file_type=self.pf,
+        )
+        # Create publish file that will be filtered out by the 'published_file_filtesr' config
+        self.ignore_publish = self.create_published_file(
+            code="ignore_node",
+            name="ignore",
+            path_cache="%s/%s" % (self.project_name, self.fourth_publish_path_cache),
+            path_cache_storage=self.primary_storage,
+            path={
+                "local_path": os.path.normpath(
+                    os.path.join(self.project_root, "files", "images", "svenFace.jpg")
+                )
+            },
+            created_at=datetime.datetime(2021, 1, 4, 12, 1),
+            task=self.task,
+            entity=self.version,
+            version_number=1,
+            published_file_type=self.pf,
+        )
+        # Create a history publish file that will be filtered out by the
+        # 'history_published_file_filtesr' config
+        self.ignore_publish_history = self.create_published_file(
+            code="ignore_history",
+            name="hello",
+            path_cache="%s/%s" % (self.project_name, self.first_publish_path_cache),
+            path_cache_storage=self.primary_storage,
+            path={
+                "local_path": os.path.normpath(
+                    os.path.join(self.project_root, "files", "images", "svenFace.jpg")
+                )
+            },
+            created_at=datetime.datetime(2021, 1, 4, 12, 1),
+            task=self.task,
+            entity=self.version,
+            version_number=5,
+            published_file_type=self.pf,
         )
 
         # A mapping of published file path caches to the entity
@@ -596,12 +620,21 @@ class TestBreakdownManager(AppTestBase):
                 self.project_root,
                 self.third_publish_path_cache.replace("/", os.path.sep),
             ): self.first_publish_latest,
+            # os.path.join(
+            #     self.project_root,
+            #     self.fourth_publish_path_cache.replace("/", os.path.sep),
+            # ): self.ignore_publish,
+            # os.path.join(
+            #     self.project_root,
+            #     self.fifth_publish_path_cache.replace("/", os.path.sep),
+            # ): self.ignore_publish_history,
         }
 
         # Generate the list of expected published files and paths that should be found by the
         # BreakdownManager scan scene
         self.expected_published_files_found = []
         self.expected_published_file_paths = []
+        self.expected_published_file_ids = []
         hook_result = self.app.execute_hook_method(
             "hook_scene_operations", "scan_scene"
         )
@@ -617,11 +650,51 @@ class TestBreakdownManager(AppTestBase):
             self.expected_published_files_found.append(
                 {"id": pf["id"], "project": pf["project"]}
             )
+            self.expected_published_file_ids.append(pf["id"])
 
-    def test_scan_scene(self):
+
+    def test_get_published_file_fields(self):
+        """Test the BreakdownManager 'get_published_file_fields' method."""
+
+        fields = self.manager.get_published_file_fields()
+        expected_fields = self.constants.PUBLISHED_FILES_FIELDS + self.app.get_setting(
+            "published_file_fields", []
+        )
+
+        assert len(fields) == len(expected_fields)
+        for field in expected_fields:
+            assert field in fields
+
+    def test_get_published_file_fields(self):
+        """Test the BreakdownManager 'get_published_file_filters' method."""
+
+        filters = self.manager.get_published_file_filters()
+        # Expected filters defined in the config file test.yml
+        expected_filters = [
+            ["code", "is_not", "ignore_node"],
+        ]
+
+        assert len(filters) == len(expected_filters)
+        for f in expected_filters:
+            assert f in filters
+    
+    def test_get_history_published_file_fields(self):
+        """Test the BreakdownManager 'get_history_published_file_filters' method."""
+
+        filters = self.manager.get_history_published_file_filters()
+        # Expected filters defined in the config file test.yml
+        expected_filters = [
+            ["code", "is_not", "ignore_history"],
+        ]
+
+        assert len(filters) == len(expected_filters)
+        for f in expected_filters:
+            assert f in filters
+
+    def test_get_scene_objects(self):
         """Test scanning the current scene."""
 
-        scene_items = self.manager.scan_scene()
+        scene_items = self.manager.get_scene_objects()
         assert isinstance(scene_items, list)
 
         file_paths = [item["path"] for item in scene_items]
@@ -634,6 +707,50 @@ class TestBreakdownManager(AppTestBase):
             "published_file_fields", []
         )
 
+        found_paths = []
+        found_published_files = []
+        for item in file_items:
+            assert hasattr(item, "sg_data")
+            assert isinstance(item.sg_data, dict)
+            assert item.sg_data is not None
+
+            sg_data_keys = item.sg_data.keys()
+            for field in fields:
+                assert field in sg_data_keys
+
+            found_paths.append(item.path)
+            found_published_files.append(
+                {"id": item.sg_data["id"], "project": item.sg_data["project"]}
+            )
+
+        # Assert that all expected paths were found.
+        assert set(found_paths) == set(self.expected_published_file_paths)
+        # Assert that all the expected published files were found, and no unexpected files were found.
+        assert [
+            pf
+            for pf in found_published_files
+            if pf not in self.expected_published_files_found
+        ] == []
+        assert [
+            pf
+            for pf in self.expected_published_files_found
+            if pf not in found_published_files
+        ] == []
+
+    def test_scan_scene(self):
+        """Test scanning the current scene."""
+
+        file_items = self.manager.scan_scene()
+        assert isinstance(file_items, list)
+
+        # Assert that scene items were filtered out correctly
+        for item in file_items:
+            assert hasattr(item, "sg_data")
+            assert item.sg_data["code"] != "ignore_node"
+
+        fields = self.constants.PUBLISHED_FILES_FIELDS + self.app.get_setting(
+            "published_file_fields", []
+        )
         found_paths = []
         found_published_files = []
         for item in file_items:
@@ -677,20 +794,14 @@ class TestBreakdownManager(AppTestBase):
             ["one_field", "two fields", "some field"],
         ]
         for extra_fields in possible_extra_fields:
-            scene_items = self.manager.scan_scene(extra_fields)
-            assert isinstance(scene_items, list)
+            file_items = self.manager.scan_scene(extra_fields)
+            assert isinstance(file_items, list)
 
             fields = self.constants.PUBLISHED_FILES_FIELDS + self.app.get_setting(
                 "published_file_fields", []
             )
             if extra_fields:
                 fields += extra_fields
-
-            file_paths = [item["path"] for item in scene_items]
-            published_files = self.manager.get_published_files_from_file_paths(
-                file_paths, extra_fields=extra_fields
-            )
-            file_items = self.manager.get_file_items(scene_items, published_files)
 
             found_paths = []
             found_published_files = []
@@ -722,21 +833,25 @@ class TestBreakdownManager(AppTestBase):
                 if pf not in found_published_files
             ] == []
 
+    def test_get_published_files_for_items(self):
+        """Test the BreakdownManager 'get_published_files_for_items' method."""
+
+        file_items = self.manager.scan_scene(extra_fields=["code"])
+        assert isinstance(file_items, list)
+
+        published_files = self.manager.get_published_files_for_items(file_items, extra_fields=["code"])
+        assert len(published_files) == len(self.expected_published_files_found)
+
+        for pf in published_files:
+            assert pf["code"] != "ignore_history"
+            assert pf["id"] in self.expected_published_file_ids
+
     def test_get_latest_published_file(self):
         """Test getting the latest available published file according to the current item context."""
 
-        scene_items = self.manager.scan_scene()
-        file_paths = [item["path"] for item in scene_items]
-
-        published_files = self.manager.get_published_files_from_file_paths(
-            file_paths,
-        )
-        assert isinstance(published_files, dict)
-        for file_path in published_files:
-            assert file_path in file_paths
-
-        file_items = self.manager.get_file_items(scene_items, published_files)
+        file_items = self.manager.scan_scene()
         assert isinstance(file_items, list)
+
         try:
             item = next(
                 i
@@ -761,20 +876,15 @@ class TestBreakdownManager(AppTestBase):
     def test_get_published_file_history(self):
         """Test getting the published history for the selected item."""
 
-        scene_items = self.manager.scan_scene()
-        assert isinstance(scene_items, list)
+        file_items = self.manager.scan_scene()
+        assert isinstance(file_items, list)
 
         # Use any item from the scene
         try:
-            scene_item = scene_items[0]
+            item = file_items[0]
         except IndexError:
             # Test data is invalid, expected that scan scene would return at least one item.
             raise InvalidTestData("Expected result to have at least one item.")
-
-        published_files = self.manager.get_published_files_from_file_paths(
-            [scene_item["path"]],
-        )
-        item = self.manager.get_file_items([scene_item], published_files)[0]
 
         latest_published_file_before_update = item.latest_published_file
         result = self.manager.get_published_file_history(item)
@@ -806,20 +916,15 @@ class TestBreakdownManager(AppTestBase):
         Test getting the published history for the selected item.
         """
 
-        scene_items = self.manager.scan_scene()
-        assert isinstance(scene_items, list)
+        file_items = self.manager.scan_scene()
+        assert isinstance(file_items, list)
 
         # Use any item from the scene
         try:
-            scene_item = scene_items[0]
+            item = file_items[0]
         except IndexError:
             # Test data is invalid, expected that scan scene would return at least one item.
             raise InvalidTestData("Expected result to have at least one item.")
-
-        published_files = self.manager.get_published_files_from_file_paths(
-            [scene_item["path"]],
-        )
-        item = self.manager.get_file_items([scene_item], published_files)[0]
 
         latest_published_file_before_update = item.latest_published_file
         possible_extra_fields = [
@@ -858,20 +963,15 @@ class TestBreakdownManager(AppTestBase):
         Test the Breakdown Manager 'update_to_latest_version' method.
         """
 
-        scene_items = self.manager.scan_scene()
-        assert isinstance(scene_items, list)
+        file_items = self.manager.scan_scene()
+        assert isinstance(file_items, list)
 
         # Use any item from the scene
         try:
-            scene_item = scene_items[0]
+            item = file_items[0]
         except IndexError:
             # Test data is invalid, expected that scan scene would return at least one item.
             raise InvalidTestData("Expected result to have at least one item.")
-
-        published_files = self.manager.get_published_files_from_file_paths(
-            [scene_item["path"]]
-        )
-        item = self.manager.get_file_items([scene_item], published_files)[0]
 
         if item.sg_data is None:
             expected_latest_data = {"version_number": 1}
@@ -902,21 +1002,16 @@ class TestBreakdownManager(AppTestBase):
     def test_update_to_specific_version(self):
         """Test the Breakdown Manager 'update_to_latest_version' method."""
 
-        scene_items = self.manager.scan_scene()
-        assert isinstance(scene_items, list)
+        file_items = self.manager.scan_scene()
+        assert isinstance(file_items, list)
         # Make sure there is data to be tested
-        assert len(scene_items) > 0
-
-        file_paths = [item["path"] for item in scene_items]
-        published_files = self.manager.get_published_files_from_file_paths(file_paths)
-        file_items = self.manager.get_file_items(scene_items, published_files)
+        assert len(file_items) > 0
 
         # Use any scene item that has a history
         item = None
         sg_data = None
         for file_item in file_items:
             history = self.manager.get_published_file_history(file_item)
-
             if len(history) > 1:
                 item = file_item
 
@@ -969,7 +1064,14 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
         super(TestBreakdownManagerMultipleProjects, self).setUp()
 
         # Create a second project for the test module
-        _, project2_root = self.create_project({"name": "project 2"})
+        project2, project2_root = self.create_project({"name": "project 2"})
+        self.project = project2
+
+        # Create Task and Entity objects for the published files
+        self.version = self.create_version(code="project_2_version")
+        self.task = self.create_task(
+            content="Test Breakdown2 Project 2 Task", entity=self.version
+        )
 
         # Add the new project path to the environment variable
         os.environ["TK_TEST_PROJECT_ROOT_PATHS"] += "," + project2_root
@@ -988,6 +1090,9 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
             },
             created_at=datetime.datetime(2021, 1, 4, 12, 1),
             version_number=4,
+            task=self.task,
+            entity=self.version,
+            published_file_type=self.pf,
         )
         project2_publish2 = self.create_published_file(
             code="abc2",
@@ -1001,6 +1106,9 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
             },
             created_at=datetime.datetime(2021, 1, 4, 12, 1),
             version_number=5,
+            task=self.task,
+            entity=self.version,
+            published_file_type=self.pf,
         )
 
         # Add to the list of published files
@@ -1031,3 +1139,4 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
             self.expected_published_files_found.append(
                 {"id": pf["id"], "project": pf["project"]}
             )
+            self.expected_published_file_ids.append(pf["id"])

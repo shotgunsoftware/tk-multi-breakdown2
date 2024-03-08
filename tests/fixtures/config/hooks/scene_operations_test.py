@@ -54,6 +54,16 @@ class TestBreakdownSceneOperations(HookBaseClass):
                 "node_type": "reference",
                 "path": os.path.join("foo", "bar", "again"),
             },
+            {
+                "node_name": "A reference node to ignore",
+                "node_type": "reference",
+                "path": os.path.join("foo", "bar", "ignore"),
+            },
+            {
+                "node_name": "An updated reference node to ignore",
+                "node_type": "reference",
+                "path": os.path.join("foo", "bar", "ignore_history"),
+            },
         ]
 
         result = []
