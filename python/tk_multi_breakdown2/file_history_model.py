@@ -64,6 +64,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         ShotgunModel.__init__(self, parent, bg_task_manager=bg_task_manager)
 
         self._app = sgtk.platform.current_bundle()
+        self.__manager = self._app.create_breakdown_manager()
 
         # Store parent file item data
         self.__parent_sg_data = None
@@ -153,18 +154,16 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             else -1
         )
 
-        fields = constants.PUBLISHED_FILES_FIELDS + self._app.get_setting(
-            "published_file_fields", []
-        )
+        fields = self.__manager.get_published_file_filters()
         fields += get_ui_published_file_fields(self._app)
         filters = [
-            ["project", "is", self.parent_entity["project"]],
-            ["name", "is", self.parent_entity["name"]],
-            ["task", "is", self.parent_entity["task"]],
-            ["entity", "is", self.parent_entity["entity"]],
-            ["published_file_type", "is", self.parent_entity["published_file_type"]],
+            ["project", "is", self.parent_entity.sg_data["project"]],
+            ["name", "is", self.parent_entity.sg_data["name"]],
+            ["task", "is", self.parent_entity.sg_data["task"]],
+            ["entity", "is", self.parent_entity.sg_data["entity"]],
+            ["published_file_type", "is", self.parent_entity.sg_data["published_file_type"]],
         ]
-
+        filters += self.__manager.get_history_published_file_filters()
         ShotgunModel._load_data(
             self,
             entity_type="PublishedFile",
