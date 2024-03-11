@@ -221,7 +221,6 @@ class BreakdownManager(object):
 
         return self._bundle.get_setting("history_published_file_filters", [])
 
-
     def get_latest_published_file(self, item, data_retriever=None, extra_fields=None):
         """
         Get the latest available published file according to the current item context.
@@ -260,7 +259,9 @@ class BreakdownManager(object):
 
         return result
 
-    def get_published_files_for_items(self, items, data_retriever=None, extra_fields=None):
+    def get_published_files_for_items(
+        self, items, data_retriever=None, extra_fields=None
+    ):
         """
         Get all published files (history) for the given items.
 
@@ -315,7 +316,9 @@ class BreakdownManager(object):
         if not item or not item.sg_data:
             return []
 
-        result = self.get_published_files_for_items([item], data_retriever=data_retriever, extra_fields=extra_fields)
+        result = self.get_published_files_for_items(
+            [item], data_retriever=data_retriever, extra_fields=extra_fields
+        )
         if result and isinstance(result, list):
             item.latest_published_file = result[0]
         return result

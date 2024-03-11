@@ -306,6 +306,7 @@ def test_get_latest_published_file(bundle, file_item_data):
         # Assert that the item's latest_published_file property was updated correctly.
         assert scene_item.latest_published_file == latest
 
+
 @pytest.mark.parametrize(
     "file_item_data",
     [
@@ -653,7 +654,6 @@ class TestBreakdownManager(AppTestBase):
             )
             self.expected_published_file_ids.append(pf["id"])
 
-
     def test_get_published_file_fields(self):
         """Test the BreakdownManager 'get_published_file_fields' method."""
 
@@ -678,7 +678,7 @@ class TestBreakdownManager(AppTestBase):
         assert len(filters) == len(expected_filters)
         for f in expected_filters:
             assert f in filters
-    
+
     def test_get_history_published_file_fields(self):
         """Test the BreakdownManager 'get_history_published_file_filters' method."""
 
@@ -840,7 +840,9 @@ class TestBreakdownManager(AppTestBase):
         file_items = self.manager.scan_scene(extra_fields=["code"])
         assert isinstance(file_items, list)
 
-        published_files = self.manager.get_published_files_for_items(file_items, extra_fields=["code"])
+        published_files = self.manager.get_published_files_for_items(
+            file_items, extra_fields=["code"]
+        )
         assert len(published_files) == len(self.expected_published_files_found)
 
         for pf in published_files:

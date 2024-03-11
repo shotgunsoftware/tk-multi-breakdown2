@@ -16,7 +16,9 @@ HookBaseClass = sgtk.get_hook_baseclass()
 class GetPublishedFiles(HookBaseClass):
     """Hook to specify the query to retrieve Published Files for the app."""
 
-    def get_published_files_for_items(self, items, data_retriever=None, extra_fields=None, published_file_filters=None):
+    def get_published_files_for_items(
+        self, items, data_retriever=None, extra_fields=None, published_file_filters=None
+    ):
         """
         Make an API request to get all published files for the given file items.
 
@@ -127,7 +129,7 @@ class GetPublishedFiles(HookBaseClass):
 
         if not items:
             return []
-        
+
         # Build the filters to get all published files for at once for all the file items.
         entities = []
         names = []
@@ -144,9 +146,13 @@ class GetPublishedFiles(HookBaseClass):
 
             # Required published file fields are name and published file type. There will be
             # an api error if these are not set.
-            filters_by_project[project_id].setdefault("names", []).append(file_item.sg_data["name"])
+            filters_by_project[project_id].setdefault("names", []).append(
+                file_item.sg_data["name"]
+            )
 
-            filters_by_project[project_id].setdefault("published_file_types", []).append(file_item.sg_data["published_file_type"])
+            filters_by_project[project_id].setdefault(
+                "published_file_types", []
+            ).append(file_item.sg_data["published_file_type"])
 
             # Optional fields are linked entity and task.
             entity = file_item.sg_data["entity"]
@@ -165,7 +171,7 @@ class GetPublishedFiles(HookBaseClass):
         for project_id, project_filters in filters_by_project.items():
             names = project_filters.get("names", [])
             pf_types = project_filters.get("published_file_types", [])
-            
+
             # Build the entity filters
             entities = project_filters.get("entities", [])
             none_entity = project_filters.get("none_entity", False)
@@ -185,22 +191,24 @@ class GetPublishedFiles(HookBaseClass):
                 task_filters.append(["task", "is", None])
 
             # Published files will be found by their entity, name, task and published file type.
-            filters.append({
-                "filter_operator": "all",
-                "filters": [
-                    ["project.Project.id", "is", project_id],
-                    ["name", "in", names],
-                    ["published_file_type", "in", pf_types],
-                    {
-                        "filter_operator": "any",
-                        "filters": entity_filters,
-                    },
-                    {
-                        "filter_operator": "any",
-                        "filters": task_filters,
-                    },
-                ],
-            })
+            filters.append(
+                {
+                    "filter_operator": "all",
+                    "filters": [
+                        ["project.Project.id", "is", project_id],
+                        ["name", "in", names],
+                        ["published_file_type", "in", pf_types],
+                        {
+                            "filter_operator": "any",
+                            "filters": entity_filters,
+                        },
+                        {
+                            "filter_operator": "any",
+                            "filters": task_filters,
+                        },
+                    ],
+                }
+            )
 
         return [
             {
