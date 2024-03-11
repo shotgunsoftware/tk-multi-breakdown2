@@ -65,6 +65,15 @@ configuration:
           - [task, is_not, null]
           - [entity, is_not, null]
 
+    history_published_file_filters:
+        type: list
+        description: List of filters that will be applied when querying ShotGrid for the history Published
+                     Files based on the items found in the scene.
+        values:
+            type: shotgun_filter
+        allows_empty: True
+        default_value: []
+
     group_by:
         type: str
         default_value: project
