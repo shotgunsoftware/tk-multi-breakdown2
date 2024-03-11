@@ -741,7 +741,7 @@ class TestBreakdownManager(AppTestBase):
     def test_scan_scene(self):
         """Test scanning the current scene."""
 
-        file_items = self.manager.scan_scene()
+        file_items = self.manager.scan_scene(extra_fields=["code"])
         assert isinstance(file_items, list)
 
         # Assert that scene items were filtered out correctly
