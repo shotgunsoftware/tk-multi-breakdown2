@@ -153,7 +153,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             else -1
         )
 
-        fields = self.__manager.get_published_file_filters()
+        fields = self.__manager.get_published_file_fields()
         fields += get_ui_published_file_fields(self._app)
         filters = [
             ["project", "is", self.parent_entity["project"]],
