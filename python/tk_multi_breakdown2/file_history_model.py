@@ -156,14 +156,14 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         fields = self.__manager.get_published_file_filters()
         fields += get_ui_published_file_fields(self._app)
         filters = [
-            ["project", "is", self.parent_entity.sg_data["project"]],
-            ["name", "is", self.parent_entity.sg_data["name"]],
-            ["task", "is", self.parent_entity.sg_data["task"]],
-            ["entity", "is", self.parent_entity.sg_data["entity"]],
+            ["project", "is", self.parent_entity["project"]],
+            ["name", "is", self.parent_entity["name"]],
+            ["task", "is", self.parent_entity["task"]],
+            ["entity", "is", self.parent_entity["entity"]],
             [
                 "published_file_type",
                 "is",
-                self.parent_entity.sg_data["published_file_type"],
+                self.parent_entity["published_file_type"],
             ],
         ]
         filters += self.__manager.get_history_published_file_filters()
