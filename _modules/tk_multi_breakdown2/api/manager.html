@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.9 documentation</title>
+  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.10 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -28,7 +28,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-    <a href='http://developers.shotgridsoftware.com'>
+    <a href='https://help.autodesk.com/view/SGDEV/ENU/'>
     
         <img style='width: 191px;
                 height: 60px;
@@ -80,12 +80,12 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.9.<br>
+    <b>tk-multi-breakdown2</b> v0.2.10.<br>
     
         This documentation is part of the ShotGrid Pipeline Toolkit.
     
     For more information, please visit
-    <a class=custom_post_menu href='https://developers.shotgridsoftware.com'>The ShotGrid developer portal.</a>.
+    <a class=custom_post_menu href='https://help.autodesk.com/view/SGDEV/ENU/'>The ShotGrid developer portal.</a>.
     The code associated with this documentation can be found
     <a class=custom_post_menu href='https://github.com/shotgunsoftware/tk-multi-breakdown2'>here</a>.
 
@@ -135,6 +135,7 @@
 <span class="c1"># not expressly granted therein are reserved by Autodesk, Inc.</span>
 
 <span class="kn">import</span> <span class="nn">sgtk</span>
+<span class="kn">from</span> <span class="nn">tank.errors</span> <span class="kn">import</span> <span class="n">TankHookMethodDoesNotExistError</span>
 
 <span class="kn">from</span> <span class="nn">.item</span> <span class="kn">import</span> <span class="n">FileItem</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">constants</span>
@@ -403,22 +404,95 @@
         <span class="c1"># Return empty list indicating no publish file history was found.</span>
         <span class="k">return</span> <span class="p">[]</span></div>
 
-<div class="viewcode-block" id="BreakdownManager.update_to_latest_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version">[docs]</a>    <span class="k">def</span> <span class="nf">update_to_latest_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+<div class="viewcode-block" id="BreakdownManager.update_to_latest_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version">[docs]</a>    <span class="k">def</span> <span class="nf">update_to_latest_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the item to its latest version.</span>
 
-<span class="sd">        :param item: Item to update</span>
-<span class="sd">        :type item: FileItem</span>
+<span class="sd">        :param items: The item or items to update.</span>
+<span class="sd">        :type items: FileItem | List[FileItem]</span>
 
-<span class="sd">        :return: True if the item requires the data model to update, else False will not</span>
-<span class="sd">            trigger a model update.</span>
-<span class="sd">        :rtype: bool</span>
+<span class="sd">        :return: The list of file item objects that were updated to the latest version.</span>
+<span class="sd">        :rtype: List[FileItem]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">items</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_to_specific_version</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span><span class="p">)</span></div>
+        <span class="c1"># First try to execute the hook method to update items in batch for performance.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_items_to_latest_version</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">TankHookMethodDoesNotExistError</span><span class="p">:</span>
+            <span class="c1"># Fallback to updating items one by one.</span>
+            <span class="n">updated_items</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+                <span class="n">do_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_to_specific_version</span><span class="p">(</span>
+                    <span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">do_update</span><span class="p">:</span>
+                    <span class="n">updated_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">updated_items</span></div>
+
+<div class="viewcode-block" id="BreakdownManager.update_items_to_latest_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_items_to_latest_version">[docs]</a>    <span class="k">def</span> <span class="nf">update_items_to_latest_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the list of items to their respective latest version.</span>
+
+<span class="sd">        :param items: The item or items to update.</span>
+<span class="sd">        :type items: FileItem | List[FileItem]</span>
+
+<span class="sd">        :return: The list of file item objectggs that were updated to the latest version.</span>
+<span class="sd">        :rtype: List[FileItem]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">hook_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">)</span>
+        <span class="n">scene_operation_hook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">create_hook_instance</span><span class="p">(</span><span class="n">hook_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">scene_operation_hook</span><span class="p">,</span> <span class="s2">&quot;update_items&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TankHookMethodDoesNotExistError</span>
+
+        <span class="c1"># Prepare the items to update</span>
+        <span class="n">items_by_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+            <span class="n">sg_data</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;local_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">item_dict</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">][</span><span class="s2">&quot;local_path&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;old_path&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">][</span><span class="s2">&quot;old_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span>
+            <span class="n">items_by_dict</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">item_dict</span>
+
+        <span class="c1"># No items to update, return empty list to indicate no further action.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">items_by_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="c1"># Execute the hook to perform the update operation.</span>
+        <span class="n">items_to_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
+            <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;update_items&quot;</span><span class="p">,</span>
+            <span class="n">items</span><span class="o">=</span><span class="n">items_by_dict</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Update the FileItem objects model data directly, if specified.</span>
+        <span class="k">if</span> <span class="n">items_to_update</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Default to updating all items</span>
+            <span class="n">items_to_update</span> <span class="o">=</span> <span class="n">items</span>
+
+        <span class="c1"># The returned items are the FileItem dict representations. We will need to map these</span>
+        <span class="c1"># back to their FileItem object.</span>
+        <span class="n">updated_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">items_to_update</span><span class="p">:</span>
+            <span class="c1"># Only update the file item if specified. Updating the item will affect the data</span>
+            <span class="c1"># model directly</span>
+            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">item_dict</span> <span class="ow">in</span> <span class="n">items_by_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">items_to_update</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span>
+                <span class="n">updated_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">updated_items</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.update_to_specific_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version">[docs]</a>    <span class="k">def</span> <span class="nf">update_to_specific_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -470,7 +544,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Autodesk.</p>
+    <p>&#169; Copyright 2024, Autodesk.</p>
   </div>
 
    
