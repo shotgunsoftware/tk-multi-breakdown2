@@ -1440,7 +1440,11 @@ class AppDialog(QtGui.QWidget):
 
                 for item_action in actions_list:
                     try:
-                        file_item = next(fi for fi in file_items if fi.sg_data == item_action["sg_publish_data"])
+                        file_item = next(
+                            fi
+                            for fi in file_items
+                            if fi.sg_data == item_action["sg_publish_data"]
+                        )
                         if item_action["params"] is None:
                             item_action["params"] = {"file_item": file_item}
                         else:
