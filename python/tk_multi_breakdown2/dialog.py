@@ -75,6 +75,16 @@ class AppDialog(QtGui.QWidget):
 
         self._bundle = sgtk.platform.current_bundle()
 
+        # Use Loader App api to handle all our file item actions. Pass the Breakdown2 App
+        # bundle to the Loader api in order to define the actions in the Breakdown2 App
+        # config settings.
+        loader_app = self._bundle.engine.apps.get("tk-multi-loader2")
+        if loader_app:
+            self.__loader_manager = loader_app.create_loader_manager(self._bundle)
+        else:
+            self.__loader_manager = None
+            self._bundle.logger.warning("Configure Loader App (tk-multi-loader2) to use custom actions.")
+
         # This property indicates if the app should listen for DCC events to perform data
         # refreshes automatically.
         self._auto_refresh = False
@@ -790,6 +800,13 @@ class AppDialog(QtGui.QWidget):
             lambda: self._set_details_panel_visibility(True)
         )
         context_menu.addAction(show_details_action)
+
+        # Get custom actions defined in the config.
+        custom_actions = self.__get_custom_actions()
+        if custom_actions:
+            context_menu.addSeparator()
+        context_menu.addActions(custom_actions)
+    
         context_menu.exec_(pnt)
 
     def _show_history_item_context_menu(self, view, index, pos):
@@ -1282,17 +1299,9 @@ class AppDialog(QtGui.QWidget):
         all selected items to the latest version.
         """
 
-        selection_model = self._ui.file_view.selectionModel()
-        if not selection_model:
+        file_items = self.__get_selected_items_data()
+        if not file_items:
             return
-
-        file_items = []
-        indexes = selection_model.selectedIndexes()
-        for index in indexes:
-            if isinstance(index.model(), QtGui.QSortFilterProxyModel):
-                index = index.model().mapToSource(index)
-            file_item = index.data(FileModel.FILE_ITEM_ROLE)
-            file_items.append(file_item)
 
         # Turn off event handling while executing the action, we do not want the UI to handle
         # events while performating the action.
@@ -1333,6 +1342,105 @@ class AppDialog(QtGui.QWidget):
         for row in range(self._file_model.rowCount()):
             index = self._file_model.index(row, 0)
             self._ui.file_view.expand(index)
+
+    ################################################################################################
+    # Private utility methods
+
+    def __get_selected_items_data(self, data_roles=FileModel.FILE_ITEM_ROLE):
+        """
+        Return the data associated with the selected items in the file view.
+
+        :param data_roles: The data model role(s) to retrieve the specific data for the
+            selected items. If only a single role is given, the return value is a flat
+            list of the data. If more than one role is given, a dictionary mapping of
+            role to the respective data is returned. Default is `FileModel.FILE_ITEM_ROLE`.
+        :type data_roles: int | List[int]
+        :return: The data for the selected items.
+        :rtype: list | dict
+        """
+
+        selection_model = self._ui.file_view.selectionModel()
+        if not selection_model:
+            return []
+
+        if not isinstance(data_roles, list):
+            data_roles = [data_roles]
+
+        data = {}
+        for role in data_roles:
+            data[role] = []
+
+        indexes = selection_model.selectedIndexes()
+        for index in indexes:
+            if isinstance(index.model(), QtGui.QSortFilterProxyModel):
+                index = index.model().mapToSource(index)
+            for role in data_roles:
+                data[role].append(index.data(role))
+
+        if len(data_roles) == 1:
+            return data[data_roles[0]]
+        return data
+
+    def __get_custom_actions(self):
+        """
+        Return the custom actions for the selected items.
+        """
+
+        if not self.__loader_manager:
+            return [] 
+
+        data = self.__get_selected_items_data([FileModel.FILE_ITEM_ROLE, FileModel.FILE_ITEM_SG_DATA_ROLE])
+        file_items = data[FileModel.FILE_ITEM_ROLE]
+        if not file_items:
+            return []
+
+        actions = []
+        if len(file_items) == 1:
+            # Create actions for a single file item
+            file_item = file_items[0]
+            item_actions = self.__loader_manager.get_actions_for_publish(
+                file_item.sg_data, self.__loader_manager.UI_AREA_MAIN
+            )
+
+            for item_action in item_actions:
+                # Add the FileItem to the action params. This may be needed to execute the action.
+                if item_action["params"] is None:
+                    item_action["params"] = {"file_item": file_item}
+                else:
+                    item_action["params"]["file_item"] = file_item
+
+                display_name = item_action.get("caption") or item_action["name"]
+                action = QtGui.QAction(display_name)
+                action.triggered.connect(
+                    lambda checked=False, d=file_item.sg_data, a=item_action: self.__loader_manager.execute_action(d, a)
+                )
+                actions.append(action)
+        else:
+            # Create common actions for multiple file items
+            sg_data_list = data[FileModel.FILE_ITEM_SG_DATA_ROLE]
+            item_actions = self.__loader_manager.get_actions_for_publishes(
+                sg_data_list, self.__loader_manager.UI_AREA_MAIN
+            )
+            for action_name, actions_list in item_actions.items():
+                if not actions_list:
+                    continue
+
+                for item_action in actions_list:
+                    for file_item in file_items:
+                        if file_item.sg_data == item_action["sg_publish_data"]:
+                            if item_action["params"] is None:
+                                item_action["params"] = {"file_item": file_item}
+                            else:
+                                item_action["params"]["file_item"] = file_item
+
+                display_name = actions_list[0].get("action", {}).get("caption") or action_name
+                action = QtGui.QAction(display_name)
+                action.triggered.connect(
+                    lambda checked=False, actions=actions_list: self.__loader_manager.execute_multiple_actions(actions)
+                )
+                actions.append(action)
+        
+        return actions
 
     ################################################################################################
     # ViewItemDelegate action method callbacks item's action is clicked
