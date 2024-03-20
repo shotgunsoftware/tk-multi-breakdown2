@@ -1391,7 +1391,7 @@ class AppDialog(QtGui.QWidget):
         api is used to handle creating and executing the actions. This requires the Loader App
         to be configured for the current running environment.
 
-        :return: The custom actions for the selected items.
+        :return: The actions for the selected items.
         :rtype: List[QtGui.QAction]
         """
 
