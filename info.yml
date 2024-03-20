@@ -45,7 +45,8 @@ configuration:
         type: hook
         default_value: "{self}/actions.py"
         description: Hook which contains all methods for action management. This hook can
-                     point to a Loader App actions_hook.
+                     point to a Loader App actions_hook. This hook name must be 'actions_hook'
+                     in order to pass the Breakdown2 App to the Loader App api.
 
     version_history:
         type: int
