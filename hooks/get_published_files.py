@@ -111,7 +111,7 @@ class GetPublishedFiles(HookBaseClass):
 
     def get_latest_published_file(self, item, data_retriever=None, **kwargs):
         """
-        Query ShotGrid to get the latest published file for the given item.
+        Query Flow Production Tracking to get the latest published file for the given item.
 
         :param item: :class`FileItem` object we want to get the latest published file for
         :type item: :class`FileItem`
