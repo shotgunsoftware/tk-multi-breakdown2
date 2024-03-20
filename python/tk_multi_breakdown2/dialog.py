@@ -1386,6 +1386,13 @@ class AppDialog(QtGui.QWidget):
     def __get_custom_actions(self):
         """
         Return the custom actions for the selected items.
+
+        The custom actions are defined in the Breakdown2 App config settings. The Loader App
+        api is used to handle creating and executing the actions. This requires the Loader App
+        to be configured for the current running environment.
+
+        :return: The custom actions for the selected items.
+        :rtype: List[QtGui.QAction]
         """
 
         if not self.__loader_manager:
