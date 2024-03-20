@@ -1416,9 +1416,9 @@ class AppDialog(QtGui.QWidget):
             for item_action in item_actions:
                 # Add the FileItem to the action params. This may be needed to execute the action.
                 if item_action["params"] is None:
-                    item_action["params"] = {"file_item": file_item}
+                    item_action["params"] = {"file_item": file_item.to_dict()}
                 else:
-                    item_action["params"]["file_item"] = file_item
+                    item_action["params"]["file_item"] = file_item.to_dict()
 
                 display_name = item_action.get("caption") or item_action["name"]
                 action = QtGui.QAction(display_name)
@@ -1446,9 +1446,9 @@ class AppDialog(QtGui.QWidget):
                             if fi.sg_data == item_action["sg_publish_data"]
                         )
                         if item_action["params"] is None:
-                            item_action["params"] = {"file_item": file_item}
+                            item_action["params"] = {"file_item": file_item.to_dict()}
                         else:
-                            item_action["params"]["file_item"] = file_item
+                            item_action["params"]["file_item"] = file_item.to_dict()
                     except StopIteration:
                         continue
 
