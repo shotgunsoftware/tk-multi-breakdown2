@@ -83,7 +83,9 @@ class AppDialog(QtGui.QWidget):
             self.__loader_manager = loader_app.create_loader_manager(self._bundle)
         else:
             self.__loader_manager = None
-            self._bundle.logger.warning("Configure Loader App (tk-multi-loader2) to use custom actions.")
+            self._bundle.logger.warning(
+                "Configure Loader App (tk-multi-loader2) to use custom actions."
+            )
 
         # This property indicates if the app should listen for DCC events to perform data
         # refreshes automatically.
@@ -806,7 +808,7 @@ class AppDialog(QtGui.QWidget):
         if custom_actions:
             context_menu.addSeparator()
         context_menu.addActions(custom_actions)
-    
+
         context_menu.exec_(pnt)
 
     def _show_history_item_context_menu(self, view, index, pos):
@@ -1387,9 +1389,11 @@ class AppDialog(QtGui.QWidget):
         """
 
         if not self.__loader_manager:
-            return [] 
+            return []
 
-        data = self.__get_selected_items_data([FileModel.FILE_ITEM_ROLE, FileModel.FILE_ITEM_SG_DATA_ROLE])
+        data = self.__get_selected_items_data(
+            [FileModel.FILE_ITEM_ROLE, FileModel.FILE_ITEM_SG_DATA_ROLE]
+        )
         file_items = data[FileModel.FILE_ITEM_ROLE]
         if not file_items:
             return []
@@ -1412,7 +1416,9 @@ class AppDialog(QtGui.QWidget):
                 display_name = item_action.get("caption") or item_action["name"]
                 action = QtGui.QAction(display_name)
                 action.triggered.connect(
-                    lambda checked=False, d=file_item.sg_data, a=item_action: self.__loader_manager.execute_action(d, a)
+                    lambda checked=False, d=file_item.sg_data, a=item_action: self.__loader_manager.execute_action(
+                        d, a
+                    )
                 )
                 actions.append(action)
         else:
@@ -1433,13 +1439,17 @@ class AppDialog(QtGui.QWidget):
                             else:
                                 item_action["params"]["file_item"] = file_item
 
-                display_name = actions_list[0].get("action", {}).get("caption") or action_name
+                display_name = (
+                    actions_list[0].get("action", {}).get("caption") or action_name
+                )
                 action = QtGui.QAction(display_name)
                 action.triggered.connect(
-                    lambda checked=False, actions=actions_list: self.__loader_manager.execute_multiple_actions(actions)
+                    lambda checked=False, actions=actions_list: self.__loader_manager.execute_multiple_actions(
+                        actions
+                    )
                 )
                 actions.append(action)
-        
+
         return actions
 
     ################################################################################################
