@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Breakdown API &mdash; tk-multi-breakdown2 v0.2.10 documentation</title>
+  <title>Breakdown API &mdash; tk-multi-breakdown2 v0.3.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -118,7 +118,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.10.<br>
+    <b>tk-multi-breakdown2</b> v0.3.0.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -206,12 +206,12 @@ to execute in the main thread (e.g. GUI events).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths">
 <span class="sig-name descname"><span class="pre">get_published_files_from_file_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bg_task_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_published_files_from_file_paths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_published_files_from_file_paths" title="Permalink to this definition"></a></dt>
-<dd><p>Query the ShotGrid API to get the published files for the given file paths.</p>
+<dd><p>Query the Flow Production Tracking API to get the published files for the given file paths.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file_paths</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of file paths to get the published files from.</p></li>
-<li><p><strong>extra_fields</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of ShotGrid fields to append to the ShotGrid query
+<li><p><strong>extra_fields</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – A list of Flow Production Tracking fields to append to the Flow Production Tracking query
 when retreiving the published files.</p></li>
 <li><p><strong>bg_task_manager</strong> – (optional) A background task manager to execute the request
 async. If not provided, the request will be executed synchronously.</p></li>
@@ -234,8 +234,8 @@ files data is returned if executed synchronosly.</p>
 <dt class="sig sig-object py" id="tk_multi_breakdown2.api.BreakdownManager.get_file_items">
 <span class="sig-name descname"><span class="pre">get_file_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_objects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">published_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tk_multi_breakdown2/api/manager.html#BreakdownManager.get_file_items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tk_multi_breakdown2.api.BreakdownManager.get_file_items" title="Permalink to this definition"></a></dt>
 <dd><p>Get the file item objects for the given scene objects.</p>
-<p>Scene objects that do not have a corresponding ShotGrid Published File will be omitted
-from the result (a FileItem will not be created for it).</p>
+<p>Scene objects that do not have a corresponding Flow Production Tracking Published File
+will be omitted from the result (a FileItem will not be created for it).</p>
 <p>The <cite>scene_objects</cite> dict param expects the key-values:</p>
 <blockquote>
 <div><dl class="simple">
@@ -312,7 +312,7 @@ will execute the api request synchronously.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The latest published file as a ShotGrid entity dictionary if the request was
+<dd class="field-even"><p>The latest published file as a Flow Production Tracking entity dictionary if the request was
 synchronous, else the request background task id if the request was async.</p>
 </dd>
 </dl>
@@ -350,14 +350,14 @@ than the current item (project, name, task, …)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query fields.</p></li>
+<li><p><strong>extra_fields</strong> – A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.</p></li>
 <li><p><strong>item</strong> – :class`FileItem` object we want to get the published file history</p></li>
-<li><p><strong>extra_fields</strong> – A list of ShotGrid fields to append to the ShotGrid query
+<li><p><strong>extra_fields</strong> – A list of Flow Production Tracking fields to append to the Flow Production Tracking query
 for published files.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A list of ShotGrid published file dictionary</p>
+<dd class="field-even"><p>A list of Flow Production Tracking published file dictionary</p>
 </dd>
 </dl>
 </dd></dl>
@@ -404,7 +404,7 @@ for published files.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>item</strong> (<a class="reference internal" href="#tk_multi_breakdown2.api.FileItem" title="tk_multi_breakdown2.api.FileItem"><em>FileItem</em></a>) – Item to update</p></li>
-<li><p><strong>sg_data</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Dictionary of ShotGrid data representing the published file we want to update the item to</p></li>
+<li><p><strong>sg_data</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#dict" title="(in Python v3.9)"><em>dict</em></a>) – Dictionary of Flow Production Tracking data representing the published file we want to update the item to</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -435,7 +435,7 @@ but will contain details about the latest available version of the file.</p>
 <li><p><strong>node_name</strong> – Name of the file node</p></li>
 <li><p><strong>node_type</strong> – Type of the file node</p></li>
 <li><p><strong>path</strong> – Path on disk of this file</p></li>
-<li><p><strong>sg_data</strong> – Dictionary of ShotGrid data representing this file in the database</p></li>
+<li><p><strong>sg_data</strong> – Dictionary of Flow Production Tracking data representing this file in the database</p></li>
 <li><p><strong>extra_data</strong> – Dictionary containing additional information about this file</p></li>
 </ul>
 </dd>
@@ -443,7 +443,7 @@ but will contain details about the latest available version of the file.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.highest_version_number">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">highest_version_number</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.highest_version_number" title="Permalink to this definition"></a></dt>
-<dd><p>Get highest version number available in the ShotGrid database for this file.</p>
+<dd><p>Get highest version number available in the Flow Production Tracking database for this file.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -485,7 +485,7 @@ but will contain details about the latest available version of the file.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="tk_multi_breakdown2.api.FileItem.sg_data">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sg_data</span></span><a class="headerlink" href="#tk_multi_breakdown2.api.FileItem.sg_data" title="Permalink to this definition"></a></dt>
-<dd><p>Get or set the ShotGrid data associated with this item.</p>
+<dd><p>Get or set the Flow Production Tracking data associated with this item.</p>
 </dd></dl>
 
 <dl class="py property">

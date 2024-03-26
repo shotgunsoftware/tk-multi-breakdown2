@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.2.10 documentation</title>
+  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -80,7 +80,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.10.<br>
+    <b>tk-multi-breakdown2</b> v0.3.0.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -190,11 +190,11 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bg_task_manager</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Query the ShotGrid API to get the published files for the given file paths.</span>
+<span class="sd">        Query the Flow Production Tracking API to get the published files for the given file paths.</span>
 
 <span class="sd">        :param file_paths: A list of file paths to get the published files from.</span>
 <span class="sd">        :type file_paths: List[str]</span>
-<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query</span>
+<span class="sd">        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query</span>
 <span class="sd">                             when retreiving the published files.</span>
 <span class="sd">        :type extra_fields: List[str]</span>
 <span class="sd">        :param bg_task_manager: (optional) A background task manager to execute the request</span>
@@ -240,8 +240,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the file item objects for the given scene objects.</span>
 
-<span class="sd">        Scene objects that do not have a corresponding ShotGrid Published File will be omitted</span>
-<span class="sd">        from the result (a FileItem will not be created for it).</span>
+<span class="sd">        Scene objects that do not have a corresponding Flow Production Tracking Published File</span>
+<span class="sd">        will be omitted from the result (a FileItem will not be created for it).</span>
 
 <span class="sd">        The `scene_objects` dict param expects the key-values:</span>
 
@@ -312,7 +312,7 @@
 <span class="sd">            will execute the api request synchronously.</span>
 <span class="sd">        :type data_retriever: ShotgunDataRetriever</span>
 
-<span class="sd">        :return: The latest published file as a ShotGrid entity dictionary if the request was</span>
+<span class="sd">        :return: The latest published file as a Flow Production Tracking entity dictionary if the request was</span>
 <span class="sd">            synchronous, else the request background task id if the request was async.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -365,12 +365,12 @@
 <span class="sd">        Get the published history for the selected item. It will gather all the published files with the same context</span>
 <span class="sd">        than the current item (project, name, task, ...)</span>
 
-<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query fields.</span>
+<span class="sd">        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.</span>
 <span class="sd">        :param item: :class`FileItem` object we want to get the published file history</span>
-<span class="sd">        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query</span>
+<span class="sd">        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query</span>
 <span class="sd">                             for published files.</span>
 
-<span class="sd">        :returns: A list of ShotGrid published file dictionary</span>
+<span class="sd">        :returns: A list of Flow Production Tracking published file dictionary</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">:</span>
@@ -500,7 +500,7 @@
 
 <span class="sd">        :param item: Item to update</span>
 <span class="sd">        :type item: FileItem</span>
-<span class="sd">        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to</span>
+<span class="sd">        :param sg_data: Dictionary of Flow Production Tracking data representing the published file we want to update the item to</span>
 <span class="sd">        :type sg_data: dict</span>
 
 <span class="sd">        :return: True if the item requires the data model to update, else False will not</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.2.10 documentation</title>
+  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -80,7 +80,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.2.10.<br>
+    <b>tk-multi-breakdown2</b> v0.3.0.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -148,7 +148,7 @@
 <span class="sd">        :param node_name:  Name of the file node</span>
 <span class="sd">        :param node_type:  Type of the file node</span>
 <span class="sd">        :param path:       Path on disk of this file</span>
-<span class="sd">        :param sg_data:    Dictionary of ShotGrid data representing this file in the database</span>
+<span class="sd">        :param sg_data:    Dictionary of Flow Production Tracking data representing this file in the database</span>
 <span class="sd">        :param extra_data: Dictionary containing additional information about this file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -189,7 +189,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">highest_version_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get highest version number available in the ShotGrid database for this file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get highest version number available in the Flow Production Tracking database for this file.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version_number&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -250,7 +250,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sg_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get or set the ShotGrid data associated with this item.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get or set the Flow Production Tracking data associated with this item.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_data</span>
 
     <span class="nd">@sg_data</span><span class="o">.</span><span class="n">setter</span>
