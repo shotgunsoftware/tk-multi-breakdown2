@@ -145,10 +145,17 @@ class BreakdownManager(object):
 
         for obj in scene_objects:
             if obj["path"] in published_files:
-                file_item = FileItem(obj["node_name"], obj["node_type"], obj["path"])
-                file_item.extra_data = obj.get("extra_data")
-                file_item.sg_data = published_files[obj["path"]]
-                file_items.append(file_item)
+                file_items.append(
+                    FileItem(
+                        obj["node_name"],
+                        obj["node_type"],
+                        obj["path"],
+                        sg_data=published_files[obj["path"]],
+                        extra_data=obj.get("extra_data"),
+                        locked=obj.get("locked", False),
+                        loaded=obj.get("loaded", True),
+                    )
+                )
 
         return file_items
 
