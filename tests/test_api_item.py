@@ -54,7 +54,6 @@ class TestApiItem:
         assert file_item.locked == file_item_data["locked"]
         assert file_item.loaded == file_item_data["loaded"]
 
-
     @pytest.mark.parametrize(
         "file_item_data",
         [(False, False), (True, False), (False, True), (True, True)],
