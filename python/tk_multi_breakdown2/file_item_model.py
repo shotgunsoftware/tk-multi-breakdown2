@@ -50,7 +50,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_ROLE,  # The item status
         STATUS_FILTER_DATA_ROLE,  # The item status data used for filtering
         REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
-        ICON_REFERENCE_LOADED, # The QIcon to display for an item that is not loaded
+        ICON_REFERENCE_LOADED,  # The QIcon to display for an item that is not loaded
         GROUP_ID_ROLE,  # The id of the group for this item
         GROUP_DISPLAY_ROLE,  # The id of the group for this item
         FILE_ITEM_ROLE,  # The file item object
@@ -412,7 +412,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             if role == FileTreeItemModel.ICON_REFERENCE_LOADED:
                 if file_item.loaded:
                     return QtGui.QIcon()  # No icon for loaded references
-                return SGQIcon.validation_warning()  # Show a warning icon for unloaded references
+                return (
+                    SGQIcon.validation_warning()
+                )  # Show a warning icon for unloaded references
         else:
             # It is a group for file items
             if role in (

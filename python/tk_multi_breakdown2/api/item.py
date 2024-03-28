@@ -15,7 +15,16 @@ class FileItem(object):
     but will contain details about the latest available version of the file.
     """
 
-    def __init__(self, node_name, node_type, path, sg_data=None, extra_data=None, locked=False, loaded=True):
+    def __init__(
+        self,
+        node_name,
+        node_type,
+        path,
+        sg_data=None,
+        extra_data=None,
+        locked=False,
+        loaded=True,
+    ):
         """
         Class constructor.
 
