@@ -11,7 +11,7 @@
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
-from .ui import resources_rc  # Required for accessing icons
+from .framework_qtwidgets import SGQIcon
 from .utils import get_ui_published_file_fields
 from . import constants
 
@@ -47,10 +47,12 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     ) = range(2)
 
     STATUS_BADGES = {
-        STATUS_UP_TO_DATE: ":/tk-multi-breakdown2/icons/current-uptodate.png",
-        STATUS_OUT_OF_DATE: ":/tk-multi-breakdown2/icons/current-outofdate.png",
+        STATUS_UP_TO_DATE: SGQIcon.resource_path(
+            "check_mark_green", SGQIcon.SIZE_16x16
+        ),
+        STATUS_OUT_OF_DATE: SGQIcon.resource_path("check_mark_red", SGQIcon.SIZE_16x16),
     }
-    LOCKED_ICON = ":/tk-multi-breakdown2/icons/current-override.png"
+    LOCKED_ICON = SGQIcon.resource_path("lock", SGQIcon.SIZE_16x16)
 
     def __init__(self, parent, bg_task_manager):
         """
