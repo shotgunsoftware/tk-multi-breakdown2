@@ -129,7 +129,7 @@ class BreakdownSceneOperations(HookBaseClass):
             which will be updated to the new file path. The existing path is used to look up
             the reference to update.
         :type extra_data: dict (required key-values: 'old_path': str)
-        :param sg_data: Additional ShotGrid specific data required to look up reference
+        :param sg_data: Additional Flow Production Tracking specific data required to look up reference
             templates to perform the reference update.
         :type sg_data: dict (required key-values: 'project': dict, 'task': dict)
 

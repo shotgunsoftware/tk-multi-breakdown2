@@ -64,11 +64,11 @@ class BreakdownManager(object):
         self, file_paths, extra_fields=None, bg_task_manager=None
     ):
         """
-        Query the ShotGrid API to get the published files for the given file paths.
+        Query the Flow Production Tracking API to get the published files for the given file paths.
 
         :param file_paths: A list of file paths to get the published files from.
         :type file_paths: List[str]
-        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query
+        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query
                              when retreiving the published files.
         :type extra_fields: List[str]
         :param bg_task_manager: (optional) A background task manager to execute the request
@@ -114,8 +114,8 @@ class BreakdownManager(object):
         """
         Get the file item objects for the given scene objects.
 
-        Scene objects that do not have a corresponding ShotGrid Published File will be omitted
-        from the result (a FileItem will not be created for it).
+        Scene objects that do not have a corresponding Flow Production Tracking Published File
+        will be omitted from the result (a FileItem will not be created for it).
 
         The `scene_objects` dict param expects the key-values:
 
@@ -193,7 +193,7 @@ class BreakdownManager(object):
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
 
-        :return: The latest published file as a ShotGrid entity dictionary if the request was
+        :return: The latest published file as a Flow Production Tracking entity dictionary if the request was
             synchronous, else the request background task id if the request was async.
         """
 
@@ -246,12 +246,12 @@ class BreakdownManager(object):
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
 
-        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query fields.
+        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.
         :param item: :class`FileItem` object we want to get the published file history
-        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query
+        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query
                              for published files.
 
-        :returns: A list of ShotGrid published file dictionary
+        :returns: A list of Flow Production Tracking published file dictionary
         """
 
         if not item.sg_data:
@@ -381,7 +381,7 @@ class BreakdownManager(object):
 
         :param item: Item to update
         :type item: FileItem
-        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to
+        :param sg_data: Dictionary of Flow Production Tracking data representing the published file we want to update the item to
         :type sg_data: dict
 
         :return: True if the item requires the data model to update, else False will not
