@@ -77,7 +77,10 @@ class BreakdownSceneOperations(HookBaseClass):
                         "node_name": r.getName(),
                         "node_type": node_type,
                         "path": path,
-                        "extra_data": {"node_id": r.getObjectId()},
+                        "extra_data": {
+                            "node_id": r.getObjectId(),
+                        },
+                        "loaded": r.isLoaded(),
                     }
                 )
 

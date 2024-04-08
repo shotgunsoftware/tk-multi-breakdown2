@@ -424,13 +424,10 @@ class UIConfigAdvanced(HookClass):
 
         file_item = self.get_file_item(index)
         if file_item:
-            role = index.model().REFERENCE_LOADED
-            is_local = index.data(role)
-            if not is_local:
+            ref_loaded_icon = index.data(index.model().ICON_REFERENCE_LOADED)
+            if ref_loaded_icon:
                 icons["bottom-right"] = {
-                    # FIXME this is just a placeholder icon, this should be updated when showing
-                    # icons for unloaded references is enabled.
-                    "pixmap": QtGui.QIcon(),
+                    "pixmap": ref_loaded_icon,
                     "inset": True,
                 }
 
