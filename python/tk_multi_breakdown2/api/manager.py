@@ -24,10 +24,11 @@ class BreakdownManager(object):
         self._bundle = bundle
 
     @sgtk.LogManager.log_timing
-    def scan_scene(self, execute_in_main_thread=True):
+    def get_scene_objects(self, execute_in_main_thread=True):
         """
-        Scan the current scene to return a list of scene references.
+        Get the current scene objects by executing the scan_scene hook method.
 
+        A list of dictionaries representing the scene references will be returned.
         The return dict value has the following key-values:
 
             node (str)
@@ -46,7 +47,7 @@ class BreakdownManager(object):
         :type execute_in_main_thread: bool
 
         :return: A list of scene references.
-        :rtype: dict
+        :rtype: List[dict]
         """
 
         if execute_in_main_thread:
@@ -58,6 +59,32 @@ class BreakdownManager(object):
 
         # Execute in the current thread
         return self._bundle.execute_hook_method("hook_scene_operations", "scan_scene")
+
+    @sgtk.LogManager.log_timing
+    def scan_scene(self, extra_fields=None, execute_in_main_thread=True):
+        """
+        Scan the current scene to return a list of scene references.
+
+        A list of FileItem objects representing the scene references will be returned.
+
+        :param execute_in_main_thread: True will ensure the hook method is executed in the
+            main thread, else False will execute in the current thread. Default is True, since
+            the scan_scene function will need to execute DCC functionality that likely needs
+            to execute in the main thread (e.g. GUI events).
+        :type execute_in_main_thread: bool
+
+        :return: A list of scene references.
+        :rtype: List[FileItem]
+        """
+
+        scene_objects = self.get_scene_objects(
+            execute_in_main_thread=execute_in_main_thread
+        )
+        file_paths = [o["path"] for o in scene_objects]
+        published_files = self.get_published_files_from_file_paths(
+            file_paths, extra_fields=extra_fields
+        )
+        return self.get_file_items(scene_objects, published_files)
 
     @sgtk.LogManager.log_timing
     def get_published_files_from_file_paths(
@@ -88,7 +115,7 @@ class BreakdownManager(object):
         if extra_fields is not None:
             fields += extra_fields
 
-        # Get the published file filters to pass to the query
+        # Get the published file filters defined in the config to pass to the query
         filters = self.get_published_file_filters()
 
         # Option to run this in a background task since this can take some time to execute.
@@ -107,7 +134,11 @@ class BreakdownManager(object):
         # No background task manager provided, execute the request synchronously and return
         # the published files data immediately.
         return sgtk.util.find_publish(
-            self._bundle.sgtk, file_paths, fields=fields, only_current_project=False
+            self._bundle.sgtk,
+            file_paths,
+            filters=filters,
+            fields=fields,
+            only_current_project=False,
         )
 
     def get_file_items(self, scene_objects, published_files):
@@ -183,7 +214,21 @@ class BreakdownManager(object):
 
         return self._bundle.get_setting("published_file_filters", [])
 
-    def get_latest_published_file(self, item, data_retriever=None):
+    def get_history_published_file_filters(self):
+        """
+        Get additional filters to pass to the query to retrieve the history published files
+        for a given file item.
+
+        :param item: The file item to get the history published file filters for.
+        :type item: FileItem
+
+        :return: The history published file filters.
+        :rtype: List[List[dict]]
+        """
+
+        return self._bundle.get_setting("history_published_file_filters", [])
+
+    def get_latest_published_file(self, item, data_retriever=None, extra_fields=None):
         """
         Get the latest available published file according to the current item context.
 
@@ -200,11 +245,19 @@ class BreakdownManager(object):
         if not item or not item.sg_data:
             return None if data_retriever else {}
 
+        fields = self.get_published_file_fields()
+        if extra_fields:
+            fields += extra_fields
+
+        filters = self.get_history_published_file_filters()
+
         result = self._bundle.execute_hook_method(
             "hook_get_published_files",
             "get_latest_published_file",
             item=item,
             data_retriever=data_retriever,
+            extra_fields=fields,
+            published_file_filters=filters,
         )
 
         # Only set the latest published file data if the result was immediately returned.
@@ -213,12 +266,11 @@ class BreakdownManager(object):
 
         return result
 
-    def get_published_files_for_items(self, items, data_retriever=None):
+    def get_published_files_for_items(
+        self, items, data_retriever=None, extra_fields=None
+    ):
         """
-        Get all published files for the given items.
-
-        The published files returned may then be parsed to determine the latest published
-        file for each item.
+        Get all published files (history) for the given items.
 
         :param items: the list of :class`FileItem` we want to get published files for.
         :type items: List[FileItem]
@@ -234,56 +286,48 @@ class BreakdownManager(object):
         if not items:
             return None if data_retriever else {}
 
+        fields = self.get_published_file_fields()
+        if extra_fields:
+            fields += extra_fields
+
+        filters = self.get_history_published_file_filters()
+
         return self._bundle.execute_hook_method(
             "hook_get_published_files",
             "get_published_files_for_items",
             items=items,
             data_retriever=data_retriever,
+            extra_fields=fields,
+            published_file_filters=filters,
         )
 
-    def get_published_file_history(self, item, extra_fields=None):
+    def get_published_file_history(self, item, extra_fields=None, data_retriever=None):
         """
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
 
-        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.
         :param item: :class`FileItem` object we want to get the published file history
-        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query
-                             for published files.
+        :type item: FileItem
+        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.
+        :type extra_fields: List[str]
+        :param data_retreiver: If provided, the api request will be async. The default value
+            will execute the api request synchronously.
+        :type data_retriever: ShotgunDataRetriever
 
-        :returns: A list of Flow Production Tracking published file dictionary
+        :return: If the request is async, then the request task id is returned, else the
+            published file history.
+        :rtype: str | dict
         """
 
-        if not item.sg_data:
+        if not item or not item.sg_data:
             return []
 
-        fields = constants.PUBLISHED_FILES_FIELDS + self._bundle.get_setting(
-            "published_file_fields", []
+        result = self.get_published_files_for_items(
+            [item], data_retriever=data_retriever, extra_fields=extra_fields
         )
-        if extra_fields is not None:
-            fields += extra_fields
-
-        filters = [
-            ["project", "is", item.sg_data["project"]],
-            ["name", "is", item.sg_data["name"]],
-            ["task", "is", item.sg_data["task"]],
-            ["entity", "is", item.sg_data["entity"]],
-            ["published_file_type", "is", item.sg_data["published_file_type"]],
-        ]
-
-        pfs = self._bundle.shotgun.find(
-            "PublishedFile",
-            filters=filters,
-            fields=fields,
-            order=[{"direction": "desc", "field_name": "version_number"}],
-        )
-
-        if pfs:
-            item.latest_published_file = pfs[0]
-            return pfs
-
-        # Return empty list indicating no publish file history was found.
-        return []
+        if result and isinstance(result, list):
+            item.latest_published_file = result[0]
+        return result
 
     def update_to_latest_version(self, items):
         """

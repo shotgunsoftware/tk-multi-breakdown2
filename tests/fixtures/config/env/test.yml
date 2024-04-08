@@ -25,6 +25,10 @@ engines:
           path: $SHOTGUN_CURRENT_REPO_ROOT
         hook_scene_operations: "{config}/scene_operations_test.py"
         published_file_fields: ["test_field_1", "test_field_2"]
+        published_file_filters:
+          - [code, is_not, ignore_node]
+        history_published_file_filters:
+          - [code, is_not, ignore_history]
 
 frameworks:
   tk-framework-qtwidgets_v2.x.x:
