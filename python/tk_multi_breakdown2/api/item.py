@@ -22,7 +22,7 @@ class FileItem(object):
         :param node_name:  Name of the file node
         :param node_type:  Type of the file node
         :param path:       Path on disk of this file
-        :param sg_data:    Dictionary of ShotGrid data representing this file in the database
+        :param sg_data:    Dictionary of Flow Production Tracking data representing this file in the database
         :param extra_data: Dictionary containing additional information about this file
         """
 
@@ -63,7 +63,7 @@ class FileItem(object):
 
     @property
     def highest_version_number(self):
-        """Get highest version number available in the ShotGrid database for this file."""
+        """Get highest version number available in the Flow Production Tracking database for this file."""
         if self._latest_published_file:
             return self._latest_published_file.get("version_number")
         return None
@@ -124,7 +124,7 @@ class FileItem(object):
 
     @property
     def sg_data(self):
-        """Get or set the ShotGrid data associated with this item."""
+        """Get or set the Flow Production Tracking data associated with this item."""
         return self._sg_data
 
     @sg_data.setter

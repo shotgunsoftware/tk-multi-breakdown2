@@ -698,9 +698,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             self.__scene_objects = self._manager.scan_scene()
 
             # Make an async request to get the published files for the references in the scene.
-            # This will omit any objects from the scene that do not have a ShotGrid Published
-            # File. Some files can come from other projects so we cannot rely on templates,
-            # and instead need to query ShotGrid.
+            # This will omit any objects from the scene that do not have a
+            # Flow Production Tracking Published File. Some files can come from other projects
+            # so we cannot rely on templates, and instead need to query Flow Production Tracking.
             file_paths = [o["path"] for o in self.__scene_objects]
             self.__pending_published_file_data_request = (
                 self._manager.get_published_files_from_file_paths(
