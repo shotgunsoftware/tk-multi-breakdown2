@@ -80,11 +80,25 @@ class AppDialog(QtGui.QWidget):
         # config settings.
         loader_app = self._bundle.engine.apps.get("tk-multi-loader2")
         if loader_app:
-            self.__loader_manager = loader_app.create_loader_manager(self._bundle)
+            try:
+                self.__loader_manager = loader_app.create_loader_manager(self._bundle)
+            except TypeError:
+                self.__loader_manager = None
+                self._bundle.logger.warning(
+                    "The current Loader API (tk-multi-loader2) version {} does not support Scene Breakdown custom actions. Update the Loader API to version 1.25.0 or later.".format(
+                        loader_app.version
+                    )
+                )
+            except Exception:
+                # Catch all for any error that occurred trying to create the Loader API instance.
+                self.__loader_manager = None
+                self._bundle.logger.warning(
+                    "Failed to get the Loader API. Custom actions will not be available."
+                )
         else:
             self.__loader_manager = None
             self._bundle.logger.warning(
-                "Configure Loader App (tk-multi-loader2) to use custom actions."
+                "Configure the Loader API (tk-multi-loader2) to use custom actions."
             )
 
         # This property indicates if the app should listen for DCC events to perform data
