@@ -29,7 +29,7 @@ configuration:
         type: hook
         default_value: "{self}/get_published_files.py"
         description: Specificy a hook that, if desired, defines how Pubilshed File entites are retrieved
-                     from the ShotGrid API.
+                     from the Flow Production Tracking API.
 
     hook_ui_config:
         type: hook
@@ -41,6 +41,13 @@ configuration:
         default_value: "{self}/ui_config_advanced.py"
         description: Specify an advanced hook that, if desired, configures the UI.
 
+    actions_hook:
+        type: hook
+        default_value: "{self}/actions.py"
+        description: Hook which contains all methods for action management. This hook can
+                     point to a Loader App actions_hook. This hook name must be 'actions_hook'
+                     in order to pass the Breakdown2 App to the Loader App api.
+
     version_history:
         type: int
         default_value: 5
@@ -50,14 +57,16 @@ configuration:
         type: list
         values: {type: str}
         allows_empty: True
-        description: List of Published File fields returned when querying ShotGrid for published file history.
-                     These fields will also be used when scanning the scene to get the current scene elements.
+        description: List of Published File fields returned when querying Flow Production Tracking for published
+                     file history. These fields will also be used when scanning the scene to get the current scene
+                     elements.
 
     published_file_filters:
         type: list
-        description: List of filters that will be applied when querying ShotGrid for Published Files based on
-                     the items found in the scene. To show Published Files without a Task, remove the default
-                     filter to exclude Published Files that do not have a Task, and similarly for Link entity.
+        description: List of filters that will be applied when querying Flow Production Tracking for Published
+                     Files based on the items found in the scene. To show Published Files without a Task, remove
+                     the default filter to exclude Published Files that do not have a Task, and similarly for Link
+                     entity.
         values:
             type: shotgun_filter
         allows_empty: True
@@ -102,10 +111,17 @@ configuration:
                      timeout. The default interval length is 30 seconds. Set a negative valeu to not
                      perform the background file item status checks.
 
+    action_mappings:
+        type: dict
+        description: Associates published file types with actions. The actions are all defined
+                     inside the actions hook. Use special key 'All' to define actions for all
+                     published file types. These actions can be passed to the Loader App api to
+                     create and execute actions.
+        default_value: {}
 
-# The ShotGrid fields that this app needs in order to operate correctly
+# The Flow Production Tracking fields that this app needs in order to operate correctly
 requires_shotgun_fields:
-# linked_projects.Asset is required for references in multiple ShotGrid rojects
+# linked_projects.Asset is required for references in multiple Flow Production Tracking projects
 
 # More verbose description of this item
 display_name: "Scene Breakdown"
@@ -122,4 +138,4 @@ supported_engines:
 # the frameworks required to run this app
 frameworks:
     - {"name": "tk-framework-shotgunutils", "version": "v5.x.x", "minimum_version": "v5.8.2"}
-    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.10.6"}
+    - {"name": "tk-framework-qtwidgets", "version": "v2.x.x", "minimum_version": "v2.12.0"}

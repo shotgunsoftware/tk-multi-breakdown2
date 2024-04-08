@@ -11,7 +11,7 @@
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
-from .ui import resources_rc  # Required for accessing icons
+from .framework_qtwidgets import SGQIcon
 from .utils import get_ui_published_file_fields
 
 
@@ -46,10 +46,12 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
     ) = range(2)
 
     STATUS_BADGES = {
-        STATUS_UP_TO_DATE: ":/tk-multi-breakdown2/icons/current-uptodate.png",
-        STATUS_OUT_OF_DATE: ":/tk-multi-breakdown2/icons/current-outofdate.png",
+        STATUS_UP_TO_DATE: SGQIcon.resource_path(
+            "check_mark_green", SGQIcon.SIZE_16x16
+        ),
+        STATUS_OUT_OF_DATE: SGQIcon.resource_path("check_mark_red", SGQIcon.SIZE_16x16),
     }
-    LOCKED_ICON = ":/tk-multi-breakdown2/icons/current-override.png"
+    LOCKED_ICON = SGQIcon.resource_path("lock", SGQIcon.SIZE_16x16)
 
     def __init__(self, parent, bg_task_manager):
         """
@@ -91,7 +93,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
     @property
     def parent_entity(self):
-        """Get the ShotGrid entity data dictionary that the parent file item represents."""
+        """Get the Flow Production Tracking entity data dictionary that the parent file item represents."""
         return self.__parent_sg_data
 
     @property
@@ -138,8 +140,8 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
     def load_data(self, parent_file):
         """
-        Load the history details for the parent file item. The file item contains the ShotGrid data
-        dictionary used to load the history data.
+        Load the history details for the parent file item. The file item contains the
+        Flow Production Tracking data dictionary used to load the history data.
 
         :param sg_data: The parent file item to load history data for.
         :type sg_data: FileItem
@@ -187,7 +189,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         :param item: QStandardItem that is about to be added to the model. This has been primed
                      with the standard settings that the ShotgunModel handles.
-        :param sg_data: ShotGrid data dictionary that was received from ShotGrid given the fields
+        :param sg_data: Flow Production Tracking data dictionary that was received from Flow Production Tracking given the fields
                         and other settings specified in load_data()
         """
 
@@ -233,7 +235,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         Sets a tooltip for this model item.
 
         :param item: ShotgunStandardItem associated with the publish.
-        :param sg_item: Publish information from ShotGrid.
+        :param sg_item: Publish information from Flow Production Tracking.
         """
 
         # Do nothing, let the delegate show the tooltip.

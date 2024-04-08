@@ -39,7 +39,7 @@ def file_item_optional_fields():
     Return the list of FileItem attribuets that may or may not be initialized on create.
     """
 
-    return ["sg_data", "extra_data"]
+    return ["sg_data", "extra_data", "locked", "loaded"]
 
 
 @pytest.fixture
@@ -96,6 +96,8 @@ def file_item_data(request):
         "node_name": node_name,
         "node_type": node_type,
         "path": path,
+        "locked": True,
+        "loaded": False,
         "sg_data": sg_data,
         "extra_data": extra_data,
     }

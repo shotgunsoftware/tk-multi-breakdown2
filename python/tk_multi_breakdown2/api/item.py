@@ -15,15 +15,26 @@ class FileItem(object):
     but will contain details about the latest available version of the file.
     """
 
-    def __init__(self, node_name, node_type, path, sg_data=None, extra_data=None):
+    def __init__(
+        self,
+        node_name,
+        node_type,
+        path,
+        sg_data=None,
+        extra_data=None,
+        locked=False,
+        loaded=True,
+    ):
         """
         Class constructor.
 
         :param node_name:  Name of the file node
         :param node_type:  Type of the file node
         :param path:       Path on disk of this file
-        :param sg_data:    Dictionary of ShotGrid data representing this file in the database
+        :param sg_data:    Dictionary of Flow Production Tracking data representing this file in the database
         :param extra_data: Dictionary containing additional information about this file
+        :param locked: True if the file item is locked, else False.
+        :param loaded: True if the file item is loaded, else False.
         """
 
         self._node_name = node_name
@@ -31,8 +42,9 @@ class FileItem(object):
         self._path = path
         self._sg_data = sg_data
         self._extra_data = extra_data
+        self._locked = locked
+        self._loaded = loaded
         self._latest_published_file = None
-        self._locked = False
         self._thumbnail_path = None
 
     def __hash__(self):
@@ -63,7 +75,7 @@ class FileItem(object):
 
     @property
     def highest_version_number(self):
-        """Get highest version number available in the ShotGrid database for this file."""
+        """Get highest version number available in the Flow Production Tracking database for this file."""
         if self._latest_published_file:
             return self._latest_published_file.get("version_number")
         return None
@@ -105,6 +117,15 @@ class FileItem(object):
         self._locked = value
 
     @property
+    def loaded(self):
+        """Get whether or not this file item is loaded."""
+        return self._loaded
+
+    @loaded.setter
+    def loaded(self, value):
+        self._loaded = value
+
+    @property
     def latest_published_file(self):
         """Get the latest published file for this file item."""
         return self._latest_published_file
@@ -124,7 +145,7 @@ class FileItem(object):
 
     @property
     def sg_data(self):
-        """Get or set the ShotGrid data associated with this item."""
+        """Get or set the Flow Production Tracking data associated with this item."""
         return self._sg_data
 
     @sg_data.setter

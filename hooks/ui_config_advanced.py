@@ -153,13 +153,14 @@ class UIConfigAdvanced(HookClass):
         Returns the data to display for this model index item's title.
 
         If a title template string is defined, return a tuple where the first item is the
-        template string and the second item is the ShotGrid data to format the template
-        string with. This tuple return value may be consumed by the :class:`ViewItemDelegate`
-        that will search and replace the tempalte string with the specified values from
-        the ShotGrid data provided.
+        template string and the second item is the Flow Production Tracking data to
+        format the template string with. This tuple return value may be consumed by
+        the :class:`ViewItemDelegate` that will search and replace the tempalte string with
+        the specified values from the Flow Production Tracking data provided.
 
         See the UIConfiguration class (ui_configuartion.py) for more details on how to
-        construct a template string that can be processed and replaced with ShotGrid data.
+        construct a template string that can be processed and replaced with
+        Flow Production Tracking data.
 
         :param index: The model item index
         :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
@@ -171,7 +172,7 @@ class UIConfigAdvanced(HookClass):
         file_item = self.get_file_item(index)
         if file_item:
             if self._title_template_string:
-                # Search and replace any non-ShotGrid data fields
+                # Search and replace any non-Flow Production Tracking data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._title_template_string
                 )
@@ -188,13 +189,14 @@ class UIConfigAdvanced(HookClass):
         Returns the data to display for this model index item's subtitle.
 
         If a subtitle template string is defined, return a tuple where the first item is the
-        template string and the second item is the ShotGrid data to format the template
-        string with. This tuple return value may be consumed by the :class:`ViewItemDelegate`
-        that will search and replace the tempalte string with the specified values from
-        the ShotGrid data provided.
+        template string and the second item is the Flow Production Tracking data to format
+        the template string with. This tuple return value may be consumed by
+        the :class:`ViewItemDelegate` that will search and replace the tempalte string with
+        the specified values from the Flow Production Tracking data provided.
 
         See the UIConfiguration class (ui_configuartion.py) for more details on how to
-        construct a template string that can be processed and replaced with ShotGrid data.
+        construct a template string that can be processed and replaced with
+        Flow Production Tracking data.
 
         :param index: The model item index
         :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
@@ -208,7 +210,7 @@ class UIConfigAdvanced(HookClass):
 
         if file_item:
             if self._subtitle_template_string:
-                # Search and replace any non-ShotGrid data fields
+                # Search and replace any non-Flow Production Tracking data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._subtitle_template_string
                 )
@@ -336,13 +338,14 @@ class UIConfigAdvanced(HookClass):
         Returns the data to display for this model index item's detailed text.
 
         If a details template string is defined, return a tuple where the first item is the
-        template string and the second item is the ShotGrid data to format the template
-        string with. This tuple return value may be consumed by the :class:`ViewItemDelegate`
-        that will search and replace the tempalte string with the specified values from
-        the ShotGrid data provided.
+        template string and the second item is the Flow Production Tracking data to format
+        the template string with. This tuple return value may be consumed by
+        the :class:`ViewItemDelegate` that will search and replace the tempalte string with
+        the specified values from the Flow Production Tracking data provided.
 
         See the UIConfiguration class (ui_configuartion.py) for more details on how to
-        construct a template string that can be processed and replaced with ShotGrid data.
+        construct a template string that can be processed and replaced with
+        Flow Production Tracking data.
 
         :param index: The model item index
         :type index: :class:`sgkt.platofrm.qt.QtCore.QModelIndex`
@@ -354,7 +357,7 @@ class UIConfigAdvanced(HookClass):
         file_item = self.get_file_item(index)
         if file_item:
             if self._details_template_string:
-                # Search and replace any non-ShotGrid data fields
+                # Search and replace any non-Flow Production Tracking data fields
                 template_string = _resolve_file_item_tokens(
                     file_item, self._details_template_string
                 )
@@ -377,7 +380,7 @@ class UIConfigAdvanced(HookClass):
 
         file_item = self.get_file_item(index)
         if file_item and self._short_text_template_string:
-            # Search and replace any non-ShotGrid data fields
+            # Search and replace any non-Flow Production Tracking data fields
             template_string = _resolve_file_item_tokens(
                 file_item, self._short_text_template_string
             )
@@ -421,15 +424,10 @@ class UIConfigAdvanced(HookClass):
 
         file_item = self.get_file_item(index)
         if file_item:
-            role = index.model().REFERENCE_LOADED
-            is_local = index.data(role)
-            if not is_local:
+            ref_loaded_icon = index.data(index.model().ICON_REFERENCE_LOADED)
+            if ref_loaded_icon:
                 icons["bottom-right"] = {
-                    # FIXME this is just a placeholder icon, this should be updated when showing
-                    # icons for unloaded references is enabled.
-                    "pixmap": QtGui.QIcon(
-                        ":/tk-multi-breakdown2/icons/icons/red_bullet.png"
-                    ),
+                    "pixmap": ref_loaded_icon,
                     "inset": True,
                 }
 
@@ -456,13 +454,14 @@ class UIConfigAdvanced(HookClass):
         """
         Returns the data to display for this model index item's title. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
-        ShotGrid data to format the template string with. This tuple return value may be
-        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the ShotGrid data provided.
+        Flow Production Tracking data to format the template string with. This tuple
+        return value may be consumed by the :class:`ViewItemDelegate` that will search
+        and replace the tempalte string with the specified values from the
+        Flow Production Tracking data provided.
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The ShotGrid data associated with this item.
+        :param sg_data: The Flow Production Tracking data associated with this item.
         :type sg_data: dict
 
         :return: The title data to display.
@@ -478,13 +477,14 @@ class UIConfigAdvanced(HookClass):
         """
         Returns the data to display for this model index item's subtitle. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
-        ShotGrid data to format the template string with. This tuple return value may be
-        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the ShotGrid data provided.
+        Flow Production Tracking data to format the template string with. This tuple return
+        value may be consumed by the :class:`ViewItemDelegate` that will search and replace
+        the tempalte string with the specified values from the Flow Production Tracking data
+        provided.
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The ShotGrid data associated with this item.
+        :param sg_data: The Flow Production Tracking data associated with this item.
         :type sg_data: dict
 
         :return: The subtitle data to display.
@@ -500,13 +500,14 @@ class UIConfigAdvanced(HookClass):
         """
         Returns the data to display for this model index item's details. Specifically, a
         tuple will be returned, where item (1) is a template string and item (2) is the
-        ShotGrid data to format the template string with. This tuple return value may be
-        consumed by the :class:`ViewItemDelegate` that will search and replace the tempalte
-        string with the specified values from the ShotGrid data provided.
+        Flow Production Tracking data to format the template string with. This tuple return
+        value may be consumed by the :class:`ViewItemDelegate` that will search and replace
+        the tempalte string with the specified values from the Flow Production Tracking
+        data provided.
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The ShotGrid data associated with this item.
+        :param sg_data: The Flow Production Tracking data associated with this item.
         :type sg_data: dict
 
         :return: The details data to display.
@@ -524,7 +525,7 @@ class UIConfigAdvanced(HookClass):
 
         :param item: The model item representing file history item.
         :type item: :class:`sgtk.platform.qt.QtGui.QStandardItem`
-        :param sg_data: The ShotGrid data associated with this item.
+        :param sg_data: The Flow Production Tracking data associated with this item.
         :type sg_data: dict
 
         :return: The item thumbnail.
@@ -618,7 +619,7 @@ def _resolve_tokens(token, value, text):
 
 def _resolve_file_item_tokens(file_item, template_string):
     """
-    Convenience method to resolve any File item (non-ShotGrid) specific fields.
+    Convenience method to resolve any File item (non-Flow Production Tracking) specific fields.
     """
 
     for token in ["NODE_NAME", "PATH"]:

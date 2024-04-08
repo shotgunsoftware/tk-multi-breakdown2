@@ -13,8 +13,7 @@ from sgtk.platform.qt import QtGui, QtCore
 from tank.errors import TankHookMethodDoesNotExistError
 from tank_vendor import six
 
-from .ui.dialog import Ui_Dialog
-from .ui import resources_rc  # Required for accessing icons
+from .dialog_ui import DialogUI
 
 from .file_item_model import FileTreeItemModel as FileModel
 from .file_history_model import FileHistoryModel
@@ -22,7 +21,6 @@ from .actions import ActionManager
 from .framework_qtwidgets import (
     FilterItem,
     FilterMenu,
-    FilterMenuButton,  # Keep this import even if the linter says its unused
     ShotgunOverlayWidget,
     ViewItemDelegate,
     ThumbnailViewItemDelegate,
@@ -54,8 +52,10 @@ class AppDialog(QtGui.QWidget):
     GRID_SIZE_SCALE_VALUE = "view_item_grid_size_scale"
     THUMBNAIL_SIZE_SCALE_VALUE = "view_item_thumb_size_scale"
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
+    SETTINGS_WIDGET_GEOMETRY = "breakdown2_dialog_geometry"
     SPLITTER_STATE = "splitter_state"
     FILTER_MENU_STATE = "filter_menu_state"
+    FILTER_MENU_DOCKED_SETTING = "filter_menu_docked_state"
     GROUP_BY_SETTING = "group_by"
     AUTO_REFRESH_SETTING = "auto_refresh"
     DYNAMIC_LOADING_SETTING = "dynamic_loading"
@@ -74,6 +74,32 @@ class AppDialog(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         self._bundle = sgtk.platform.current_bundle()
+
+        # Use Loader App api to handle all our file item actions. Pass the Breakdown2 App
+        # bundle to the Loader api in order to define the actions in the Breakdown2 App
+        # config settings.
+        loader_app = self._bundle.engine.apps.get("tk-multi-loader2")
+        if loader_app:
+            try:
+                self.__loader_manager = loader_app.create_loader_manager(self._bundle)
+            except TypeError:
+                self.__loader_manager = None
+                self._bundle.logger.warning(
+                    "The current Loader API (tk-multi-loader2) version {} does not support Scene Breakdown custom actions. Update the Loader API to version 1.25.0 or later.".format(
+                        loader_app.version
+                    )
+                )
+            except Exception:
+                # Catch all for any error that occurred trying to create the Loader API instance.
+                self.__loader_manager = None
+                self._bundle.logger.warning(
+                    "Failed to get the Loader API. Custom actions will not be available."
+                )
+        else:
+            self.__loader_manager = None
+            self._bundle.logger.warning(
+                "Configure the Loader API (tk-multi-loader2) to use custom actions."
+            )
 
         # This property indicates if the app should listen for DCC events to perform data
         # refreshes automatically.
@@ -103,10 +129,9 @@ class AppDialog(QtGui.QWidget):
         )
 
         # -----------------------------------------------------
-        # Load in the UI from the design file
+        # Get the UI from the DialogUI class
 
-        self._ui = Ui_Dialog()
-        self._ui.setupUi(self)
+        self._ui = DialogUI.ui(self)
 
         # -----------------------------------------------------
         # Set up buttons
@@ -137,8 +162,6 @@ class AppDialog(QtGui.QWidget):
         )
         self._ui.refresh_btn.setMenu(refresh_button_menu)
         self._ui.refresh_btn.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
-        self._ui.refresh_btn.setIcon(SGQIcon.refresh())
-        self._ui.refresh_btn.setCheckable(True)
         self._ui.refresh_btn.clicked.connect(self._on_refresh_clicked)
 
         # -----------------------------------------------------
@@ -189,6 +212,9 @@ class AppDialog(QtGui.QWidget):
         self._ui.file_view.setModel(self._file_proxy_model)
 
         self._file_model_overlay = ShotgunOverlayWidget(self._ui.file_view)
+        self._filter_widget_overlay = ShotgunOverlayWidget(
+            self._ui.content_filter_scroll_area
+        )
 
         # Set up group combobox
         group_by_fields = self._bundle.get_setting("group_by_fields")
@@ -249,7 +275,9 @@ class AppDialog(QtGui.QWidget):
             FilterItem.FilterOp.IN,
             data_func=list_item_delegate.get_displayed_text,
         )
-        self._filter_menu = FilterMenu(self, refresh_on_show=False)
+        self._filter_menu = FilterMenu(
+            self, refresh_on_show=False, dock_widget=self._ui.content_filter_scroll_area
+        )
         # TODO allow this list of filters to be defined in the config.
         self._filter_menu.set_accept_fields(
             [
@@ -302,6 +330,10 @@ class AppDialog(QtGui.QWidget):
             ]
         )
         self._ui.filter_btn.setMenu(self._filter_menu)
+        self._filter_menu.menu_about_to_be_refreshed.connect(
+            lambda: self._filter_widget_overlay.start_spin()
+        )
+        self._filter_menu.menu_refreshed.connect(self._on_filter_menu_refreshed)
 
         # Set up the view modes
         self.view_modes = [
@@ -363,11 +395,12 @@ class AppDialog(QtGui.QWidget):
         # now use the proxy model to sort the data to ensure
         # higher version numbers appear earlier in the list
         # the history model is set up so that the default display
-        # role contains the version number field in ShotGrid.
-        # This field is what the proxy model sorts by default
-        # We set the dynamic filter to true, meaning QT will keep
-        # continuously sorting. And then tell it to use column 0
-        # (we only have one column in our models) and descending order.
+        # role contains the version number field in
+        # Flow Production Tracking. This field is what the proxy model
+        # sorts by default We set the dynamic filter to true, meaning
+        # QT will keep continuously sorting. And then tell it to use
+        # column 0 (we only have one column in our models) and descending
+        # order.
         self._file_history_proxy_model.setDynamicSortFilter(True)
         self._file_history_proxy_model.setSortRole(FileHistoryModel.SORT_ROLE)
         self._file_history_proxy_model.sort(0, QtCore.Qt.DescendingOrder)
@@ -556,10 +589,19 @@ class AppDialog(QtGui.QWidget):
         settings, so that they can be restored on opening the app for the user next time.
         """
 
+        self._settings_manager.store(
+            self.SETTINGS_WIDGET_GEOMETRY,
+            self.saveGeometry(),
+            pickle_setting=False,
+        )
         self._settings_manager.store(self.GROUP_BY_SETTING, self._file_model.group_by)
         self._settings_manager.store(self.AUTO_REFRESH_SETTING, self._auto_refresh)
         self._settings_manager.store(
             self.DYNAMIC_LOADING_SETTING, self._dynamic_loading
+        )
+        self._settings_manager.store(
+            self.FILTER_MENU_DOCKED_SETTING,
+            self._filter_menu.docked,
         )
 
         if six.PY2:
@@ -588,6 +630,12 @@ class AppDialog(QtGui.QWidget):
         of creating the widgets.
         """
 
+        widget_geometry = self._settings_manager.retrieve(
+            self.SETTINGS_WIDGET_GEOMETRY, None
+        )
+        if widget_geometry:
+            self.restoreGeometry(widget_geometry)
+
         # Restore the splitter state that divides the main view and the details
         # First try to restore the state from the settings manager
         splitter_state = self._settings_manager.retrieve(self.SPLITTER_STATE, None)
@@ -614,6 +662,12 @@ class AppDialog(QtGui.QWidget):
                 ): {},
             }
         self._filter_menu.restore_state(menu_state)
+
+        menu_docked = self._settings_manager.retrieve(
+            self.FILTER_MENU_DOCKED_SETTING, False
+        )
+        if menu_docked:
+            self._filter_menu.dock_filters()
 
     ######################################################################################################
     # Protected methods
@@ -647,19 +701,11 @@ class AppDialog(QtGui.QWidget):
         delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
 
-        # Create an icon for the expand header action
-        expand_icon = QtGui.QIcon(":/tk-multi-breakdown2/icons/tree_arrow_expanded.png")
-        expand_icon.addPixmap(
-            QtGui.QPixmap(":/tk-multi-breakdown2/icons/tree_arrow_collapsed.png"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.On,
-        )
-
         # Add LEFT side actions: group header expand and status icon
         delegate.add_actions(
             [
                 {
-                    "icon": expand_icon,
+                    "icon": SGQIcon.tree_arrow(),
                     "show_always": True,
                     "padding": 0,
                     "features": QtGui.QStyleOptionButton.Flat,
@@ -682,9 +728,7 @@ class AppDialog(QtGui.QWidget):
         # Add the menu actions buton on top right
         delegate.add_action(
             {
-                "icon": QtGui.QIcon(
-                    ":/tk-multi-breakdown2/icons/tree_arrow_expanded.png"
-                ),
+                "icon": SGQIcon.tree_arrow(),
                 "padding": 0,
                 "callback": self._actions_menu_requested,
             },
@@ -752,9 +796,7 @@ class AppDialog(QtGui.QWidget):
         # Add the menu actions button.
         delegate.add_action(
             {
-                "icon": QtGui.QIcon(
-                    ":/tk-multi-breakdown2/icons/tree_arrow_expanded.png"
-                ),
+                "icon": SGQIcon.tree_arrow(),
                 "padding": 0,
                 "callback": self._show_history_item_context_menu,
             },
@@ -790,6 +832,13 @@ class AppDialog(QtGui.QWidget):
             lambda: self._set_details_panel_visibility(True)
         )
         context_menu.addAction(show_details_action)
+
+        # Get custom actions defined in the config.
+        custom_actions = self.__get_custom_actions()
+        if custom_actions:
+            context_menu.addSeparator()
+        context_menu.addActions(custom_actions)
+
         context_menu.exec_(pnt)
 
     def _show_history_item_context_menu(self, view, index, pos):
@@ -1141,6 +1190,19 @@ class AppDialog(QtGui.QWidget):
         # Refresh the filter menu after the data has loaded
         self._filter_menu.refresh()
 
+    def _on_filter_menu_refreshed(self):
+        """Callback triggered when the filter menu has finished refreshing."""
+
+        if self._file_model.rowCount() <= 0:
+            # No data in the file model to generate any filters.
+            self._filter_widget_overlay.show_message("No filter data.")
+        elif self._filter_menu.is_empty():
+            # There is data in the model, but no filters were generated from the data.
+            self._filter_widget_overlay.show_message("No filters found.")
+        else:
+            # There are filters to show, hide the overlay.
+            self._filter_widget_overlay.hide()
+
     def _on_file_model_layout_changed(self):
         """Callback triggered when the file model's layout has changed."""
 
@@ -1282,17 +1344,9 @@ class AppDialog(QtGui.QWidget):
         all selected items to the latest version.
         """
 
-        selection_model = self._ui.file_view.selectionModel()
-        if not selection_model:
+        file_items = self.__get_selected_items_data()
+        if not file_items:
             return
-
-        file_items = []
-        indexes = selection_model.selectedIndexes()
-        for index in indexes:
-            if isinstance(index.model(), QtGui.QSortFilterProxyModel):
-                index = index.model().mapToSource(index)
-            file_item = index.data(FileModel.FILE_ITEM_ROLE)
-            file_items.append(file_item)
 
         # Turn off event handling while executing the action, we do not want the UI to handle
         # events while performating the action.
@@ -1333,6 +1387,126 @@ class AppDialog(QtGui.QWidget):
         for row in range(self._file_model.rowCount()):
             index = self._file_model.index(row, 0)
             self._ui.file_view.expand(index)
+
+    ################################################################################################
+    # Private utility methods
+
+    def __get_selected_items_data(self, data_roles=FileModel.FILE_ITEM_ROLE):
+        """
+        Return the data associated with the selected items in the file view.
+
+        :param data_roles: The data model role(s) to retrieve the specific data for the
+            selected items. If only a single role is given, the return value is a flat
+            list of the data. If more than one role is given, a dictionary mapping of
+            role to the respective data is returned. Default is `FileModel.FILE_ITEM_ROLE`.
+        :type data_roles: int | List[int]
+        :return: The data for the selected items.
+        :rtype: list | dict
+        """
+
+        selection_model = self._ui.file_view.selectionModel()
+        if not selection_model:
+            return []
+
+        if not isinstance(data_roles, list):
+            data_roles = [data_roles]
+
+        data = {}
+        for role in data_roles:
+            data[role] = []
+
+        indexes = selection_model.selectedIndexes()
+        for index in indexes:
+            if isinstance(index.model(), QtGui.QSortFilterProxyModel):
+                index = index.model().mapToSource(index)
+            for role in data_roles:
+                data[role].append(index.data(role))
+
+        if len(data_roles) == 1:
+            return data[data_roles[0]]
+        return data
+
+    def __get_custom_actions(self):
+        """
+        Return the custom actions for the selected items.
+
+        The custom actions are defined in the Breakdown2 App config settings. The Loader App
+        api is used to handle creating and executing the actions. This requires the Loader App
+        to be configured for the current running environment.
+
+        :return: The actions for the selected items.
+        :rtype: List[QtGui.QAction]
+        """
+
+        if not self.__loader_manager:
+            return []
+
+        data = self.__get_selected_items_data(
+            [FileModel.FILE_ITEM_ROLE, FileModel.FILE_ITEM_SG_DATA_ROLE]
+        )
+        file_items = data[FileModel.FILE_ITEM_ROLE]
+        if not file_items:
+            return []
+
+        actions = []
+        if len(file_items) == 1:
+            # Create actions for a single file item
+            file_item = file_items[0]
+            item_actions = self.__loader_manager.get_actions_for_publish(
+                file_item.sg_data, self.__loader_manager.UI_AREA_MAIN
+            )
+
+            for item_action in item_actions:
+                # Add the FileItem to the action params. This may be needed to execute the action.
+                if item_action["params"] is None:
+                    item_action["params"] = {"file_item": file_item.to_dict()}
+                else:
+                    item_action["params"]["file_item"] = file_item.to_dict()
+
+                display_name = item_action.get("caption") or item_action["name"]
+                action = QtGui.QAction(display_name)
+                action.triggered.connect(
+                    lambda checked=False, d=file_item.sg_data, a=item_action: self.__loader_manager.execute_action(
+                        d, a
+                    )
+                )
+                actions.append(action)
+        else:
+            # Create common actions for multiple file items
+            sg_data_list = data[FileModel.FILE_ITEM_SG_DATA_ROLE]
+            item_actions = self.__loader_manager.get_actions_for_publishes(
+                sg_data_list, self.__loader_manager.UI_AREA_MAIN
+            )
+            for action_name, actions_list in item_actions.items():
+                if not actions_list:
+                    continue
+
+                for item_action in actions_list:
+                    try:
+                        file_item = next(
+                            fi
+                            for fi in file_items
+                            if fi.sg_data == item_action["sg_publish_data"]
+                        )
+                        if item_action["params"] is None:
+                            item_action["params"] = {"file_item": file_item.to_dict()}
+                        else:
+                            item_action["params"]["file_item"] = file_item.to_dict()
+                    except StopIteration:
+                        continue
+
+                display_name = (
+                    actions_list[0].get("action", {}).get("caption") or action_name
+                )
+                action = QtGui.QAction(display_name)
+                action.triggered.connect(
+                    lambda checked=False, actions=actions_list: self.__loader_manager.execute_multiple_actions(
+                        actions
+                    )
+                )
+                actions.append(action)
+
+        return actions
 
     ################################################################################################
     # ViewItemDelegate action method callbacks item's action is clicked

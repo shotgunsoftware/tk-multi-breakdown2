@@ -8,17 +8,15 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
-import copy
-
 import sgtk
 from sgtk import TankError
 from sgtk.platform.qt import QtGui, QtCore
 
 from tank_vendor import six
 
-from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
 from .decorators import wait_cursor
+from .framework_qtwidgets import SGQIcon
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
@@ -49,6 +47,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_ROLE,  # The item status
         STATUS_FILTER_DATA_ROLE,  # The item status data used for filtering
         REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
+        ICON_REFERENCE_LOADED,  # The QIcon to display for an item that is not loaded
         GROUP_ID_ROLE,  # The id of the group for this item
         GROUP_DISPLAY_ROLE,  # The id of the group for this item
         FILE_ITEM_ROLE,  # The file item object
@@ -61,7 +60,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
         FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 15)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 16)
 
     # File item status enum
     (
@@ -71,10 +70,14 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_LOCKED,
     ) = range(4)
 
+    # File item status icon paths. Use path instead of QIcons here so that this data can be
+    # serialized (e.g. for save/restore state)
     FILE_ITEM_STATUS_ICON_PATHS = {
-        STATUS_UP_TO_DATE: ":/tk-multi-breakdown2/icons/main-uptodate.png",
-        STATUS_OUT_OF_SYNC: ":/tk-multi-breakdown2/icons/main-outofdate.png",
-        STATUS_LOCKED: ":/tk-multi-breakdown2/icons/main-override.png",
+        STATUS_UP_TO_DATE: SGQIcon.resource_path(
+            "check_mark_green", SGQIcon.SIZE_20x20
+        ),
+        STATUS_OUT_OF_SYNC: SGQIcon.resource_path("refresh_red", SGQIcon.SIZE_20x20),
+        STATUS_LOCKED: SGQIcon.resource_path("lock", SGQIcon.SIZE_20x20),
     }
     FILE_ITEM_STATUS_ICONS = {
         STATUS_UP_TO_DATE: FILE_ITEM_STATUS_ICON_PATHS.get(STATUS_UP_TO_DATE),
@@ -405,12 +408,14 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 return self.is_loading(index)
 
             if role == FileTreeItemModel.REFERENCE_LOADED:
-                # TODO call a hook method per DCC to check if the reference associated with this
-                # file item has been loaded into the scene (if the DCC supports loading and
-                # unloading references, e.g. Maya).
-                #
-                # For now, we'll just say everything is loaded unless told otherwise.
-                return True
+                return file_item.loaded
+
+            if role == FileTreeItemModel.ICON_REFERENCE_LOADED:
+                if file_item.loaded:
+                    return QtGui.QIcon()  # No icon for loaded references
+                return (
+                    SGQIcon.validation_warning()
+                )  # Show a warning icon for unloaded references
         else:
             # It is a group for file items
             if role in (
@@ -696,9 +701,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             self.__scene_objects = self._manager.get_scene_objects()
 
             # Make an async request to get the published files for the references in the scene.
-            # This will omit any objects from the scene that do not have a ShotGrid Published
-            # File. Some files can come from other projects so we cannot rely on templates,
-            # and instead need to query ShotGrid.
+            # This will omit any objects from the scene that do not have a
+            # Flow Production Tracking Published File. Some files can come from other projects
+            # so we cannot rely on templates, and instead need to query Flow Production Tracking.
             file_paths = [o["path"] for o in self.__scene_objects]
             self.__pending_published_file_data_request = (
                 self._manager.get_published_files_from_file_paths(

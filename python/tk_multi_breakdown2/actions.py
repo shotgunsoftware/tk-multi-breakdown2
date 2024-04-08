@@ -49,7 +49,7 @@ class ActionManager(object):
         :type file_item: FileItem
         :parma model: The Qt model that the may need to be updated after the action executes.
         :type model: QtGui.QStandardItemModel
-        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to
+        :param sg_data: Dictionary of Flow Production Tracking data representing the published file we want to update the item to
         :type sg_data: dict
         :param parent: Parent widget
         :type parent: QtGui.QWidget
@@ -199,7 +199,7 @@ class UpdateToSpecificVersionAction(Action):
         :type label: str
         :param item: The file item to perform the action on.
         :type item: FileItem
-        :param sg_data: Dictionary of ShotGrid data representing the Published File we want to update the item to
+        :param sg_data: Dictionary of Flow Production Tracking data representing the Published File we want to update the item to
         :type sg_data: dict
         :param model: The Qt model that may need to be updated after the action executes.
         :type model: QtGui.QStandardItemModel

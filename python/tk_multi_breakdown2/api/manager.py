@@ -91,11 +91,11 @@ class BreakdownManager(object):
         self, file_paths, extra_fields=None, bg_task_manager=None
     ):
         """
-        Query the ShotGrid API to get the published files for the given file paths.
+        Query the Flow Production Tracking API to get the published files for the given file paths.
 
         :param file_paths: A list of file paths to get the published files from.
         :type file_paths: List[str]
-        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query
+        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query
                              when retreiving the published files.
         :type extra_fields: List[str]
         :param bg_task_manager: (optional) A background task manager to execute the request
@@ -145,8 +145,8 @@ class BreakdownManager(object):
         """
         Get the file item objects for the given scene objects.
 
-        Scene objects that do not have a corresponding ShotGrid Published File will be omitted
-        from the result (a FileItem will not be created for it).
+        Scene objects that do not have a corresponding Flow Production Tracking Published File
+        will be omitted from the result (a FileItem will not be created for it).
 
         The `scene_objects` dict param expects the key-values:
 
@@ -176,10 +176,17 @@ class BreakdownManager(object):
 
         for obj in scene_objects:
             if obj["path"] in published_files:
-                file_item = FileItem(obj["node_name"], obj["node_type"], obj["path"])
-                file_item.extra_data = obj.get("extra_data")
-                file_item.sg_data = published_files[obj["path"]]
-                file_items.append(file_item)
+                file_items.append(
+                    FileItem(
+                        obj["node_name"],
+                        obj["node_type"],
+                        obj["path"],
+                        sg_data=published_files[obj["path"]],
+                        extra_data=obj.get("extra_data"),
+                        locked=obj.get("locked", False),
+                        loaded=obj.get("loaded", True),
+                    )
+                )
 
         return file_items
 
@@ -231,7 +238,7 @@ class BreakdownManager(object):
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
 
-        :return: The latest published file as a ShotGrid entity dictionary if the request was
+        :return: The latest published file as a Flow Production Tracking entity dictionary if the request was
             synchronous, else the request background task id if the request was async.
         """
 
@@ -301,8 +308,7 @@ class BreakdownManager(object):
 
         :param item: :class`FileItem` object we want to get the published file history
         :type item: FileItem
-        :param extra_fields: A list of ShotGrid fields to append to the ShotGrid query
-                             for published files.
+        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.
         :type extra_fields: List[str]
         :param data_retreiver: If provided, the api request will be async. The default value
             will execute the api request synchronously.
@@ -419,7 +425,7 @@ class BreakdownManager(object):
 
         :param item: Item to update
         :type item: FileItem
-        :param sg_data: Dictionary of ShotGrid data representing the published file we want to update the item to
+        :param sg_data: Dictionary of Flow Production Tracking data representing the published file we want to update the item to
         :type sg_data: dict
 
         :return: True if the item requires the data model to update, else False will not
