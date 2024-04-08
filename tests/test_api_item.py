@@ -51,6 +51,34 @@ class TestApiItem:
         assert file_item.sg_data == file_item_data["sg_data"]
         assert file_item.extra_data == file_item_data["extra_data"]
         assert file_item.latest_published_file is None
+        assert file_item.locked == file_item_data["locked"]
+        assert file_item.loaded == file_item_data["loaded"]
+
+    @pytest.mark.parametrize(
+        "file_item_data",
+        [(False, False), (True, False), (False, True), (True, True)],
+        indirect=["file_item_data"],
+    )
+    def test_file_item_constructor_default(
+        self, file_item_required_fields, file_item_data
+    ):
+        """
+        Test the FileItem default constructor.
+        """
+
+        kwargs = {}
+        for field in file_item_required_fields:
+            kwargs[field] = file_item_data[field]
+
+        file_item = FileItem(**kwargs)
+        assert file_item.node_name == file_item_data["node_name"]
+        assert file_item.node_type == file_item_data["node_type"]
+        assert file_item.path == file_item_data["path"]
+        assert file_item.sg_data == None
+        assert file_item.extra_data == None
+        assert file_item.latest_published_file is None
+        assert file_item.locked == False
+        assert file_item.loaded == True
 
     @pytest.mark.parametrize(
         "latest_published_file",

@@ -41,6 +41,13 @@ configuration:
         default_value: "{self}/ui_config_advanced.py"
         description: Specify an advanced hook that, if desired, configures the UI.
 
+    actions_hook:
+        type: hook
+        default_value: "{self}/actions.py"
+        description: Hook which contains all methods for action management. This hook can
+                     point to a Loader App actions_hook. This hook name must be 'actions_hook'
+                     in order to pass the Breakdown2 App to the Loader App api.
+
     version_history:
         type: int
         default_value: 5
@@ -95,6 +102,13 @@ configuration:
                      timeout. The default interval length is 30 seconds. Set a negative valeu to not
                      perform the background file item status checks.
 
+    action_mappings:
+        type: dict
+        description: Associates published file types with actions. The actions are all defined
+                     inside the actions hook. Use special key 'All' to define actions for all
+                     published file types. These actions can be passed to the Loader App api to
+                     create and execute actions.
+        default_value: {}
 
 # The Flow Production Tracking fields that this app needs in order to operate correctly
 requires_shotgun_fields:

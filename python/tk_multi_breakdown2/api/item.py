@@ -15,7 +15,16 @@ class FileItem(object):
     but will contain details about the latest available version of the file.
     """
 
-    def __init__(self, node_name, node_type, path, sg_data=None, extra_data=None):
+    def __init__(
+        self,
+        node_name,
+        node_type,
+        path,
+        sg_data=None,
+        extra_data=None,
+        locked=False,
+        loaded=True,
+    ):
         """
         Class constructor.
 
@@ -24,6 +33,8 @@ class FileItem(object):
         :param path:       Path on disk of this file
         :param sg_data:    Dictionary of Flow Production Tracking data representing this file in the database
         :param extra_data: Dictionary containing additional information about this file
+        :param locked: True if the file item is locked, else False.
+        :param loaded: True if the file item is loaded, else False.
         """
 
         self._node_name = node_name
@@ -31,8 +42,9 @@ class FileItem(object):
         self._path = path
         self._sg_data = sg_data
         self._extra_data = extra_data
+        self._locked = locked
+        self._loaded = loaded
         self._latest_published_file = None
-        self._locked = False
         self._thumbnail_path = None
 
     def __hash__(self):
@@ -103,6 +115,15 @@ class FileItem(object):
     @locked.setter
     def locked(self, value):
         self._locked = value
+
+    @property
+    def loaded(self):
+        """Get whether or not this file item is loaded."""
+        return self._loaded
+
+    @loaded.setter
+    def loaded(self, value):
+        self._loaded = value
 
     @property
     def latest_published_file(self):

@@ -19,6 +19,7 @@ from tank_vendor import six
 from .ui import resources_rc  # Required for accessing icons
 from .utils import get_ui_published_file_fields
 from .decorators import wait_cursor
+from .framework_qtwidgets import SGQIcon
 
 shotgun_data = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_data"
@@ -49,6 +50,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         STATUS_ROLE,  # The item status
         STATUS_FILTER_DATA_ROLE,  # The item status data used for filtering
         REFERENCE_LOADED,  # True if the reference associated with the item is loaded by the DCC
+        ICON_REFERENCE_LOADED,  # The QIcon to display for an item that is not loaded
         GROUP_ID_ROLE,  # The id of the group for this item
         GROUP_DISPLAY_ROLE,  # The id of the group for this item
         FILE_ITEM_ROLE,  # The file item object
@@ -61,7 +63,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         FILE_ITEM_CREATED_AT_ROLE,  # Convenience method to extract the created at datetime from the file item shotgun data
         FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
-    ) = range(_BASE_ROLE, _BASE_ROLE + 15)
+    ) = range(_BASE_ROLE, _BASE_ROLE + 16)
 
     # File item status enum
     (
@@ -405,12 +407,14 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 return self.is_loading(index)
 
             if role == FileTreeItemModel.REFERENCE_LOADED:
-                # TODO call a hook method per DCC to check if the reference associated with this
-                # file item has been loaded into the scene (if the DCC supports loading and
-                # unloading references, e.g. Maya).
-                #
-                # For now, we'll just say everything is loaded unless told otherwise.
-                return True
+                return file_item.loaded
+
+            if role == FileTreeItemModel.ICON_REFERENCE_LOADED:
+                if file_item.loaded:
+                    return QtGui.QIcon()  # No icon for loaded references
+                return (
+                    SGQIcon.validation_warning()
+                )  # Show a warning icon for unloaded references
         else:
             # It is a group for file items
             if role in (
