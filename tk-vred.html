@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.3.0 documentation</title>
+  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.4.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -93,7 +93,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.3.0.<br>
+    <b>tk-multi-breakdown2</b> v0.4.0.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -217,7 +217,10 @@
                         <span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">getName</span><span class="p">(),</span>
                         <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="n">node_type</span><span class="p">,</span>
                         <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
-                        <span class="s2">&quot;extra_data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">()},</span>
+                        <span class="s2">&quot;extra_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">(),</span>
+                        <span class="p">},</span>
+                        <span class="s2">&quot;loaded&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">isLoaded</span><span class="p">(),</span>
                     <span class="p">}</span>
                 <span class="p">)</span>
 
