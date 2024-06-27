@@ -52,8 +52,18 @@ class BreakdownSceneOperations(HookBaseClass):
         available. Any such versions are then displayed in the UI as out of date.
         """
 
+        try:
+            import sys
+            sys.path.append("C:\\python_libs")
+            import ptvsd
+            ptvsd.enable_attach()
+            ptvsd.wait_for_attach()
+        except:
+            pass
+
         refs = []
 
+        # FIXME cannot find references under switch nodes
         for r in self._vredpy.vrReferenceService.getSceneReferences():
 
             # we only want to keep the top references
@@ -99,6 +109,19 @@ class BreakdownSceneOperations(HookBaseClass):
         :rtype: List[dict] | True
         """
 
+        keep_materials = True
+
+        # # FIXME If we want to keep materials, we cannot update all at once..
+
+        if keep_materials:
+            updated_items = []
+            items = item if isinstance(item, list) else [item]
+            for item in items: 
+                if self.update_item(item):
+                    updated_items.append(item)
+            return updated_items
+
+        # Existing behaviour before keep materials
         if isinstance(item, list):
             return self.update_items(item)
         return self.update_item(item)
@@ -143,7 +166,8 @@ class BreakdownSceneOperations(HookBaseClass):
 
         # Update the VRED references based on their reference type being source or smart
         if refs_to_load:
-            self._vredpy.vrReferenceService.loadSourceReferences(refs_to_load)
+            # self._vredpy.vrReferenceService.loadSourceReferences(refs_to_load)
+            self._vredpy.vrReferenceService.reimportSourceReferences(refs_to_load)
         if smart_refs_to_import:
             self._vredpy.vrReferenceService.reimportSmartReferences(
                 smart_refs_to_import
@@ -176,13 +200,25 @@ class BreakdownSceneOperations(HookBaseClass):
         if node_type == "source_reference":
             new_node_name = os.path.splitext(os.path.basename(path))[0]
             ref_node.setSourcePath(path)
+
+            materials_by_node_name = self.__get_materials_by_node_name(ref_node)
+
             ref_node.loadSourceReference()
             ref_node.setName(new_node_name)
+
+            self.__apply_materials_by_node_name(ref_node, materials_by_node_name)
+
             return True
 
         if node_type == "smart_reference":
             ref_node.setSmartPath(path)
+
+            materials_by_node_name = self.__get_materials_by_node_name(ref_node)
+
             self._vredpy.vrReferenceService.reimportSmartReferences([ref_node])
+
+            self.__apply_materials_by_node_name(ref_node, materials_by_node_name)
+
             return True
 
         # Return False to indicate the item was not updated
@@ -256,3 +292,25 @@ class BreakdownSceneOperations(HookBaseClass):
             if r.getObjectId() == ref_id:
                 return r
         return None
+
+    def __get_materials_by_node_name(self, ref_node):
+        """Get the materials by node name."""
+        materials_by_node_name = {}
+        nodes = list(ref_node.children)
+        while nodes:
+            node = nodes.pop()
+            material = node.getMaterial()
+            if material:
+                materials_by_node_name[node.getName()] = material
+            nodes.extend(node.children)
+        return materials_by_node_name
+
+    def __apply_materials_by_node_name(self, ref_node, materials_by_node_name):
+        """Apply the materials by node name."""
+        nodes = list(ref_node.children)
+        while nodes:
+            node = nodes.pop()
+            material = materials_by_node_name.get(node.getName())
+            if material:
+                node.applyMaterial(material)
+            nodes.extend(node.children)
