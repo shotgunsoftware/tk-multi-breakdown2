@@ -12,8 +12,6 @@ import sgtk
 from sgtk import TankError
 from sgtk.platform.qt import QtGui, QtCore
 
-from tank_vendor import six
-
 from .utils import get_ui_published_file_fields
 from .decorators import wait_cursor
 from .framework_qtwidgets import SGQIcon
@@ -167,7 +165,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         self.__pending_version_requests = {}
         self.__pending_thumbnail_requests = {}
 
-        if group_by and isinstance(group_by, six.string_types):
+        if group_by and isinstance(group_by, str):
             self._group_by = group_by
         else:
             self._group_by = "project"
