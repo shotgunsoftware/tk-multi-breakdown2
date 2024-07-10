@@ -265,7 +265,7 @@ class BreakdownSceneOperations(HookBaseClass):
             if r.getObjectId() == ref_id:
                 return r
         return None
-    
+
     def __load_source_references(self, refs, show_options=False):
         """Load the source references in VRED."""
 
