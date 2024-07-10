@@ -10,6 +10,7 @@
 
 import os
 import sgtk
+from sgtk.platform.qt import QtCore, QtGui
 
 
 HookBaseClass = sgtk.get_hook_baseclass()
@@ -28,6 +29,9 @@ class BreakdownSceneOperations(HookBaseClass):
         # Keep track of the scene change callbacks that are registered, so that they can be
         # disconnected at a later time.
         self._on_references_changed_cb = None
+
+    # --------------------------------------------------------------------------
+    # Hook methods
 
     def scan_scene(self):
         """
@@ -121,7 +125,7 @@ class BreakdownSceneOperations(HookBaseClass):
         for item in items:
             # Get the current reference from the item data
             node_id = item.get("extra_data", {}).get("node_id")
-            ref_node = self.get_reference_by_id(node_id)
+            ref_node = self.__get_reference_by_id(node_id)
             if not ref_node:
                 self.logger.error(
                     "Couldn't get reference node named {}".format(item["node_name"])
@@ -143,7 +147,8 @@ class BreakdownSceneOperations(HookBaseClass):
 
         # Update the VRED references based on their reference type being source or smart
         if refs_to_load:
-            self._vredpy.vrReferenceService.loadSourceReferences(refs_to_load)
+            interactive_update = self.parent.get_setting("interactive_update", False)
+            self.__load_source_references(refs_to_load, show_options=interactive_update)
         if smart_refs_to_import:
             self._vredpy.vrReferenceService.reimportSmartReferences(
                 smart_refs_to_import
@@ -164,7 +169,7 @@ class BreakdownSceneOperations(HookBaseClass):
         """
 
         node_id = item.get("extra_data", {}).get("node_id")
-        ref_node = self.get_reference_by_id(node_id)
+        ref_node = self.__get_reference_by_id(node_id)
         if not ref_node:
             self.logger.error(
                 "Couldn't get reference node named {}".format(item["node_name"])
@@ -176,7 +181,8 @@ class BreakdownSceneOperations(HookBaseClass):
         if node_type == "source_reference":
             new_node_name = os.path.splitext(os.path.basename(path))[0]
             ref_node.setSourcePath(path)
-            ref_node.loadSourceReference()
+            interactive_update = self.parent.get_setting("interactive_update", False)
+            self.__load_source_references(ref_node, show_options=interactive_update)
             ref_node.setName(new_node_name)
             return True
 
@@ -244,7 +250,10 @@ class BreakdownSceneOperations(HookBaseClass):
                     pass
                     self._on_references_changed_cb = None
 
-    def get_reference_by_id(self, ref_id):
+    # --------------------------------------------------------------------------
+    # Private helper methods
+
+    def __get_reference_by_id(self, ref_id):
         """
         Get a reference node from its name.
 
@@ -256,3 +265,18 @@ class BreakdownSceneOperations(HookBaseClass):
             if r.getObjectId() == ref_id:
                 return r
         return None
+    
+    def __load_source_references(self, refs, show_options=False):
+        """Load the source references in VRED."""
+
+        if not isinstance(refs, list):
+            refs = [refs]
+
+        if show_options:
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
+            try:
+                self._vredpy.vrReferenceService.reimportSourceReferences(refs)
+            finally:
+                QtGui.QApplication.restoreOverrideCursor()
+        else:
+            self._vredpy.vrReferenceService.loadSourceReferences(refs)
