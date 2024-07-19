@@ -20,6 +20,13 @@ configuration:
         default_value: True
         description: Specify if the app window should launch as panel or dialog.
 
+    interactive_update:
+        type: bool
+        default_value: False
+        description: Specify if user interaction is required when updating a
+                     reference. This is helpful if a DCC requires user
+                     interaction to specify any update options.
+
     hook_scene_operations:
         type: hook
         default_value: "{self}/{engine_name}_scene_operations.py"
