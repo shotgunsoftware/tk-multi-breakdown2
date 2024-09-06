@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.4.0 documentation</title>
+  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.4.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -93,7 +93,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.0.<br>
+    <b>tk-multi-breakdown2</b> v0.4.1.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -150,6 +150,7 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sgtk</span>
+<span class="kn">from</span> <span class="nn">sgtk.platform.qt</span> <span class="kn">import</span> <span class="n">QtCore</span><span class="p">,</span> <span class="n">QtGui</span>
 
 
 <span class="n">HookBaseClass</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">get_hook_baseclass</span><span class="p">()</span>
@@ -168,6 +169,9 @@
         <span class="c1"># Keep track of the scene change callbacks that are registered, so that they can be</span>
         <span class="c1"># disconnected at a later time.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># --------------------------------------------------------------------------</span>
+    <span class="c1"># Hook methods</span>
 
     <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -261,7 +265,7 @@
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
             <span class="c1"># Get the current reference from the item data</span>
             <span class="n">node_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_data&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;node_id&quot;</span><span class="p">)</span>
-            <span class="n">ref_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_reference_by_id</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+            <span class="n">ref_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_reference_by_id</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">ref_node</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                     <span class="s2">&quot;Couldn&#39;t get reference node named </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">])</span>
@@ -283,7 +287,8 @@
 
         <span class="c1"># Update the VRED references based on their reference type being source or smart</span>
         <span class="k">if</span> <span class="n">refs_to_load</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">loadSourceReferences</span><span class="p">(</span><span class="n">refs_to_load</span><span class="p">)</span>
+            <span class="n">interactive_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;interactive_update&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__load_source_references</span><span class="p">(</span><span class="n">refs_to_load</span><span class="p">,</span> <span class="n">show_options</span><span class="o">=</span><span class="n">interactive_update</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">smart_refs_to_import</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">reimportSmartReferences</span><span class="p">(</span>
                 <span class="n">smart_refs_to_import</span>
@@ -304,7 +309,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">node_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_data&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;node_id&quot;</span><span class="p">)</span>
-        <span class="n">ref_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_reference_by_id</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+        <span class="n">ref_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_reference_by_id</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ref_node</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                 <span class="s2">&quot;Couldn&#39;t get reference node named </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">])</span>
@@ -316,7 +321,8 @@
         <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;source_reference&quot;</span><span class="p">:</span>
             <span class="n">new_node_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">ref_node</span><span class="o">.</span><span class="n">setSourcePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="n">ref_node</span><span class="o">.</span><span class="n">loadSourceReference</span><span class="p">()</span>
+            <span class="n">interactive_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;interactive_update&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__load_source_references</span><span class="p">(</span><span class="n">ref_node</span><span class="p">,</span> <span class="n">show_options</span><span class="o">=</span><span class="n">interactive_update</span><span class="p">)</span>
             <span class="n">ref_node</span><span class="o">.</span><span class="n">setName</span><span class="p">(</span><span class="n">new_node_name</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
 
@@ -384,7 +390,10 @@
                     <span class="k">pass</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">get_reference_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_id</span><span class="p">):</span>
+    <span class="c1"># --------------------------------------------------------------------------</span>
+    <span class="c1"># Private helper methods</span>
+
+    <span class="k">def</span> <span class="nf">__get_reference_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a reference node from its name.</span>
 
@@ -396,6 +405,21 @@
             <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">()</span> <span class="o">==</span> <span class="n">ref_id</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">r</span>
         <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__load_source_references</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">refs</span><span class="p">,</span> <span class="n">show_options</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the source references in VRED.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">refs</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">show_options</span><span class="p">:</span>
+            <span class="n">QtGui</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">setOverrideCursor</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ArrowCursor</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">reimportSourceReferences</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">QtGui</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">restoreOverrideCursor</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">loadSourceReferences</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
