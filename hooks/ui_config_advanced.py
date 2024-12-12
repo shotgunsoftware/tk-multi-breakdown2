@@ -86,7 +86,7 @@ class UIConfigAdvanced(HookClass):
         :param kwags: The keyword arguments to tpass to the base constructor.
         """
 
-        super(UIConfigAdvanced, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # The file UI configuration that defines what data to display for a file item
         file_item_config = self.parent.execute_hook_method(

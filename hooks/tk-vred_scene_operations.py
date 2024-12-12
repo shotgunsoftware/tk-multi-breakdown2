@@ -22,7 +22,7 @@ class BreakdownSceneOperations(HookBaseClass):
     def __init__(self, *args, **kwargs):
         """Class constructor."""
 
-        super(BreakdownSceneOperations, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self._vredpy = self.parent.engine.vredpy
 

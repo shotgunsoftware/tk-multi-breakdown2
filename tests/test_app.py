@@ -99,7 +99,7 @@ class TestApplication(AppTestBase):
         """
 
         os.environ["TEST_ENVIRONMENT"] = "test"
-        super(TestApplication, self).setUp()
+        super().setUp()
 
     def test_init_app(self):
         """

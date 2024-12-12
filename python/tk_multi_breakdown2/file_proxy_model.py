@@ -36,7 +36,7 @@ class FileProxyModel(FilterItemTreeProxyModel):
 
         self._search_text_filter_item = None
 
-        super(FileProxyModel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def search_text_filter_item(self):
@@ -85,7 +85,7 @@ class FileProxyModel(FilterItemTreeProxyModel):
         is accepted based on the filters.
         """
 
-        base_model_accepts = super(FileProxyModel, self)._is_row_accepted(
+        base_model_accepts = super()._is_row_accepted(
             src_row, src_parent_idx, parent_accepted
         )
         if not base_model_accepts:

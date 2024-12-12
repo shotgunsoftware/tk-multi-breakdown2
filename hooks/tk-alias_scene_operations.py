@@ -27,7 +27,7 @@ class BreakdownSceneOperations(HookBaseClass):
     def __init__(self, *args, **kwargs):
         """Class constructor."""
 
-        super(BreakdownSceneOperations, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Keep track of the scene change callbacks that are registered, so that they can be
         # disconnected at a later time.

@@ -497,7 +497,7 @@ class TestBreakdownManager(AppTestBase):
         """Set up before any tests are executed."""
 
         os.environ["TEST_ENVIRONMENT"] = "test"
-        super(TestBreakdownManager, self).setUp()
+        super().setUp()
 
         # Set the environment variable for the hook scene operations method 'scan_scene'
         os.environ["TK_TEST_PROJECT_ROOT_PATHS"] = self.project_root
@@ -1064,7 +1064,7 @@ class TestBreakdownManagerMultipleProjects(TestBreakdownManager):
         Set up before any tests are executed.
         """
 
-        super(TestBreakdownManagerMultipleProjects, self).setUp()
+        super().setUp()
 
         # Create a second project for the test module
         project2, project2_root = self.create_project({"name": "project 2"})

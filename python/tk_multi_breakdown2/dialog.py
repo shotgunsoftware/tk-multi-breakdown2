@@ -11,7 +11,6 @@
 import sgtk
 from sgtk.platform.qt import QtGui, QtCore
 from tank.errors import TankHookMethodDoesNotExistError
-from tank_vendor import six
 
 from .dialog_ui import DialogUI
 
@@ -514,7 +513,7 @@ class AppDialog(QtGui.QWidget):
             self.__update_on_show = False
             self._reload_file_model()
 
-        super(AppDialog, self).showEvent(event)
+        super().showEvent(event)
 
     def closeEvent(self, event):
         """
@@ -576,7 +575,7 @@ class AppDialog(QtGui.QWidget):
             self._bg_task_manager.shut_down()
             self._bg_task_manager = None
 
-        super(AppDialog, self).closeEvent(event)
+        super().closeEvent(event)
 
     ######################################################################################################
     # Public methods
@@ -604,16 +603,11 @@ class AppDialog(QtGui.QWidget):
             self._filter_menu.docked,
         )
 
-        if six.PY2:
-            self._settings_manager.store(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
-        else:
-            # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
-            # will convert QByteArray objects to str when storing).
-            self._raw_values_settings.setValue(
-                self.SPLITTER_STATE, self._ui.details_splitter.saveState()
-            )
+        # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+        # will convert QByteArray objects to str when storing).
+        self._raw_values_settings.setValue(
+            self.SPLITTER_STATE, self._ui.details_splitter.saveState()
+        )
 
         self._settings_manager.store(
             self.FILTER_MENU_STATE, self._filter_menu.save_state()
