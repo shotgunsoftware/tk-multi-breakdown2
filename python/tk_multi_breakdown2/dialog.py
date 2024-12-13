@@ -603,7 +603,7 @@ class AppDialog(QtGui.QWidget):
             self._filter_menu.docked,
         )
 
-        # For Python 3, store the raw QByteArray object (cannot use the settings manager because it
+        # Store the raw QByteArray object (cannot use the settings manager because it
         # will convert QByteArray objects to str when storing).
         self._raw_values_settings.setValue(
             self.SPLITTER_STATE, self._ui.details_splitter.saveState()
