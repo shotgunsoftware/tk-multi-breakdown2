@@ -26,7 +26,7 @@ class AppTestBase(TankTestBase):
         """
 
         # First call the parent TankTestBase constructor to set up the tests base
-        super(AppTestBase, self).setUp()
+        super().setUp()
         self.setup_fixtures()
 
         # Set up the python path to import required modules
@@ -72,7 +72,7 @@ class AppTestBase(TankTestBase):
         if self.engine:
             self.engine.destroy()
 
-        super(AppTestBase, self).tearDown()
+        super().tearDown()
 
     @property
     def engine(self):

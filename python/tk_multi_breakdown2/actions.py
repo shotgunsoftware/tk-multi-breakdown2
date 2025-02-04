@@ -166,7 +166,7 @@ class UpdateToLatestVersionAction(Action):
         :type model: QtGui.QStandardItemModel
         """
 
-        super(UpdateToLatestVersionAction, self).__init__(label, file_items, model)
+        super().__init__(label, file_items, model)
 
     @wait_cursor
     def execute(self):

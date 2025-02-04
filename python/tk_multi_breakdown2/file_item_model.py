@@ -122,7 +122,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :type dynamic_loading: bool
         """
 
-        super(FileTreeItemModel, self).__init__(parent)
+        super().__init__(parent)
 
         # The model data
         # Create the (invisible) tree root item. All top level file item will be added as
@@ -1638,7 +1638,7 @@ class FileTreeModelItem(FileModelItem):
     def __init__(self, file_item=None, group_id=None, group_display=None):
         """Initialize the file tree item."""
 
-        super(FileTreeModelItem, self).__init__(file_item)
+        super().__init__(file_item)
 
         self.__group_id = group_id
         self.__group_display = group_display

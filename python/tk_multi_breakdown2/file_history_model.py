@@ -125,7 +125,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             sg_data = self.data(index, self.SG_DATA_ROLE)
             return sg_data.get("version_number", -1)
 
-        return super(FileHistoryModel, self).data(index, role)
+        return super().data(index, role)
 
     def is_current(self, history_sg_data):
         """
