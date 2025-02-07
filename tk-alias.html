@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.4.2 documentation</title>
+  <title>Alias Default hook &mdash; tk-multi-breakdown2 v0.4.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -94,7 +94,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.2.<br>
+    <b>tk-multi-breakdown2</b> v0.4.3.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -149,32 +149,32 @@
 <span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
 <span class="c1"># not expressly granted therein are reserved by Autodesk, Inc.</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="kn">import</span> <span class="nn">sgtk</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sgtk</span>
 
-<span class="kn">import</span> <span class="nn">alias_api</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">alias_api</span>
 
 <span class="n">HookBaseClass</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">get_hook_baseclass</span><span class="p">()</span>
 
 
-<span class="k">class</span> <span class="nc">BreakdownSceneOperations</span><span class="p">(</span><span class="n">HookBaseClass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BreakdownSceneOperations</span><span class="p">(</span><span class="n">HookBaseClass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Breakdown operations for Alias.</span>
 
 <span class="sd">    This implementation handles detection of Alias references.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Class constructor.&quot;&quot;&quot;</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">BreakdownSceneOperations</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Keep track of the scene change callbacks that are registered, so that they can be</span>
         <span class="c1"># disconnected at a later time.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The scan scene method is executed once at startup and its purpose is</span>
 <span class="sd">        to analyze the current scene and return a list of references that are</span>
@@ -236,7 +236,7 @@
 
         <span class="k">return</span> <span class="n">refs</span>
 
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform replacements given a number of scene items passed from the app.</span>
 
@@ -260,7 +260,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_reference</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">update_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">extra_data</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the Alias reference from the given data.</span>
 
@@ -343,7 +343,7 @@
         <span class="n">alias_api</span><span class="o">.</span><span class="n">update_reference</span><span class="p">(</span><span class="n">old_path</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">register_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">register_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register the callback such that it is executed on a scene change event.</span>
 
@@ -385,7 +385,7 @@
         <span class="k">for</span> <span class="n">callback</span><span class="p">,</span> <span class="n">events</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span><span class="o">.</span><span class="n">register_alias_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">events</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">unregister_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unregister_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister the scene change callbacks by disconnecting any signals.&quot;&quot;&quot;</span>
 
         <span class="n">event_watcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">event_watcher</span>
@@ -397,7 +397,7 @@
         <span class="k">for</span> <span class="n">callback</span><span class="p">,</span> <span class="n">events</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alias_event_callbacks</span><span class="p">:</span>
             <span class="n">event_watcher</span><span class="o">.</span><span class="n">unregister_alias_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">events</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__handle_event_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_result</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__handle_event_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_result</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Intermediate callback handler for Alias events.</span>
 
@@ -447,7 +447,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    

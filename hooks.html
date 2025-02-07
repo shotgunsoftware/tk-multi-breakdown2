@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Breakdown Hooks &mdash; tk-multi-breakdown2 v0.4.2 documentation</title>
+  <title>Breakdown Hooks &mdash; tk-multi-breakdown2 v0.4.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -99,7 +99,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.2.<br>
+    <b>tk-multi-breakdown2</b> v0.4.3.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -342,12 +342,12 @@
 <section id="id2">
 <h3>Basic Examples<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
 <p>This example demonstrates how to get the index data from a model role, to display for the file item’s title field. The <code class="docutils literal notranslate"><span class="pre">DisplayRole</span></code> data will be retrieved for each index and shown in the top-left of the file item text.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>We can extend this example to use the hook’s static method <code class="docutils literal notranslate"><span class="pre">get_file_item</span></code>, to get the Flow Production Tracking data for this index to display certain Flow Production Tracking data:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
     <span class="n">file_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_item</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">file_item</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;created_by&quot;</span><span class="p">)</span>
@@ -357,7 +357,7 @@
 </div>
 <p>If the <code class="docutils literal notranslate"><span class="pre">FileItem</span></code> object is retrieved for this index, display the user who created this Flow Production Tracking entity that the item is associated with. Notice that if a FileItem object was not found, we default to display the indexes DisplayRole data.</p>
 <p>We can take this example one step further by using the hook attribute <code class="docutils literal notranslate"><span class="pre">_title_template_string</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
     <span class="n">file_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_item</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_title_template_string</span><span class="p">:</span>
@@ -384,7 +384,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, Autodesk.</p>
+    <p>&#169; Copyright 2025, Autodesk.</p>
   </div>
 
    
