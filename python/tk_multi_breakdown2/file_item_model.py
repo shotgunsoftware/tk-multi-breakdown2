@@ -60,6 +60,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
     ) = range(_BASE_ROLE, _BASE_ROLE + 16)
 
+    FILE_ITEM_EXPAND_ROLE = _BASE_ROLE + 21
+
     # File item status enum
     (
         STATUS_NONE,  # Status is none when the necessary data has not all loaded yet to determine the status
@@ -327,6 +329,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # It is a file item
             file_item = model_item.file_item
 
+            if role == FileTreeItemModel.FILE_ITEM_EXPAND_ROLE:
+                return model_item.expanded if hasattr(model_item, "expanded") else False
+
             if role == QtCore.Qt.DisplayRole:
                 return file_item.sg_data.get("name") or file_item.node_name
 
@@ -506,6 +511,14 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         changed = False
         change_roles = [role]
+
+        if role == FileTreeItemModel.FILE_ITEM_EXPAND_ROLE:
+            if model_item.expanded == value:
+                return False
+
+            model_item.expanded = value
+            self.dataChanged.emit(index, index, change_roles)
+            return True
 
         if role == QtCore.Qt.DecorationRole:
             model_item.set_thumbnail(value)
@@ -1566,6 +1579,8 @@ class FileModelItem:
 
     def __init__(self, file_item):
         """Initialize the file item."""
+
+        self.expanded = False
 
         self.set_file_item(file_item)
 
