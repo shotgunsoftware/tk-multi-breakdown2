@@ -711,9 +711,11 @@ class AppDialog(QtGui.QWidget):
                     "show_always": True,
                     "padding": 0,
                     "features": QtGui.QStyleOptionButton.Flat,
-                    "get_data": get_thumbnail_header_status_action_data
-                    if thumbnail
-                    else get_status_action_data,
+                    "get_data": (
+                        get_thumbnail_header_status_action_data
+                        if thumbnail
+                        else get_status_action_data
+                    ),
                 },
             ],
             ViewItemDelegate.LEFT,
