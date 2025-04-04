@@ -13,7 +13,7 @@ import datetime
 import os
 import sys
 import pytest
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 from app_test_base import AppTestBase
 
