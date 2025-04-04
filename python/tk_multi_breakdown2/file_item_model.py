@@ -9,6 +9,7 @@
 # not expressly granted therein are reserved by Autodesk, Inc.
 
 import copy
+# import traceback
 
 import sgtk
 from sgtk import TankError
@@ -61,6 +62,8 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         FILE_ITEM_TAGS_ROLE,  # Convenience method to extract the file item tags from the shotgun data
         NEXT_AVAILABLE_ROLE,  # Keep track of the next available custome role. Insert new roles above.
     ) = range(_BASE_ROLE, _BASE_ROLE + 14)
+
+    FILE_ITEM_EXPAND_ROLE = _BASE_ROLE + 19
 
     # File item status enum
     (
@@ -390,6 +393,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # It is a file item
             file_item = model_item.file_item
 
+            if role == FileTreeItemModel.FILE_ITEM_EXPAND_ROLE:
+                return model_item.expanded if hasattr(model_item, "expanded") else False
+
             if role == QtCore.Qt.BackgroundRole:
                 return QtGui.QApplication.palette().midlight()
 
@@ -556,10 +562,18 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         model_item = self.__get_internal_data(index)
         if not model_item:
             return False
-        
+
         changed = False
         change_roles = [role]
         file_item = model_item.file_item
+
+        if role == FileTreeItemModel.FILE_ITEM_EXPAND_ROLE:
+            if model_item.expanded == value:
+                return False
+
+            model_item.expanded = value
+            self.dataChanged.emit(index, index, change_roles)
+            return True
 
         if file_item:
             if role == QtCore.Qt.DecorationRole:
@@ -1588,6 +1602,7 @@ class FileModelItem:
         """Initialize the file item."""
 
         self.__file_item = file_item
+        self.expanded = False
 
         if self.__file_item:
             # File item path should be unique
