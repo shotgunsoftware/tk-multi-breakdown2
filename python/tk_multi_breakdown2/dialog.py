@@ -690,7 +690,6 @@ class AppDialog(QtGui.QWidget):
         delegate.subtitle_role = FileModel.VIEW_ITEM_SUBTITLE_ROLE
         delegate.thumbnail_role = FileModel.VIEW_ITEM_THUMBNAIL_ROLE
         delegate.icon_role = FileModel.VIEW_ITEM_ICON_ROLE
-        delegate.expand_role = FileModel.VIEW_ITEM_EXPAND_ROLE
         delegate.height_role = FileModel.VIEW_ITEM_HEIGHT_ROLE
         delegate.loading_role = FileModel.VIEW_ITEM_LOADING_ROLE
         delegate.separator_role = FileModel.VIEW_ITEM_SEPARATOR_ROLE
@@ -712,9 +711,11 @@ class AppDialog(QtGui.QWidget):
                     "show_always": True,
                     "padding": 0,
                     "features": QtGui.QStyleOptionButton.Flat,
-                    "get_data": get_thumbnail_header_status_action_data
-                    if thumbnail
-                    else get_status_action_data,
+                    "get_data": (
+                        get_thumbnail_header_status_action_data
+                        if thumbnail
+                        else get_status_action_data
+                    ),
                 },
             ],
             ViewItemDelegate.LEFT,
