@@ -29,7 +29,6 @@ sys.path.extend([base_dir, app_dir, api_dir])
 from tk_multi_breakdown2.api import BreakdownManager
 from tk_multi_breakdown2.api.item import FileItem
 
-
 """
 The purpose of set of tests below are to validate the BreakdownManager class functionality.
 They are light-weight tests that do not use any other Toolkit functionality (e.g. sgtk,

@@ -12,7 +12,6 @@ import os
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
-
 HookBaseClass = sgtk.get_hook_baseclass()
 
 

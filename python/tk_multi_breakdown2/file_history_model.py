@@ -14,7 +14,6 @@ from sgtk.platform.qt import QtCore, QtGui
 from .framework_qtwidgets import SGQIcon
 from .utils import get_ui_published_file_fields
 
-
 shotgun_model = sgtk.platform.import_framework(
     "tk-framework-shotgunutils", "shotgun_model"
 )
