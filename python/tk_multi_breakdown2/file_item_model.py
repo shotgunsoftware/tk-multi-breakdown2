@@ -694,23 +694,35 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # all async tasks are complete to reload the model.
             self.stop_timer()
 
-            # Run the scan scene method in the main thread (not a background task) since this
-            # may cause issues for certain DCCs
-            self.__scene_objects = self._manager.get_scene_objects()
+            if not self._app.get_setting("flow_integration"):
+                # Run the scan scene method in the main thread (not a background task) since this
+                # may cause issues for certain DCCs
+                self.__scene_objects = self._manager.get_scene_objects()
 
-            # Make an async request to get the published files for the references in the scene.
-            # This will omit any objects from the scene that do not have a
-            # Flow Production Tracking Published File. Some files can come from other projects
-            # so we cannot rely on templates, and instead need to query Flow Production Tracking.
-            file_paths = [o["path"] for o in self.__scene_objects]
-            self.__pending_published_file_data_request = (
-                self._manager.get_published_files_from_file_paths(
-                    file_paths,
-                    extra_fields=self._published_file_fields,
+                # Make an async request to get the published files for the references in the scene.
+                # This will omit any objects from the scene that do not have a
+                # Flow Production Tracking Published File. Some files can come from other projects
+                # so we cannot rely on templates, and instead need to query Flow Production Tracking.
+                file_paths = [o["path"] for o in self.__scene_objects]
+                self.__pending_published_file_data_request = (
+                    self._manager.get_published_files_from_file_paths(
+                        file_paths,
+                        extra_fields=self._published_file_fields,
+                        bg_task_manager=self._bg_task_manager,
+                    )
+                )
+            else:
+                (
+                    self.__scene_objects,
+                    self.__pending_published_file_data_request,
+                ) = self._app.execute_hook_method(
+                    "hook_scene_operations",
+                    "get_scene_objects_and_publishes",
+                    manager=self._manager,
+                    published_file_fields=self._published_file_fields,
                     bg_task_manager=self._bg_task_manager,
                 )
-            )
-        except:
+        except Exception:
             # Reset on failure to reload
             self.__pending_published_file_data_request = None
         finally:
@@ -1180,6 +1192,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         will execute synchronously. For async requests, the background task id will be
         returned, else the published file data will be returned for synchronous requests.
 
+        When flow_integration is enabled, the bg_task_manager is used for async execution
+        instead of the SG data_retriever, since the data comes from MEDM rather than SG.
+
         :param file_items: The file item objects to get the published file data for.
         :type file_items: List[FileItem]
         :param data_retriever: The Shotgun data retriever to make the api request async, if
@@ -1190,6 +1205,12 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             published file data for the file items is returned.
         :rtype: str | dict
         """
+
+        if self._app.get_setting("flow_integration"):
+            bg = self._bg_task_manager if data_retriever else None
+            return self._manager.get_published_files_for_items(
+                file_items, bg_task_manager=bg
+            )
 
         return self._manager.get_published_files_for_items(
             file_items, data_retriever=data_retriever
@@ -1420,6 +1441,26 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
     # ----------------------------------------------------------------------------------------
     # Background task and Data Retriever callbacks
 
+    def _handle_latest_published_files_result(self, published_file_data):
+        """
+        Process the latest published files data to update the model.
+
+        This is called from both the SG data retriever and the bg task manager
+        callbacks when the latest published files data is received.
+
+        :param published_file_data: List of published file data dicts.
+        :type published_file_data: list[dict]
+        """
+
+        published_files_mapping = self._get_published_files_mapping(published_file_data)
+
+        if self.__is_reloading:
+            self._build_model_from_file_items(published_files_mapping)
+            if self.dynamic_loading:
+                self._finish_reload()
+        else:
+            self._update_latest_published_files(published_files_mapping)
+
     def _on_data_retriever_work_completed(self, uid, request_type, data):
         """
         Slot triggered when the data-retriever has finished doing some work. The data retriever is currently
@@ -1463,19 +1504,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
         elif uid == self.__pending_latest_published_files_data_request:
             self.__pending_latest_published_files_data_request = None
-            published_files_mapping = self._get_published_files_mapping(
-                data.get("sg", [])
-            )
-
-            if self.__is_reloading:
-                self._build_model_from_file_items(published_files_mapping)
-                if self.dynamic_loading:
-                    # Emit signals that data has finished loading. Any data still loading will
-                    # be dynamically populated as it is retrieved (e.g. thumbnails).
-                    self._finish_reload()
-            else:
-                # Only update the latest published file data
-                self._update_latest_published_files(published_files_mapping)
+            self._handle_latest_published_files_result(data.get("sg", []))
 
     def _on_data_retriever_work_failed(self, uid, error_msg):
         """
@@ -1516,12 +1545,27 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 self.__scene_objects, result
             )
 
+            # For MEDM items, the thumbnail path may already be resolved in the stub
+            # data. Set it now so it's available when the model items are created.
+            if self._app.get_setting("flow_integration"):
+                for file_item in self.__file_items:
+                    thumb = (file_item.sg_data or {}).get("sg_flow_thumbnail_path")
+                    if thumb:
+                        file_item.thumbnail_path = thumb
+
             # Make an async request to get all published file data necessary to determine the
             # latest published file per file item. Get all info in a single request.
             self.__pending_latest_published_files_data_request = (
                 self._get_published_files_for_items(
                     self.__file_items, self._sg_data_retriever
                 )
+            )
+
+        elif uid == self.__pending_latest_published_files_data_request:
+            # MEDM flow_integration: latest published files came through bg_task_manager
+            self.__pending_latest_published_files_data_request = None
+            self._handle_latest_published_files_result(
+                result if isinstance(result, list) else []
             )
 
     def _on_background_task_failed(self, uid, group_id, msg, stack_trace):
@@ -1537,6 +1581,11 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         if uid == self.__pending_published_file_data_request:
             self.__pending_published_file_data_request = None
             self._finish_reload()
+
+        elif uid == self.__pending_latest_published_files_data_request:
+            self.__pending_latest_published_files_data_request = None
+            if self.__is_reloading:
+                self._finish_reload()
 
         if msg:
             raise Exception(msg)

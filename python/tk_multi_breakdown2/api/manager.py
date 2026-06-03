@@ -228,22 +228,39 @@ class BreakdownManager(object):
 
         return self._bundle.get_setting("history_published_file_filters", [])
 
-    def get_latest_published_file(self, item, data_retriever=None, extra_fields=None):
+    def get_latest_published_file(
+        self, item, data_retriever=None, extra_fields=None, bg_task_manager=None
+    ):
         """
         Get the latest available published file according to the current item context.
 
         :param item: :class`FileItem` object we want to get the latest published file
         :type item: FileItem
-        :param data_retreiver: If provided, the api request will be async. The default value
+        :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
+        :param bg_task_manager: If provided with flow_integration, used for async execution.
+        :type bg_task_manager: BackgroundTaskManager
 
         :return: The latest published file as a Flow Production Tracking entity dictionary if the request was
             synchronous, else the request background task id if the request was async.
         """
 
+        is_async = data_retriever or bg_task_manager
+
         if not item or not item.sg_data:
-            return None if data_retriever else {}
+            return None if is_async else {}
+
+        if self._bundle.get_setting("flow_integration"):
+            result = self._bundle.execute_hook_method(
+                "hook_scene_operations",
+                "get_latest_published_file",
+                item=item,
+                bg_task_manager=bg_task_manager,
+            )
+            if not is_async:
+                item.latest_published_file = result
+            return result
 
         fields = self.get_published_file_fields()
         if extra_fields:
@@ -267,24 +284,36 @@ class BreakdownManager(object):
         return result
 
     def get_published_files_for_items(
-        self, items, data_retriever=None, extra_fields=None
+        self, items, data_retriever=None, extra_fields=None, bg_task_manager=None
     ):
         """
         Get all published files (history) for the given items.
 
         :param items: the list of :class`FileItem` we want to get published files for.
         :type items: List[FileItem]
-        :param data_retreiver: If provided, the api request will be async. The default value
+        :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
+        :param bg_task_manager: If provided with flow_integration, used for async execution.
+        :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
             published file data result from the api request.
         :rtype: str | dict
         """
 
+        is_async = data_retriever or bg_task_manager
+
         if not items:
-            return None if data_retriever else {}
+            return None if is_async else {}
+
+        if self._bundle.get_setting("flow_integration"):
+            return self._bundle.execute_hook_method(
+                "hook_scene_operations",
+                "get_published_files_for_items",
+                items=items,
+                bg_task_manager=bg_task_manager,
+            )
 
         fields = self.get_published_file_fields()
         if extra_fields:
@@ -301,7 +330,9 @@ class BreakdownManager(object):
             published_file_filters=filters,
         )
 
-    def get_published_file_history(self, item, extra_fields=None, data_retriever=None):
+    def get_published_file_history(
+        self, item, extra_fields=None, data_retriever=None, bg_task_manager=None
+    ):
         """
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
@@ -310,9 +341,11 @@ class BreakdownManager(object):
         :type item: FileItem
         :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.
         :type extra_fields: List[str]
-        :param data_retreiver: If provided, the api request will be async. The default value
+        :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
+        :param bg_task_manager: If provided with flow_integration, used for async execution.
+        :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
             published file history.
@@ -323,7 +356,10 @@ class BreakdownManager(object):
             return []
 
         result = self.get_published_files_for_items(
-            [item], data_retriever=data_retriever, extra_fields=extra_fields
+            [item],
+            data_retriever=data_retriever,
+            extra_fields=extra_fields,
+            bg_task_manager=bg_task_manager,
         )
         if result and isinstance(result, list):
             item.latest_published_file = result[0]
@@ -342,6 +378,19 @@ class BreakdownManager(object):
 
         if not isinstance(items, list):
             items = [items]
+
+        if self._bundle.get_setting("flow_integration"):
+            try:
+                return self._bundle.execute_hook_method(
+                    "hook_scene_operations",
+                    "update_to_latest",
+                    items=items,
+                )
+            except Exception as e:
+                self._bundle.logger.error(
+                    f"Failed to execute hook method 'update_to_latest'. {e}"
+                )
+                return []
 
         # First try to execute the hook method to update items in batch for performance.
         try:
@@ -435,6 +484,14 @@ class BreakdownManager(object):
 
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return False
+
+        if self._bundle.get_setting("flow_integration"):
+            return self._bundle.execute_hook_method(
+                "hook_scene_operations",
+                "update_to_revision",
+                item=item.to_dict(),
+                item_data=sg_data,
+            )
 
         item_dict = item.to_dict()
         item_dict["path"] = sg_data["path"]["local_path"]
