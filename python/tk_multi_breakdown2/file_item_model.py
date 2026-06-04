@@ -694,7 +694,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # all async tasks are complete to reload the model.
             self.stop_timer()
 
-            if not self._app.get_setting("flow_integration"):
+            if not self._app.get_setting("enable_flowam"):
                 # Run the scan scene method in the main thread (not a background task) since this
                 # may cause issues for certain DCCs
                 self.__scene_objects = self._manager.get_scene_objects()
@@ -1192,7 +1192,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         will execute synchronously. For async requests, the background task id will be
         returned, else the published file data will be returned for synchronous requests.
 
-        When flow_integration is enabled, the bg_task_manager is used for async execution
+        When enable_flowam is enabled, the bg_task_manager is used for async execution
         instead of the SG data_retriever, since the data comes from MEDM rather than SG.
 
         :param file_items: The file item objects to get the published file data for.
@@ -1206,7 +1206,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :rtype: str | dict
         """
 
-        if self._app.get_setting("flow_integration"):
+        if self._app.get_setting("enable_flowam"):
             bg = self._bg_task_manager if data_retriever else None
             return self._manager.get_published_files_for_items(
                 file_items, bg_task_manager=bg
@@ -1441,7 +1441,9 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
     # ----------------------------------------------------------------------------------------
     # Background task and Data Retriever callbacks
 
-    def _handle_latest_published_files_result(self, published_file_data):
+    def _handle_latest_published_files_result(
+        self, published_file_data: list[dict]
+    ) -> None:
         """
         Process the latest published files data to update the model.
 
@@ -1547,7 +1549,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             # For MEDM items, the thumbnail path may already be resolved in the stub
             # data. Set it now so it's available when the model items are created.
-            if self._app.get_setting("flow_integration"):
+            if self._app.get_setting("enable_flowam"):
                 for file_item in self.__file_items:
                     thumb = (file_item.sg_data or {}).get("sg_flow_thumbnail_path")
                     if thumb:
@@ -1562,7 +1564,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             )
 
         elif uid == self.__pending_latest_published_files_data_request:
-            # MEDM flow_integration: latest published files came through bg_task_manager
+            # enable_flowam: latest published files came through bg_task_manager
             self.__pending_latest_published_files_data_request = None
             self._handle_latest_published_files_result(
                 result if isinstance(result, list) else []

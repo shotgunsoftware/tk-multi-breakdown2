@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Any, Optional
+
 import sgtk
 from tank.errors import TankHookMethodDoesNotExistError
 
@@ -229,8 +231,12 @@ class BreakdownManager(object):
         return self._bundle.get_setting("history_published_file_filters", [])
 
     def get_latest_published_file(
-        self, item, data_retriever=None, extra_fields=None, bg_task_manager=None
-    ):
+        self,
+        item: FileItem,
+        data_retriever: Optional[Any] = None,
+        extra_fields: Optional[list[str]] = None,
+        bg_task_manager: Optional[Any] = None,
+    ) -> Any:
         """
         Get the latest available published file according to the current item context.
 
@@ -239,7 +245,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with flow_integration, used for async execution.
+        :param bg_task_manager: If provided with enable_flowam, used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: The latest published file as a Flow Production Tracking entity dictionary if the request was
@@ -251,7 +257,7 @@ class BreakdownManager(object):
         if not item or not item.sg_data:
             return None if is_async else {}
 
-        if self._bundle.get_setting("flow_integration"):
+        if self._bundle.get_setting("enable_flowam"):
             result = self._bundle.execute_hook_method(
                 "hook_scene_operations",
                 "get_latest_published_file",
@@ -284,8 +290,12 @@ class BreakdownManager(object):
         return result
 
     def get_published_files_for_items(
-        self, items, data_retriever=None, extra_fields=None, bg_task_manager=None
-    ):
+        self,
+        items: list[FileItem],
+        data_retriever: Optional[Any] = None,
+        extra_fields: Optional[list[str]] = None,
+        bg_task_manager: Optional[Any] = None,
+    ) -> Any:
         """
         Get all published files (history) for the given items.
 
@@ -294,7 +304,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with flow_integration, used for async execution.
+        :param bg_task_manager: If provided with enable_flowam, used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
@@ -307,7 +317,7 @@ class BreakdownManager(object):
         if not items:
             return None if is_async else {}
 
-        if self._bundle.get_setting("flow_integration"):
+        if self._bundle.get_setting("enable_flowam"):
             return self._bundle.execute_hook_method(
                 "hook_scene_operations",
                 "get_published_files_for_items",
@@ -331,8 +341,12 @@ class BreakdownManager(object):
         )
 
     def get_published_file_history(
-        self, item, extra_fields=None, data_retriever=None, bg_task_manager=None
-    ):
+        self,
+        item: FileItem,
+        extra_fields: Optional[list[str]] = None,
+        data_retriever: Optional[Any] = None,
+        bg_task_manager: Optional[Any] = None,
+    ) -> Any:
         """
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
@@ -344,7 +358,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with flow_integration, used for async execution.
+        :param bg_task_manager: If provided with enable_flowam, used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
@@ -379,7 +393,7 @@ class BreakdownManager(object):
         if not isinstance(items, list):
             items = [items]
 
-        if self._bundle.get_setting("flow_integration"):
+        if self._bundle.get_setting("enable_flowam"):
             try:
                 return self._bundle.execute_hook_method(
                     "hook_scene_operations",
@@ -485,7 +499,7 @@ class BreakdownManager(object):
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return False
 
-        if self._bundle.get_setting("flow_integration"):
+        if self._bundle.get_setting("enable_flowam"):
             return self._bundle.execute_hook_method(
                 "hook_scene_operations",
                 "update_to_revision",

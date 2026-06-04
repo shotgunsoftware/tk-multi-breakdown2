@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Any
+
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
@@ -161,7 +163,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             else -1
         )
 
-        if self._app.get_setting("flow_integration"):
+        if self._app.get_setting("enable_flowam"):
             self._load_medm_history(parent_file)
             return
 
@@ -237,7 +239,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         # Set up the methods to call to retrieve the data for the specified role.
         self.set_data_for_role_methods(item, sg_data)
 
-    def _load_medm_history(self, parent_file):
+    def _load_medm_history(self, parent_file: Any) -> None:
         """
         Load published file history from the MEDM integration via hook_scene_operations.
 
@@ -268,7 +270,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
                 self.__on_medm_history_task_failed
             )
 
-    def _populate_medm_items(self, version_list):
+    def _populate_medm_items(self, version_list: list[dict]) -> None:
         """
         Populate the model with history items returned by the MEDM integration.
 
@@ -292,7 +294,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             self._populate_item(item, sg_data)
             self.appendRow(item)
 
-    def __on_medm_history_task_completed(self, uid, group_id, result):
+    def __on_medm_history_task_completed(
+        self, uid: str, group_id: Any, result: Any
+    ) -> None:
         """
         Slot called when the MEDM history background task completes successfully.
 
@@ -318,7 +322,9 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
         self._populate_medm_items(result or [])
 
-    def __on_medm_history_task_failed(self, uid, group_id, msg, stack_trace):
+    def __on_medm_history_task_failed(
+        self, uid: str, group_id: Any, msg: str, stack_trace: str
+    ) -> None:
         """
         Slot called when the MEDM history background task fails.
 

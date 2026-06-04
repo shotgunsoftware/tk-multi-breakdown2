@@ -126,7 +126,7 @@ configuration:
                      create and execute actions.
         default_value: {}
 
-    flow_integration:
+    enable_flowam:
         type: bool
         default_value: False
         description: Set to True to enable the Flow Asset Management integration.
