@@ -284,6 +284,11 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             item = QtGui.QStandardItem()
             item.setData(sg_data, self.SG_DATA_ROLE)
 
+            self._populate_item(item, sg_data)
+
+            # Override the thumbnail set by _populate_item (via role_methods) with
+            # the resolved local path provided by the FlowAM integration, since the
+            # hook does not know about sg_flow_thumbnail_path.
             thumbnail_path = sg_data.get("sg_flow_thumbnail_path")
             if thumbnail_path:
                 item.setData(
@@ -291,7 +296,6 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
                     self.VIEW_ITEM_THUMBNAIL_ROLE,
                 )
 
-            self._populate_item(item, sg_data)
             self.appendRow(item)
 
     def __on_medm_history_task_completed(
