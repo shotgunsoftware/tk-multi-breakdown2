@@ -139,7 +139,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         if not self.parent_entity:
             return False
 
-        # For MEDM items (id is None), compare by revision id
+        # For FlowAM items (id is None), compare by revision id
         parent_revision_id = self.parent_entity.get("sg_flow_revision_id")
         if parent_revision_id is not None:
             return parent_revision_id == history_sg_data.get("sg_flow_revision_id")
@@ -241,7 +241,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
     def _load_medm_history(self, parent_file: Any) -> None:
         """
-        Load published file history from the MEDM integration via hook_scene_operations.
+        Load published file history from the FlowAM integration via hook_scene_operations.
 
         :param parent_file: The parent file item to load history for.
         :type parent_file: FileItem
@@ -272,7 +272,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
 
     def _populate_medm_items(self, version_list: list[dict]) -> None:
         """
-        Populate the model with history items returned by the MEDM integration.
+        Populate the model with history items returned by the FlowAM integration.
 
         :param version_list: List of published file dictionaries.
         :type version_list: list[dict]
@@ -302,7 +302,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         self, uid: str, group_id: Any, result: Any
     ) -> None:
         """
-        Slot called when the MEDM history background task completes successfully.
+        Slot called when the FlowAM history background task completes successfully.
 
         :param uid: The unique id of the task that was completed.
         :param group_id: The group id of the task.
@@ -330,7 +330,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         self, uid: str, group_id: Any, msg: str, stack_trace: str
     ) -> None:
         """
-        Slot called when the MEDM history background task fails.
+        Slot called when the FlowAM history background task fails.
 
         :param uid: The unique id of the task that failed.
         :param group_id: The group id of the task.
@@ -354,7 +354,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             pass
 
         self._app.logger.warning(
-            "Failed to load MEDM history for file item. %s\n%s" % (msg, stack_trace)
+            "Failed to load FlowAM history for file item. %s\n%s" % (msg, stack_trace)
         )
 
     def _set_tooltip(self, item, sg_item):

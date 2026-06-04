@@ -1193,7 +1193,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         returned, else the published file data will be returned for synchronous requests.
 
         When enable_flowam is enabled, the bg_task_manager is used for async execution
-        instead of the SG data_retriever, since the data comes from MEDM rather than SG.
+        instead of the SG data_retriever, since the data comes from FlowAM rather than FPT.
 
         :param file_items: The file item objects to get the published file data for.
         :type file_items: List[FileItem]
@@ -1547,7 +1547,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 self.__scene_objects, result
             )
 
-            # For MEDM items, the thumbnail path may already be resolved in the stub
+            # For FlowAM items, the thumbnail path may already be resolved in the stub
             # data. Set it now so it's available when the model items are created.
             if self._app.get_setting("enable_flowam"):
                 for file_item in self.__file_items:
