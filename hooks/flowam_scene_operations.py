@@ -8,6 +8,14 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from __future__ import annotations
+
+from types import ModuleType
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from tk_multi_breakdown2.api.item import FileItem
+
 import sgtk
 
 HookBaseClass = sgtk.get_hook_baseclass()
@@ -21,7 +29,9 @@ class FlowBreakdownSceneOperations(HookBaseClass):
     across different DCC applications.
     """
 
-    def _get_published_file_type(self, asset, flow_module):
+    def _get_published_file_type(
+        self, asset: Any, flow_module: ModuleType
+    ) -> Optional[dict[str, Any]]:
         """Return a PublishedFileType-shaped stub derived from the asset's type_ids.
 
         Uses the first type_id in asset.type_ids and resolves its display name via
@@ -43,8 +53,11 @@ class FlowBreakdownSceneOperations(HookBaseClass):
         return {"type": "PublishedFileType", "id": None, "code": display_name}
 
     def get_scene_objects_and_publishes(
-        self, manager, published_file_fields, bg_task_manager
-    ):
+        self,
+        manager: Any,
+        published_file_fields: list[str],
+        bg_task_manager: Optional[Any],
+    ) -> tuple[list[dict[str, Any]], Any]:
         """
         Retrieve the scene objects and their associated published files
         using Flow Asset Manager integration.
@@ -161,7 +174,12 @@ class FlowBreakdownSceneOperations(HookBaseClass):
 
         return scene_objects, build_published_file_stubs()
 
-    def get_published_files_for_items(self, items, bg_task_manager=None, **kwargs):
+    def get_published_files_for_items(
+        self,
+        items: list[FileItem],
+        bg_task_manager: Optional[Any] = None,
+        **kwargs: Any,
+    ) -> Any:
         """
         Get all published file revisions for the given items using MEDM.
 
@@ -263,7 +281,12 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             return bg_task_manager.add_task(_fetch_all_versions)
         return _fetch_all_versions()
 
-    def get_latest_published_file(self, item, bg_task_manager=None, **kwargs):
+    def get_latest_published_file(
+        self,
+        item: FileItem,
+        bg_task_manager: Optional[Any] = None,
+        **kwargs: Any,
+    ) -> Any:
         """
         Get the latest published file (revision) for a single item using MEDM.
 
@@ -339,7 +362,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             return bg_task_manager.add_task(_fetch_latest)
         return _fetch_latest()
 
-    def update_to_latest(self, items):
+    def update_to_latest(self, items: list[FileItem]) -> list[FileItem]:
         """Update the given items in the scene.
 
         Args:
@@ -361,7 +384,11 @@ class FlowBreakdownSceneOperations(HookBaseClass):
 
         return items_to_update
 
-    def update_to_revision(self, item, item_data=None):
+    def update_to_revision(
+        self,
+        item: Optional[dict[str, Any]],
+        item_data: Optional[dict[str, Any]] = None,
+    ) -> bool:
         """Update the item to a specific version.
 
         Args:
