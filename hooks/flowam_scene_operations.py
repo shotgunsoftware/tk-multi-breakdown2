@@ -115,8 +115,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                         )
                     except flow_module.FlowError:
                         self.logger.warning(
-                            "No thumbnail path found for revision %s",
-                            dep_info.revision_id,
+                            f"No thumbnail path found for revision {dep_info.revision_id}"
                         )
 
                 entity = None
@@ -220,7 +219,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                         processed_assets[asset_id] = (asset, versions)
                     except flow_module.FlowError:
                         self.logger.warning(
-                            "Failed to query versions for asset %s", asset_id
+                            f"Failed to query versions for asset {asset_id}"
                         )
                         continue
 
@@ -316,12 +315,12 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                 latest_revision = asset.get_latest_revision()
                 if not latest_revision:
                     self.logger.warning(
-                        "No latest revision found for asset %s", asset_id
+                        f"No latest revision found for asset {asset_id}"
                     )
                     return {}
             except flow_module.FlowError as e:
                 self.logger.warning(
-                    "Failed to get latest revision for asset %s: %s", asset_id, e
+                    f"Failed to get latest revision for asset {asset_id}: {e}"
                 )
                 return {}
 
