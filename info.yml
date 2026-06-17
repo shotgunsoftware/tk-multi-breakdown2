@@ -138,6 +138,7 @@ description: "Tools to manage referenced PublishedFiles in your scene."
 requires_shotgun_version: "v8.20.0"
 requires_core_version: "v0.20.6"
 requires_engine_version:
+minimum_python_version: "3.9"
 
 # Supported Engines
 supported_engines:

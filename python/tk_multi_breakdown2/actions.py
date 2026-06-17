@@ -205,7 +205,7 @@ class UpdateToSpecificVersionAction(Action):
         :type model: QtGui.QStandardItemModel
         """
 
-        super(UpdateToSpecificVersionAction, self).__init__(label, [file_item], model)
+        super().__init__(label, [file_item], model)
         self._sg_data = sg_data
 
     @wait_cursor
