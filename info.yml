@@ -126,13 +126,6 @@ configuration:
                      create and execute actions.
         default_value: {}
 
-    enable_flowam:
-        type: bool
-        default_value: False
-        description: Set to True to enable the Flow Asset Management integration.
-                     It requires three functions named `update_to_revision`, `update_to_latest`,
-                     and `get_scene_objects_and_publishes` to be implemented in the scene operations hook.
-
 # The Flow Production Tracking fields this app needs in order to operate correctly
 requires_shotgun_fields:
 # linked_projects.Asset is required for references in multiple Flow Production Tracking projects

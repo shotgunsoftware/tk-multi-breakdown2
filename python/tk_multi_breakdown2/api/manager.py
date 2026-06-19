@@ -245,7 +245,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with enable_flowam, used for async execution.
+        :param bg_task_manager: Used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: The latest published file as a Flow Production Tracking entity dictionary if the request was
@@ -257,7 +257,7 @@ class BreakdownManager(object):
         if not item or not item.sg_data:
             return None if is_async else {}
 
-        if self._bundle.get_setting("enable_flowam"):
+        if self._bundle.context.flow_project_id:
             result = self._bundle.execute_hook_method(
                 "hook_scene_operations",
                 "get_latest_published_file",
@@ -304,7 +304,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with enable_flowam, used for async execution.
+        :param bg_task_manager: Used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
@@ -317,7 +317,7 @@ class BreakdownManager(object):
         if not items:
             return None if is_async else {}
 
-        if self._bundle.get_setting("enable_flowam"):
+        if self._bundle.context.flow_project_id:
             return self._bundle.execute_hook_method(
                 "hook_scene_operations",
                 "get_published_files_for_items",
@@ -358,7 +358,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with enable_flowam, used for async execution.
+        :param bg_task_manager: Used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
@@ -393,7 +393,7 @@ class BreakdownManager(object):
         if not isinstance(items, list):
             items = [items]
 
-        if self._bundle.get_setting("enable_flowam"):
+        if self._bundle.context.flow_project_id:
             try:
                 return self._bundle.execute_hook_method(
                     "hook_scene_operations",
@@ -499,7 +499,7 @@ class BreakdownManager(object):
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return False
 
-        if self._bundle.get_setting("enable_flowam"):
+        if self._bundle.context.flow_project_id:
             return self._bundle.execute_hook_method(
                 "hook_scene_operations",
                 "update_to_revision",

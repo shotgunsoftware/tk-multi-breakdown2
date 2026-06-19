@@ -163,7 +163,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             else -1
         )
 
-        if self._app.get_setting("enable_flowam"):
+        if self._app.context.flow_project_id:
             self._load_medm_history(parent_file)
             return
 
