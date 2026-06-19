@@ -43,3 +43,4 @@ jobs:
     additional_repositories:
     - name: tk-framework-qtwidgets
     - name: tk-framework-shotgunutils
+    tk_core_ref: ticket/sg-43461/migrate-host-base
