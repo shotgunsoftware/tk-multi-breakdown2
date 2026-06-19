@@ -10,8 +10,9 @@
 
 from __future__ import annotations
 
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Optional
+
+from tank_vendor.flow_integration_sdk import exceptions, globals, objects, schema
 
 if TYPE_CHECKING:
     from tk_multi_breakdown2.api.item import FileItem
@@ -30,16 +31,15 @@ class FlowBreakdownSceneOperations(HookBaseClass):
     """
 
     def _get_published_file_type(
-        self, asset: Any, flow_module: ModuleType
+        self, asset: objects.FlowAsset
     ) -> Optional[dict[str, Any]]:
         """Return a PublishedFileType-shaped stub derived from the asset's type_ids.
 
         Uses the first type_id in asset.type_ids and resolves its display name via
-        flow_module.schema.get_schema_display_name. Returns None if no type is available.
+        schema.get_schema_display_name. Returns None if no type is available.
 
         Args:
             asset: A Flow Asset object exposing a type_ids attribute (list of str).
-            flow_module: The imported flow framework module.
         Returns:
             A dict shaped like a SG PublishedFileType entity, or None.
         """
@@ -47,8 +47,8 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             return None
         type_id = asset.type_ids[0]
         try:
-            display_name = flow_module.schema.get_schema_display_name(type_id)
-        except flow_module.FlowError:
+            display_name = schema.get_schema_display_name(type_id)
+        except exceptions.FlowError:
             display_name = type_id
         return {"type": "PublishedFileType", "id": None, "code": display_name}
 
@@ -81,10 +81,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             "=== FlowAM Scene Breakdown: get_scene_objects_and_publishes ==="
         )
 
-        flow_am_fw = self.load_framework("tk-framework-flowam_v1.x.x")
-        flow_module = flow_am_fw.import_module("flow")
-
-        flow_dependencies = flow_module.asset_management.get_dependencies()
+        flow_dependencies = self.parent.flowam.get_dependencies()
 
         scene_objects = [
             {
@@ -108,12 +105,9 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                 thumbnail_path = None
                 if dep_info.revision_id:
                     try:
-                        thumbnail_path = (
-                            flow_module.asset_management.get_thumbnail_file(
-                                dep_info.revision_id
-                            )
-                        )
-                    except flow_module.FlowError:
+                        rev = objects.FlowRevision.get_revision(dep_info.revision_id)
+                        thumbnail_path = rev.get_thumbnail_file()
+                    except exceptions.FlowError:
                         self.logger.warning(
                             f"No thumbnail path found for revision {dep_info.revision_id}"
                         )
@@ -126,18 +120,14 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                         "id": dep_info.asset_id,
                         "name": None,
                     }
-                    revision = flow_module.data.AssetRevision(dep_info.revision_id)
-                    type_comps = revision.find_components(
-                        type_id=flow_module.data.BASE_TYPE_ID
-                    )
+                    revision = objects.FlowRevision.get_revision(dep_info.revision_id)
+                    type_comps = revision.find_components(type_id=globals.BASE_TYPE_ID)
                     type_ids = [c.type_id for c in type_comps]
                     published_file_type = None
                     if type_ids:
                         try:
-                            display_name = flow_module.schema.get_schema_display_name(
-                                type_ids[0]
-                            )
-                        except flow_module.FlowError:
+                            display_name = schema.get_schema_display_name(type_ids[0])
+                        except exceptions.FlowError:
                             display_name = type_ids[0]
                         published_file_type = {
                             "type": "PublishedFileType",
@@ -196,9 +186,6 @@ class FlowBreakdownSceneOperations(HookBaseClass):
         """
 
         def _fetch_all_versions():
-            flow_am_fw = self.load_framework("tk-framework-flowam_v1.x.x")
-            flow_module = flow_am_fw.import_module("flow")
-
             project = self.parent.context.project
             result = []
             processed_assets = {}
@@ -214,34 +201,32 @@ class FlowBreakdownSceneOperations(HookBaseClass):
 
                 if asset_id not in processed_assets:
                     try:
-                        asset = flow_module.data.Asset(asset_id)
+                        asset = objects.FlowAsset(asset_id)
                         versions = list(asset.iterate_versions())
                         processed_assets[asset_id] = (asset, versions)
-                    except flow_module.FlowError:
+                    except exceptions.FlowError:
                         self.logger.warning(
                             f"Failed to query versions for asset {asset_id}"
                         )
                         continue
 
                 asset, versions = processed_assets[asset_id]
-                published_file_type = self._get_published_file_type(asset, flow_module)
+                published_file_type = self._get_published_file_type(asset)
 
                 for version in versions:
                     revision = version.revision
                     local_path = None
                     try:
                         local_path = revision.get_storage_source_path(blob_index)
-                    except flow_module.FlowError:
+                    except exceptions.FlowError:
                         pass
 
                     created_at = version.created_at
 
                     thumbnail_path = None
                     try:
-                        thumbnail_path = (
-                            flow_module.asset_management.get_thumbnail_file(revision.id)
-                        )
-                    except flow_module.FlowError:
+                        thumbnail_path = revision.get_thumbnail_file()
+                    except exceptions.FlowError:
                         self.logger.warning(
                             f"Failed to get thumbnail path for revision {revision.id}"
                         )
@@ -299,9 +284,6 @@ class FlowBreakdownSceneOperations(HookBaseClass):
         """
 
         def _fetch_latest():
-            flow_am_fw = self.load_framework("tk-framework-flowam_v1.x.x")
-            flow_module = flow_am_fw.import_module("flow")
-
             item_data = item.sg_data or {}
             asset_id = item_data.get("sg_flow_asset_id")
             if not asset_id:
@@ -311,25 +293,25 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             blob_index = item_data.get("sg_flow_blob_index", 0)
 
             try:
-                asset = flow_module.data.Asset(asset_id)
+                asset = objects.FlowAsset(asset_id)
                 latest_revision = asset.get_latest_revision()
                 if not latest_revision:
                     self.logger.warning(
                         f"No latest revision found for asset {asset_id}"
                     )
                     return {}
-            except flow_module.FlowError as e:
+            except exceptions.FlowError as e:
                 self.logger.warning(
                     f"Failed to get latest revision for asset {asset_id}: {e}"
                 )
                 return {}
 
-            published_file_type = self._get_published_file_type(asset, flow_module)
+            published_file_type = self._get_published_file_type(asset)
 
             local_path = None
             try:
                 local_path = latest_revision.get_storage_source_path(blob_index)
-            except flow_module.FlowError:
+            except exceptions.FlowError:
                 pass
 
             created_at = asset.created_at
@@ -369,12 +351,9 @@ class FlowBreakdownSceneOperations(HookBaseClass):
         Returns:
             list of file item that were updated
         """
-        flow_am_fw = self.load_framework("tk-framework-flowam_v1.x.x")
-        flow_module = flow_am_fw.import_module("flow")
-
         items_to_update = []
         for file_item in items:
-            res = flow_module.asset_management.update_dependency(
+            res = self.parent.flowam.update_dependency(
                 file_item.sg_data["sg_flow_revision_id"],
                 node_handle=file_item.node_name,
             )
@@ -414,10 +393,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             )
             return False
 
-        flow_am_fw = self.load_framework("tk-framework-flowam_v1.x.x")
-        flow_module = flow_am_fw.import_module("flow")
-
-        do_update = flow_module.asset_management.update_dependency(
+        do_update = self.parent.flowam.update_dependency(
             revision_id=sg_data["sg_flow_revision_id"],
             new_revision_id=item_data["sg_flow_revision_id"],
             node_handle=item.get("node_name"),
