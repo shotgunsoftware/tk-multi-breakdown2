@@ -115,10 +115,11 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                 entity = None
                 published_file_type = None
                 if dep_info.asset_id:
+                    asset_name = objects.FlowAsset(dep_info.asset_id).name
                     entity = {
                         "type": "Asset",
                         "id": dep_info.asset_id,
-                        "name": None,
+                        "name": asset_name,
                     }
                     revision = objects.FlowRevision.get_revision(dep_info.revision_id)
                     type_comps = revision.find_components(type_id=globals.BASE_TYPE_ID)
