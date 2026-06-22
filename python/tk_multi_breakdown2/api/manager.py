@@ -265,6 +265,8 @@ class BreakdownManager(object):
                 bg_task_manager=bg_task_manager,
             )
             if not is_async:
+                if result is None:
+                    result = {}
                 item.latest_published_file = result
             return result
 
@@ -395,7 +397,7 @@ class BreakdownManager(object):
 
         if self._bundle.context.flow_project_id:
             try:
-                return self._bundle.execute_hook_method(
+                items_to_update = self._bundle.execute_hook_method(
                     "hook_scene_operations",
                     "update_to_latest",
                     items=items,
@@ -405,6 +407,20 @@ class BreakdownManager(object):
                     f"Failed to execute hook method 'update_to_latest'. {e}"
                 )
                 return []
+
+            # None means all items were updated
+            if items_to_update is None:
+                items_to_update = items
+
+            updated_items = []
+            for item in items_to_update:
+                sg_data = item.latest_published_file
+                if not sg_data or not sg_data.get("path", {}).get("local_path", None):
+                    continue
+                item.sg_data = sg_data
+                item.path = sg_data["path"]["local_path"]
+                updated_items.append(item)
+            return updated_items
 
         # First try to execute the hook method to update items in batch for performance.
         try:
@@ -500,12 +516,20 @@ class BreakdownManager(object):
             return False
 
         if self._bundle.context.flow_project_id:
-            return self._bundle.execute_hook_method(
+            do_update = self._bundle.execute_hook_method(
                 "hook_scene_operations",
                 "update_to_revision",
                 item=item.to_dict(),
                 item_data=sg_data,
             )
+            if do_update is None:
+                # Default to True if the hook return value was not explictly set
+                do_update = True
+
+            if do_update:
+                item.sg_data = sg_data
+                item.path = sg_data["path"]["local_path"]
+            return do_update
 
         item_dict = item.to_dict()
         item_dict["path"] = sg_data["path"]["local_path"]
