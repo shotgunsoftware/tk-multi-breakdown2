@@ -98,7 +98,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             result = {}
             for dep_info in flow_dependencies:
                 version_number = None
-                created_at = None  # dep_info doesn't have it. Skip for now.
+                created_at = None
                 if dep_info.version_id:
                     version_number = dep_info.version_num
 
@@ -115,16 +115,17 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                 entity = None
                 published_file_type = None
                 if dep_info.asset_id:
-                    asset_name = objects.FlowAsset(dep_info.asset_id).name
+                    asset = objects.FlowAsset(dep_info.asset_id)
                     entity = {
                         "type": "Asset",
                         "id": dep_info.asset_id,
-                        "name": asset_name,
+                        "name": asset.name,
                     }
                     revision = objects.FlowRevision.get_revision(dep_info.revision_id)
                     type_comps = revision.find_components(type_id=globals.BASE_TYPE_ID)
                     type_ids = [c.type_id for c in type_comps]
                     published_file_type = None
+                    created_at = asset.created_at
                     if type_ids:
                         try:
                             display_name = schema.get_schema_display_name(type_ids[0])
@@ -142,14 +143,18 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                     "project": project,
                     "entity": entity,
                     "name": dep_info.component_name or dep_info.node_handle,
+                    "created_at": created_at,
+                    "created_by.HumanUser.name": asset.created_by,
+                    "description": asset.description,
                     "task": None,
+                    "task.Task.sg_status_list": "No Status",
+                    "tags": "No Tags",
                     "published_file_type": published_file_type,
                     "published_file_type.PublishedFileType.code": (
                         published_file_type["code"] if published_file_type else None
                     ),
                     "path": {"local_path": dep_info.file_path},
                     "version_number": version_number,
-                    "created_at": created_at,
                     "sg_flow_revision_id": dep_info.revision_id,
                     "sg_flow_asset_id": dep_info.asset_id,
                     "sg_flow_version_id": dep_info.version_id,
@@ -198,7 +203,6 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                     continue
 
                 name = item_data.get("name")
-                blob_index = item_data.get("sg_flow_blob_index", 0)
 
                 if asset_id not in processed_assets:
                     try:
@@ -206,7 +210,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                         versions = list(asset.iterate_versions())
                         processed_assets[asset_id] = (asset, versions)
                     except exceptions.FlowError:
-                        self.logger.warning(
+                        self.logger.error(
                             f"Failed to query versions for asset {asset_id}"
                         )
                         continue
@@ -216,13 +220,9 @@ class FlowBreakdownSceneOperations(HookBaseClass):
 
                 for version in versions:
                     revision = version.revision
-                    local_path = None
-                    try:
-                        local_path = revision.get_storage_component_path(
-                            component_purpose=globals.SOURCE_PURPOSE
-                        )
-                    except exceptions.FlowError:
-                        pass
+                    local_path = revision.get_storage_component_path(
+                        component_purpose=globals.SOURCE_PURPOSE
+                    )
 
                     created_at = version.created_at
 
@@ -230,7 +230,7 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                     try:
                         thumbnail_path = revision.get_thumbnail_file()
                     except exceptions.FlowError:
-                        self.logger.warning(
+                        self.logger.error(
                             f"Failed to get thumbnail path for revision {revision.id}"
                         )
 
@@ -246,6 +246,8 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                             },
                             "name": name,
                             "task": None,
+                            "task.Task.sg_status_list": "No Status",
+                            "tags": "No Tags",
                             "published_file_type": published_file_type,
                             "published_file_type.PublishedFileType.code": (
                                 published_file_type["code"]
@@ -255,6 +257,8 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                             "path": {"local_path": local_path} if local_path else None,
                             "version_number": version.version_number,
                             "created_at": created_at,
+                            "created_by.HumanUser.name": version.created_by,
+                            "description": revision.comment,
                             "sg_flow_revision_id": revision.id,
                             "sg_flow_asset_id": asset_id,
                             "sg_flow_version_id": version.id,
@@ -290,10 +294,9 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             item_data = item.sg_data or {}
             asset_id = item_data.get("sg_flow_asset_id")
             if not asset_id:
-                return {}
+                raise exceptions.FlowError("No asset ID found for item")
 
             project = self.parent.context.project
-            blob_index = item_data.get("sg_flow_blob_index", 0)
 
             try:
                 asset = objects.FlowAsset(asset_id)
@@ -302,22 +305,20 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                     self.logger.warning(
                         f"No latest revision found for asset {asset_id}"
                     )
-                    return {}
+                    raise exceptions.FlowError(
+                        f"No latest revision found for asset {asset_id}"
+                    )
             except exceptions.FlowError as e:
-                self.logger.warning(
+                self.logger.error(
                     f"Failed to get latest revision for asset {asset_id}: {e}"
                 )
-                return {}
+                raise
 
             published_file_type = self._get_published_file_type(asset)
 
-            local_path = None
-            try:
-                local_path = latest_revision.get_storage_component_path(
-                    component_purpose=globals.SOURCE_PURPOSE
-                )
-            except exceptions.FlowError:
-                pass
+            local_path = latest_revision.get_storage_component_path(
+                component_purpose=globals.SOURCE_PURPOSE
+            )
 
             created_at = asset.created_at
 
@@ -332,6 +333,8 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                 },
                 "name": item_data.get("name"),
                 "task": None,
+                "task.Task.sg_status_list": "No Status",
+                "tags": "No Tags",
                 "published_file_type": published_file_type,
                 "published_file_type.PublishedFileType.code": (
                     published_file_type["code"] if published_file_type else None
@@ -339,6 +342,8 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                 "path": {"local_path": local_path} if local_path else None,
                 "version_number": asset.version_number,
                 "created_at": created_at,
+                "created_by.HumanUser.name": asset.created_by,
+                "description": asset.description,
                 "sg_flow_revision_id": latest_revision.id,
                 "sg_flow_asset_id": asset_id,
                 "sg_flow_version_id": asset.version_id,
