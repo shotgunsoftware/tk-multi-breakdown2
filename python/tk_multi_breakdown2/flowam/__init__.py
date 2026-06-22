@@ -14,4 +14,9 @@ This package provides drop-in replacements for the standard Shotgun-based
 Scene Breakdown models and actions, backed by Flow Asset Management (FlowAM).
 """
 
-from .reference import get_dependencies, update_dependency
+from .reference import (
+    get_dependencies,
+    get_published_file_type,
+    get_scene_objects_and_publishes,
+    update_dependency,
+)

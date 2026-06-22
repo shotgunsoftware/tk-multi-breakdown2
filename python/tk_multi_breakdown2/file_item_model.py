@@ -694,7 +694,12 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # all async tasks are complete to reload the model.
             self.stop_timer()
 
-            if not self._app.context.flow_project_id:
+            if self._app.context.flow_project_id:
+                (
+                    self.__scene_objects,
+                    self.__pending_published_file_data_request,
+                ) = self._app.flowam.get_scene_objects_and_publishes(self._bg_task_manager)
+            else:
                 # Run the scan scene method in the main thread (not a background task) since this
                 # may cause issues for certain DCCs
                 self.__scene_objects = self._manager.get_scene_objects()
@@ -711,17 +716,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                         bg_task_manager=self._bg_task_manager,
                     )
                 )
-            else:
-                (
-                    self.__scene_objects,
-                    self.__pending_published_file_data_request,
-                ) = self._app.execute_hook_method(
-                    "hook_scene_operations",
-                    "get_scene_objects_and_publishes",
-                    manager=self._manager,
-                    published_file_fields=self._published_file_fields,
-                    bg_task_manager=self._bg_task_manager,
-                )
+
         except Exception:
             # Reset on failure to reload
             self.__pending_published_file_data_request = None

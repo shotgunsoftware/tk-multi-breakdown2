@@ -9,6 +9,7 @@
 # not expressly granted therein are reserved by Autodesk, Inc.
 
 from __future__ import annotations
+from typing import Any, Optional
 
 import sgtk
 from tank_vendor.flow_integration_sdk import (
@@ -19,6 +20,27 @@ from tank_vendor.flow_integration_sdk import (
     schema,
     utils,
 )
+
+
+def get_published_file_type(asset: objects.FlowAsset) -> Optional[dict[str, Any]]:
+    """Return a PublishedFileType-shaped stub derived from the asset's type_ids.
+
+    Uses the first type_id in asset.type_ids and resolves its display name via
+    schema.get_schema_display_name. Returns None if no type is available.
+
+    Args:
+        asset: A Flow Asset object exposing a type_ids attribute (list of str).
+    Returns:
+        A dict shaped like a SG PublishedFileType entity, or None.
+    """
+    if not asset or not getattr(asset, "type_ids", None):
+        return None
+    type_id = asset.type_ids[0]
+    try:
+        display_name = schema.get_schema_display_name(type_id)
+    except exceptions.FlowError:
+        display_name = type_id
+    return {"type": "PublishedFileType", "id": None, "code": display_name}
 
 
 def get_dependencies() -> list[dependency.DependencyData]:
@@ -41,6 +63,110 @@ def get_dependencies() -> list[dependency.DependencyData]:
     asset_deps = dep_tree.get_internal_dependencies(top_level=True)
 
     return asset_deps
+
+
+def get_scene_objects_and_publishes(
+    bg_task_manager: Optional[Any],
+) -> tuple[list[dict[str, Any]], Any]:
+    """
+    Retrieve the scene objects and their associated published files
+    using Flow Asset Manager integration.
+
+    Each dependency is mapped to a stub entry shaped like a SG PublishedFile
+    but populated with MEDM data (asset_id, revision_id, version_number, etc.)
+    so the breakdown app can build its file item model and determine statuses.
+
+    Args:
+        manager: The breakdown manager instance, used to get published file fields.
+        published_file_fields: List of PublishedFile field names to query from Shotgun.
+        bg_task_manager: Background task manager for async operations. If None, execute synchronously.
+    Returns:
+        A tuple of (scene_objects, published_file_data) where:
+            - scene_objects is a list of dictionaries with keys: node_name, node_type, path
+            - published_file_data is either a background task id or a dictionary mapping
+              file paths to a stub PublishedFile dict populated with MEDM data.
+    """
+
+    flow_dependencies = get_dependencies()
+
+    scene_objects = [
+        {
+            "node_name": dep_info.node_handle,
+            "node_type": dep_info.node_type,
+            "path": dep_info.file_path,
+        }
+        for dep_info in flow_dependencies
+    ]
+
+    def build_published_file_stubs():
+        result = {}
+        for dep_info in flow_dependencies:
+            version_number = None
+            created_at = None
+            if dep_info.version_id:
+                version_number = dep_info.version_num
+
+            thumbnail_path = None
+            if dep_info.revision_id:
+                rev = objects.FlowRevision.get_revision(dep_info.revision_id)
+                thumbnail_path = rev.get_thumbnail_file()
+
+            entity = None
+            published_file_type = None
+            if dep_info.asset_id:
+                asset = objects.FlowAsset(dep_info.asset_id)
+                entity = {
+                    "type": "Asset",
+                    "id": dep_info.asset_id,
+                    "name": asset.name,
+                }
+                revision = objects.FlowRevision.get_revision(dep_info.revision_id)
+                type_comps = revision.find_components(type_id=globals.BASE_TYPE_ID)
+                type_ids = [c.type_id for c in type_comps]
+                published_file_type = None
+                created_at = asset.created_at
+                if type_ids:
+                    try:
+                        display_name = schema.get_schema_display_name(type_ids[0])
+                    except exceptions.FlowError:
+                        display_name = type_ids[0]
+                    published_file_type = {
+                        "type": "PublishedFileType",
+                        "id": None,
+                        "code": display_name,
+                    }
+
+            stub = {
+                "type": "PublishedFile",
+                "id": None,
+                "project": sgtk.platform.current_engine().context.project,
+                "entity": entity,
+                "name": dep_info.component_name or dep_info.node_handle,
+                "created_at": created_at,
+                "created_by.HumanUser.name": asset.created_by,
+                "description": asset.description,
+                "task": None,
+                "task.Task.sg_status_list": "No Status",
+                "tags": "No Tags",
+                "published_file_type": published_file_type,
+                "published_file_type.PublishedFileType.code": (
+                    published_file_type["code"] if published_file_type else None
+                ),
+                "path": {"local_path": dep_info.file_path},
+                "version_number": version_number,
+                "sg_flow_revision_id": dep_info.revision_id,
+                "sg_flow_asset_id": dep_info.asset_id,
+                "sg_flow_version_id": dep_info.version_id,
+                "sg_flow_blob_index": dep_info.blob_index,
+                "sg_flow_thumbnail_path": thumbnail_path,
+            }
+            result[dep_info.file_path] = stub
+        return result
+
+    if bg_task_manager:
+        return scene_objects, bg_task_manager.add_task(build_published_file_stubs)
+
+    return scene_objects, build_published_file_stubs()
 
 
 def update_dependency(
