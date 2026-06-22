@@ -263,7 +263,7 @@ class BreakdownManager(object):
                 bg_task_manager=bg_task_manager,
             )
             if not is_async:
-                if result is None:
+                if not isinstance(result, dict):
                     result = {}
                 item.latest_published_file = result
             return result
@@ -394,8 +394,8 @@ class BreakdownManager(object):
         if self._bundle.context.flow_project_id:
             items_to_update = self._bundle.flowam.update_to_latest(items)
 
-            # None means all items were updated
-            if items_to_update is None:
+            # None or any non-list result means all items were updated
+            if not isinstance(items_to_update, list):
                 items_to_update = items
 
             updated_items = []
