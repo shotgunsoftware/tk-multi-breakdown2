@@ -107,7 +107,7 @@ def update_dependency(
         return False
 
     # Fetch source component of new revision
-    new_rev.fetch()
+    new_rev.fetch(component_purpose=globals.SOURCE_PURPOSE)
 
     file_seq_comp = new_rev.find_component(
         type_id=schema.get_schema_id(globals.FILE_SEQ_TYPE)
@@ -118,7 +118,9 @@ def update_dependency(
             new_rev.get_storage_dir(), file_seq_comp.properties["fileFormat"]
         )
     else:
-        new_path = new_rev.get_storage_source_path()
+        new_path = new_rev.get_storage_component_path(
+            component_purpose=globals.SOURCE_PURPOSE
+        )
 
     # Get list of top-level asset dependencies in scene
     orig_revision_id = rev.id

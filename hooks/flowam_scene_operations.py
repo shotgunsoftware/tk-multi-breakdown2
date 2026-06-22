@@ -217,7 +217,9 @@ class FlowBreakdownSceneOperations(HookBaseClass):
                     revision = version.revision
                     local_path = None
                     try:
-                        local_path = revision.get_storage_source_path(blob_index)
+                        local_path = revision.get_storage_component_path(
+                            component_purpose=globals.SOURCE_PURPOSE
+                        )
                     except exceptions.FlowError:
                         pass
 
@@ -310,7 +312,9 @@ class FlowBreakdownSceneOperations(HookBaseClass):
 
             local_path = None
             try:
-                local_path = latest_revision.get_storage_source_path(blob_index)
+                local_path = latest_revision.get_storage_component_path(
+                    component_purpose=globals.SOURCE_PURPOSE
+                )
             except exceptions.FlowError:
                 pass
 
