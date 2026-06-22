@@ -394,7 +394,11 @@ class BreakdownManager(object):
         if self._bundle.context.flow_project_id:
             items_to_update = self._bundle.flowam.update_to_latest(items)
 
-            # None or any non-list result means all items were updated
+            # The FlowAM method performs the DCC-side update but does not update the
+            # Python FileItem model data. We do that here so callers always get a
+            # consistent, up-to-date list of updated FileItem objects regardless of
+            # which code path ran. A non-list return (including None) means the hook
+            # chose not to filter, so attempt to update all items.
             if not isinstance(items_to_update, list):
                 items_to_update = items
 
