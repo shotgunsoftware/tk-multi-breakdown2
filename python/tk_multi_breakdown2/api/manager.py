@@ -414,11 +414,11 @@ class BreakdownManager(object):
 
             updated_items = []
             for item in items_to_update:
-                sg_data = item.latest_published_file
-                if not sg_data or not sg_data.get("path", {}).get("local_path", None):
+                data = item.latest_published_file
+                if not data or not data.get("path", {}).get("local_path", None):
                     continue
-                item.sg_data = sg_data
-                item.path = sg_data["path"]["local_path"]
+                item.sg_data = data
+                item.path = data["path"]["local_path"]
                 updated_items.append(item)
             return updated_items
 

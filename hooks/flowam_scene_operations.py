@@ -390,15 +390,15 @@ class FlowBreakdownSceneOperations(HookBaseClass):
             return False
 
         # Validate item structure
-        sg_data = item.get("sg_data") if item else None
-        if not sg_data or not sg_data.get("sg_flow_revision_id"):
+        flowam_data = item.get("sg_data") if item else None
+        if not flowam_data or not flowam_data.get("sg_flow_revision_id"):
             self.logger.warning(
                 "Cannot update to revision: item sg_data is missing or lacks sg_flow_revision_id"
             )
             return False
 
         do_update = self.parent.flowam.update_dependency(
-            revision_id=sg_data["sg_flow_revision_id"],
+            revision_id=flowam_data["sg_flow_revision_id"],
             new_revision_id=item_data["sg_flow_revision_id"],
             node_handle=item.get("node_name"),
         )
