@@ -1349,6 +1349,12 @@ class AppDialog(QtGui.QWidget):
             self._listen_for_events(False)
         try:
             ActionManager.execute_update_to_latest_action(file_items, self._file_model)
+        except Exception as e:
+            QtGui.QMessageBox.critical(
+                None,
+                "Scene Breakdown",
+                "Error: {}".format(e),
+            )
         finally:
             self.__executing_bulk_action = False
             # Turn on event handling if it was on before
