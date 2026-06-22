@@ -258,9 +258,7 @@ class BreakdownManager(object):
             return None if is_async else {}
 
         if self._bundle.context.flow_project_id:
-            result = self._bundle.execute_hook_method(
-                "hook_scene_operations",
-                "get_latest_published_file",
+            result = self._bundle.flowam.get_latest_revision(
                 item=item,
                 bg_task_manager=bg_task_manager,
             )
@@ -320,9 +318,7 @@ class BreakdownManager(object):
             return None if is_async else {}
 
         if self._bundle.context.flow_project_id:
-            return self._bundle.execute_hook_method(
-                "hook_scene_operations",
-                "get_published_files_for_items",
+            return self._bundle.flowam.get_assets_for_items(
                 items=items,
                 bg_task_manager=bg_task_manager,
             )
@@ -396,17 +392,7 @@ class BreakdownManager(object):
             items = [items]
 
         if self._bundle.context.flow_project_id:
-            try:
-                items_to_update = self._bundle.execute_hook_method(
-                    "hook_scene_operations",
-                    "update_to_latest",
-                    items=items,
-                )
-            except Exception as e:
-                self._bundle.logger.error(
-                    f"Failed to execute hook method 'update_to_latest'. {e}"
-                )
-                return []
+            items_to_update = self._bundle.flowam.update_to_latest(items)
 
             # None means all items were updated
             if items_to_update is None:
@@ -516,9 +502,7 @@ class BreakdownManager(object):
             return False
 
         if self._bundle.context.flow_project_id:
-            do_update = self._bundle.execute_hook_method(
-                "hook_scene_operations",
-                "update_to_revision",
+            do_update = self._bundle.flowam.update_to_revision(
                 item=item.to_dict(),
                 item_data=sg_data,
             )

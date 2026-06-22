@@ -15,8 +15,9 @@ Scene Breakdown models and actions, backed by Flow Asset Management (FlowAM).
 """
 
 from .reference import (
-    get_dependencies,
-    get_published_file_type,
-    get_scene_objects_and_publishes,
-    update_dependency,
+    get_assets_for_items,
+    get_latest_revision,
+    get_scene_objects,
+    update_to_latest,
+    update_to_revision,
 )

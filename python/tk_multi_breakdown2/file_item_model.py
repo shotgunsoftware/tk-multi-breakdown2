@@ -698,7 +698,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
                 (
                     self.__scene_objects,
                     self.__pending_published_file_data_request,
-                ) = self._app.flowam.get_scene_objects_and_publishes(self._bg_task_manager)
+                ) = self._app.flowam.get_scene_objects(self._bg_task_manager)
             else:
                 # Run the scan scene method in the main thread (not a background task) since this
                 # may cause issues for certain DCCs
