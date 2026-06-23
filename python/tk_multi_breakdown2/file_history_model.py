@@ -66,6 +66,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         ShotgunModel.__init__(self, parent, bg_task_manager=bg_task_manager)
 
         self._app = sgtk.platform.current_bundle()
+        self._engine = sgtk.platform.current_engine()
         self.__manager = self._app.create_breakdown_manager()
         self.__bg_task_manager = bg_task_manager
         self.__pending_medm_history_task = None
@@ -163,7 +164,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             else -1
         )
 
-        if self._app.get_setting("enable_flowam"):
+        if self._app.context.flow_project_id and self._engine.flow_host:
             self._load_medm_history(parent_file)
             return
 

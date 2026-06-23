@@ -24,6 +24,8 @@ class BreakdownManager(object):
         """Initialize the manager."""
 
         self._bundle = bundle
+        _engine = sgtk.platform.current_engine()
+        self._flow_host = _engine.flow_host if _engine else None
 
     @sgtk.LogManager.log_timing
     def get_scene_objects(self, execute_in_main_thread=True):
@@ -245,7 +247,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with enable_flowam, used for async execution.
+        :param bg_task_manager: Used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: The latest published file as a Flow Production Tracking entity dictionary if the request was
@@ -257,14 +259,14 @@ class BreakdownManager(object):
         if not item or not item.sg_data:
             return None if is_async else {}
 
-        if self._bundle.get_setting("enable_flowam"):
-            result = self._bundle.execute_hook_method(
-                "hook_scene_operations",
-                "get_latest_published_file",
+        if self._bundle.context.flow_project_id and self._flow_host:
+            result = self._bundle.flowam.get_latest_revision(
                 item=item,
                 bg_task_manager=bg_task_manager,
             )
             if not is_async:
+                if not isinstance(result, dict):
+                    result = {}
                 item.latest_published_file = result
             return result
 
@@ -304,7 +306,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with enable_flowam, used for async execution.
+        :param bg_task_manager: Used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
@@ -317,10 +319,8 @@ class BreakdownManager(object):
         if not items:
             return None if is_async else {}
 
-        if self._bundle.get_setting("enable_flowam"):
-            return self._bundle.execute_hook_method(
-                "hook_scene_operations",
-                "get_published_files_for_items",
+        if self._bundle.context.flow_project_id and self._flow_host:
+            return self._bundle.flowam.get_assets_for_items(
                 items=items,
                 bg_task_manager=bg_task_manager,
             )
@@ -358,7 +358,7 @@ class BreakdownManager(object):
         :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
-        :param bg_task_manager: If provided with enable_flowam, used for async execution.
+        :param bg_task_manager: Used for async execution.
         :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
@@ -393,18 +393,26 @@ class BreakdownManager(object):
         if not isinstance(items, list):
             items = [items]
 
-        if self._bundle.get_setting("enable_flowam"):
-            try:
-                return self._bundle.execute_hook_method(
-                    "hook_scene_operations",
-                    "update_to_latest",
-                    items=items,
-                )
-            except Exception as e:
-                self._bundle.logger.error(
-                    f"Failed to execute hook method 'update_to_latest'. {e}"
-                )
-                return []
+        if self._bundle.context.flow_project_id and self._flow_host:
+            items_to_update = self._bundle.flowam.update_to_latest(items)
+
+            # The FlowAM method performs the DCC-side update but does not update the
+            # Python FileItem model data. We do that here so callers always get a
+            # consistent, up-to-date list of updated FileItem objects regardless of
+            # which code path ran. A non-list return (including None) means the hook
+            # chose not to filter, so attempt to update all items.
+            if not isinstance(items_to_update, list):
+                items_to_update = items
+
+            updated_items = []
+            for item in items_to_update:
+                data = item.latest_published_file
+                if not data or not data.get("path", {}).get("local_path", None):
+                    continue
+                item.sg_data = data
+                item.path = data["path"]["local_path"]
+                updated_items.append(item)
+            return updated_items
 
         # First try to execute the hook method to update items in batch for performance.
         try:
@@ -499,13 +507,19 @@ class BreakdownManager(object):
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return False
 
-        if self._bundle.get_setting("enable_flowam"):
-            return self._bundle.execute_hook_method(
-                "hook_scene_operations",
-                "update_to_revision",
+        if self._bundle.context.flow_project_id and self._flow_host:
+            do_update = self._bundle.flowam.update_to_revision(
                 item=item.to_dict(),
                 item_data=sg_data,
             )
+            if do_update is None:
+                # Default to True if the hook return value was not explictly set
+                do_update = True
+
+            if do_update:
+                item.sg_data = sg_data
+                item.path = sg_data["path"]["local_path"]
+            return do_update
 
         item_dict = item.to_dict()
         item_dict["path"] = sg_data["path"]["local_path"]
