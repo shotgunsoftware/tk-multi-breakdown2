@@ -24,7 +24,8 @@ class BreakdownManager(object):
         """Initialize the manager."""
 
         self._bundle = bundle
-        self._engine = sgtk.platform.current_engine()
+        _engine = sgtk.platform.current_engine()
+        self._flow_host = _engine.flow_host if _engine else None
 
     @sgtk.LogManager.log_timing
     def get_scene_objects(self, execute_in_main_thread=True):
@@ -258,7 +259,7 @@ class BreakdownManager(object):
         if not item or not item.sg_data:
             return None if is_async else {}
 
-        if self._bundle.context.flow_project_id and self._engine.flow_host:
+        if self._bundle.context.flow_project_id and self._flow_host:
             result = self._bundle.flowam.get_latest_revision(
                 item=item,
                 bg_task_manager=bg_task_manager,
@@ -318,7 +319,7 @@ class BreakdownManager(object):
         if not items:
             return None if is_async else {}
 
-        if self._bundle.context.flow_project_id and self._engine.flow_host:
+        if self._bundle.context.flow_project_id and self._flow_host:
             return self._bundle.flowam.get_assets_for_items(
                 items=items,
                 bg_task_manager=bg_task_manager,
@@ -392,7 +393,7 @@ class BreakdownManager(object):
         if not isinstance(items, list):
             items = [items]
 
-        if self._bundle.context.flow_project_id and self._engine.flow_host:
+        if self._bundle.context.flow_project_id and self._flow_host:
             items_to_update = self._bundle.flowam.update_to_latest(items)
 
             # The FlowAM method performs the DCC-side update but does not update the
@@ -506,7 +507,7 @@ class BreakdownManager(object):
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return False
 
-        if self._bundle.context.flow_project_id and self._engine.flow_host:
+        if self._bundle.context.flow_project_id and self._flow_host:
             do_update = self._bundle.flowam.update_to_revision(
                 item=item.to_dict(),
                 item_data=sg_data,
