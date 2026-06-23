@@ -13,9 +13,7 @@
 #
 [run]
 source=.
-omit =
-    tests/*
-    python/flowam/*
+omit=tests/*
 
 [report]
 exclude_lines =
