@@ -694,7 +694,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # all async tasks are complete to reload the model.
             self.stop_timer()
 
-            if self._app.context.flow_project_id:
+            if self._app.context.flow_project_id and self._app.flow_host:
                 (
                     self.__scene_objects,
                     self.__pending_published_file_data_request,
@@ -1201,7 +1201,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :rtype: str | dict
         """
 
-        if self._app.context.flow_project_id:
+        if self._app.context.flow_project_id and self._app.flow_host:
             bg = self._bg_task_manager if data_retriever else None
             return self._manager.get_published_files_for_items(
                 file_items, bg_task_manager=bg
@@ -1544,7 +1544,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
 
             # For FlowAM items, the thumbnail path may already be resolved in the stub
             # data. Set it now so it's available when the model items are created.
-            if self._app.context.flow_project_id:
+            if self._app.context.flow_project_id and self._app.flow_host:
                 for file_item in self.__file_items:
                     thumb = (file_item.sg_data or {}).get("sg_flow_thumbnail_path")
                     if thumb:

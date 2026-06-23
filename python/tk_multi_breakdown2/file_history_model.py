@@ -163,7 +163,7 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             else -1
         )
 
-        if self._app.context.flow_project_id:
+        if self._app.context.flow_project_id and self._app.flow_host:
             self._load_medm_history(parent_file)
             return
 
