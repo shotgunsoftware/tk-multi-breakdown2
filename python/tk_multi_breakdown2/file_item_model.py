@@ -695,7 +695,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
             # all async tasks are complete to reload the model.
             self.stop_timer()
 
-            if self._app.context.flow_project_id and self._engine.flow_host:
+            if self._app.flowam_available:
                 (
                     self.__scene_objects,
                     self.__pending_published_file_data_request,
@@ -1202,7 +1202,7 @@ class FileTreeItemModel(QtCore.QAbstractItemModel, ViewItemRolesMixin):
         :rtype: str | dict
         """
 
-        if self._app.context.flow_project_id and self._engine.flow_host:
+        if self._app.flowam_available:
             bg = self._bg_task_manager if data_retriever else None
             return self._manager.get_published_files_for_items(
                 file_items, bg_task_manager=bg

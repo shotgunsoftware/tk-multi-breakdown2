@@ -259,7 +259,7 @@ class BreakdownManager(object):
         if not item or not item.sg_data:
             return None if is_async else {}
 
-        if self._bundle.context.flow_project_id and self._flow_host:
+        if self._bundle.flowam_available:
             result = self._bundle.flowam.get_latest_revision(
                 item=item,
                 bg_task_manager=bg_task_manager,
@@ -319,7 +319,7 @@ class BreakdownManager(object):
         if not items:
             return None if is_async else {}
 
-        if self._bundle.context.flow_project_id and self._flow_host:
+        if self._bundle.flowam_available:
             return self._bundle.flowam.get_assets_for_items(
                 items=items,
                 bg_task_manager=bg_task_manager,
@@ -393,7 +393,7 @@ class BreakdownManager(object):
         if not isinstance(items, list):
             items = [items]
 
-        if self._bundle.context.flow_project_id and self._flow_host:
+        if self._bundle.flowam_available:
             items_to_update = self._bundle.flowam.update_to_latest(items)
 
             # The FlowAM method performs the DCC-side update but does not update the
@@ -435,7 +435,7 @@ class BreakdownManager(object):
         :param items: The item or items to update.
         :type items: FileItem | List[FileItem]
 
-        :return: The list of file item objectggs that were updated to the latest version.
+        :return: The list of file item objects that were updated to the latest version.
         :rtype: List[FileItem]
         """
 
@@ -507,7 +507,7 @@ class BreakdownManager(object):
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return False
 
-        if self._bundle.context.flow_project_id and self._flow_host:
+        if self._bundle.flowam_available:
             do_update = self._bundle.flowam.update_to_revision(
                 item=item.to_dict(),
                 item_data=sg_data,
