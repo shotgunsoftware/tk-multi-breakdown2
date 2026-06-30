@@ -872,8 +872,7 @@ class AppDialog(QtGui.QWidget):
             # passed in references the file history item.
             if isinstance(index.model(), QtGui.QSortFilterProxyModel):
                 index = index.model().mapToSource(index)
-            history_item = index.model().itemFromIndex(index)
-            sg_data = history_item.get_sg_data()
+            sg_data = index.data(FileHistoryModel.SG_DATA_ROLE)
 
             update_action = ActionManager.add_update_to_specific_version_action(
                 file_item_to_update, self._file_model, sg_data, None
@@ -1350,6 +1349,12 @@ class AppDialog(QtGui.QWidget):
             self._listen_for_events(False)
         try:
             ActionManager.execute_update_to_latest_action(file_items, self._file_model)
+        except Exception as e:
+            QtGui.QMessageBox.critical(
+                None,
+                "Scene Breakdown",
+                "Error: {}".format(e),
+            )
         finally:
             self.__executing_bulk_action = False
             # Turn on event handling if it was on before

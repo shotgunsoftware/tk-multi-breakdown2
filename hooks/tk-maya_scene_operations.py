@@ -23,6 +23,8 @@ class BreakdownSceneOperations(HookBaseClass):
     This implementation handles detection of maya references and file texture nodes.
     """
 
+    __callback_ids = []
+
     def scan_scene(self):
         """
         The scan scene method is executed once at startup and its purpose is
@@ -104,7 +106,6 @@ class BreakdownSceneOperations(HookBaseClass):
             self.logger.debug(
                 "File Texture %s: Updating to version %s" % (node_name, path)
             )
-            file_name = cmds.getAttr("%s.fileTextureName" % node_name)
             cmds.setAttr("%s.fileTextureName" % node_name, path, type="string")
 
     def register_scene_change_callback(self, scene_change_callback):
@@ -151,4 +152,7 @@ class BreakdownSceneOperations(HookBaseClass):
         """Unregister the scene change callbacks by disconnecting any signals."""
 
         for callback_id in self.__callback_ids:
-            OpenMaya.MSceneMessage.removeCallback(callback_id)
+            try:
+                OpenMaya.MSceneMessage.removeCallback(callback_id)
+            except RuntimeError:
+                pass

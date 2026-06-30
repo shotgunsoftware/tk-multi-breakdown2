@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from types import ModuleType
+
 import sgtk
 
 
@@ -21,6 +23,7 @@ class SceneBreakdown2(sgtk.platform.Application):
         """Called as the application is being initialized."""
 
         tk_multi_breakdown2 = self.import_module("tk_multi_breakdown2")
+        self._flowam = tk_multi_breakdown2.flowam
 
         # Store a reference to manager class to expose its functionality at the application level.
         self._manager_class = tk_multi_breakdown2.BreakdownManager
@@ -141,3 +144,28 @@ class SceneBreakdown2(sgtk.platform.Application):
         elif dialog == self._current_panel:
             self.log_debug("Current panel has been closed, clearing reference.")
             self._current_panel = None
+
+    @property
+    def flowam_available(self) -> bool:
+        """
+        Returns True if FlowAM integration is available in the running core.
+
+        :returns: True if FlowAM integration is available, False otherwise
+        :rtype: bool
+        """
+        return (
+            getattr(self.context, "flow_project_id", None) is not None
+            and getattr(sgtk.platform.current_engine(), "flow_host", None) is not None
+        )
+
+    @property
+    def flowam(self) -> ModuleType:
+        """
+        Access to the FlowAM integration module for this app. This module provides
+        drop-in replacements for the standard Shotgun-based Scene Breakdown models and actions,
+        backed by Flow Asset Management (FlowAM).
+
+        :returns: The FlowAM integration module for this app
+        :rtype: :mod:`tk_multi_breakdown2.flowam`
+        """
+        return self._flowam

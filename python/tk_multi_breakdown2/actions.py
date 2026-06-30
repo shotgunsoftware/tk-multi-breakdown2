@@ -58,7 +58,7 @@ class ActionManager(object):
         :rtype: QtGui.QAction
         """
 
-        if not sg_data.get("version_number"):
+        if sg_data.get("version_number") is None:
             return
 
         action = UpdateToSpecificVersionAction(
@@ -186,6 +186,7 @@ class UpdateToLatestVersionAction(Action):
                 index,
                 [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
             )
+        self._model.reload()
 
 
 class UpdateToSpecificVersionAction(Action):
@@ -226,3 +227,4 @@ class UpdateToSpecificVersionAction(Action):
                 index,
                 [self._model.FILE_ITEM_ROLE, self._model.FILE_ITEM_SG_DATA_ROLE],
             )
+            self._model.reload()
