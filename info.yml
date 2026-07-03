@@ -126,7 +126,7 @@ configuration:
                      create and execute actions.
         default_value: {}
 
-# The Flow Production Tracking fields that this app needs in order to operate correctly
+# The Flow Production Tracking fields this app needs in order to operate correctly
 requires_shotgun_fields:
 # linked_projects.Asset is required for references in multiple Flow Production Tracking projects
 

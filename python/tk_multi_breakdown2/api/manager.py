@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Any, Optional
+
 import sgtk
 from tank.errors import TankHookMethodDoesNotExistError
 
@@ -22,6 +24,8 @@ class BreakdownManager(object):
         """Initialize the manager."""
 
         self._bundle = bundle
+        _engine = sgtk.platform.current_engine()
+        self._flow_host = _engine.flow_host if _engine else None
 
     @sgtk.LogManager.log_timing
     def get_scene_objects(self, execute_in_main_thread=True):
@@ -228,22 +232,43 @@ class BreakdownManager(object):
 
         return self._bundle.get_setting("history_published_file_filters", [])
 
-    def get_latest_published_file(self, item, data_retriever=None, extra_fields=None):
+    def get_latest_published_file(
+        self,
+        item: FileItem,
+        data_retriever: Optional[Any] = None,
+        extra_fields: Optional[list[str]] = None,
+        bg_task_manager: Optional[Any] = None,
+    ) -> Any:
         """
         Get the latest available published file according to the current item context.
 
         :param item: :class`FileItem` object we want to get the latest published file
         :type item: FileItem
-        :param data_retreiver: If provided, the api request will be async. The default value
+        :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
+        :param bg_task_manager: Used for async execution.
+        :type bg_task_manager: BackgroundTaskManager
 
         :return: The latest published file as a Flow Production Tracking entity dictionary if the request was
             synchronous, else the request background task id if the request was async.
         """
 
+        is_async = data_retriever or bg_task_manager
+
         if not item or not item.sg_data:
-            return None if data_retriever else {}
+            return None if is_async else {}
+
+        if self._bundle.flowam_available:
+            result = self._bundle.flowam.get_latest_revision(
+                item=item,
+                bg_task_manager=bg_task_manager,
+            )
+            if not is_async:
+                if not isinstance(result, dict):
+                    result = {}
+                item.latest_published_file = result
+            return result
 
         fields = self.get_published_file_fields()
         if extra_fields:
@@ -267,24 +292,38 @@ class BreakdownManager(object):
         return result
 
     def get_published_files_for_items(
-        self, items, data_retriever=None, extra_fields=None
-    ):
+        self,
+        items: list[FileItem],
+        data_retriever: Optional[Any] = None,
+        extra_fields: Optional[list[str]] = None,
+        bg_task_manager: Optional[Any] = None,
+    ) -> Any:
         """
         Get all published files (history) for the given items.
 
         :param items: the list of :class`FileItem` we want to get published files for.
         :type items: List[FileItem]
-        :param data_retreiver: If provided, the api request will be async. The default value
+        :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
+        :param bg_task_manager: Used for async execution.
+        :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
             published file data result from the api request.
         :rtype: str | dict
         """
 
+        is_async = data_retriever or bg_task_manager
+
         if not items:
-            return None if data_retriever else {}
+            return None if is_async else {}
+
+        if self._bundle.flowam_available:
+            return self._bundle.flowam.get_assets_for_items(
+                items=items,
+                bg_task_manager=bg_task_manager,
+            )
 
         fields = self.get_published_file_fields()
         if extra_fields:
@@ -301,7 +340,13 @@ class BreakdownManager(object):
             published_file_filters=filters,
         )
 
-    def get_published_file_history(self, item, extra_fields=None, data_retriever=None):
+    def get_published_file_history(
+        self,
+        item: FileItem,
+        extra_fields: Optional[list[str]] = None,
+        data_retriever: Optional[Any] = None,
+        bg_task_manager: Optional[Any] = None,
+    ) -> Any:
         """
         Get the published history for the selected item. It will gather all the published files with the same context
         than the current item (project, name, task, ...)
@@ -310,9 +355,11 @@ class BreakdownManager(object):
         :type item: FileItem
         :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.
         :type extra_fields: List[str]
-        :param data_retreiver: If provided, the api request will be async. The default value
+        :param data_retriever: If provided, the api request will be async. The default value
             will execute the api request synchronously.
         :type data_retriever: ShotgunDataRetriever
+        :param bg_task_manager: Used for async execution.
+        :type bg_task_manager: BackgroundTaskManager
 
         :return: If the request is async, then the request task id is returned, else the
             published file history.
@@ -323,7 +370,10 @@ class BreakdownManager(object):
             return []
 
         result = self.get_published_files_for_items(
-            [item], data_retriever=data_retriever, extra_fields=extra_fields
+            [item],
+            data_retriever=data_retriever,
+            extra_fields=extra_fields,
+            bg_task_manager=bg_task_manager,
         )
         if result and isinstance(result, list):
             item.latest_published_file = result[0]
@@ -342,6 +392,27 @@ class BreakdownManager(object):
 
         if not isinstance(items, list):
             items = [items]
+
+        if self._bundle.flowam_available:
+            items_to_update = self._bundle.flowam.update_to_latest(items)
+
+            # The FlowAM method performs the DCC-side update but does not update the
+            # Python FileItem model data. We do that here so callers always get a
+            # consistent, up-to-date list of updated FileItem objects regardless of
+            # which code path ran. A non-list return (including None) means the hook
+            # chose not to filter, so attempt to update all items.
+            if not isinstance(items_to_update, list):
+                items_to_update = items
+
+            updated_items = []
+            for item in items_to_update:
+                data = item.latest_published_file
+                if not data or not data.get("path", {}).get("local_path", None):
+                    continue
+                item.sg_data = data
+                item.path = data["path"]["local_path"]
+                updated_items.append(item)
+            return updated_items
 
         # First try to execute the hook method to update items in batch for performance.
         try:
@@ -364,7 +435,7 @@ class BreakdownManager(object):
         :param items: The item or items to update.
         :type items: FileItem | List[FileItem]
 
-        :return: The list of file item objectggs that were updated to the latest version.
+        :return: The list of file item objects that were updated to the latest version.
         :rtype: List[FileItem]
         """
 
@@ -435,6 +506,20 @@ class BreakdownManager(object):
 
         if not sg_data or not sg_data.get("path", {}).get("local_path", None):
             return False
+
+        if self._bundle.flowam_available:
+            do_update = self._bundle.flowam.update_to_revision(
+                item=item.to_dict(),
+                item_data=sg_data,
+            )
+            if do_update is None:
+                # Default to True if the hook return value was not explictly set
+                do_update = True
+
+            if do_update:
+                item.sg_data = sg_data
+                item.path = sg_data["path"]["local_path"]
+            return do_update
 
         item_dict = item.to_dict()
         item_dict["path"] = sg_data["path"]["local_path"]

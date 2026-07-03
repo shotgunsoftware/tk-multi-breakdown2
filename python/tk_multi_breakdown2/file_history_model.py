@@ -8,6 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Autodesk, Inc.
 
+from typing import Any
+
 import sgtk
 from sgtk.platform.qt import QtCore, QtGui
 
@@ -64,7 +66,10 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         ShotgunModel.__init__(self, parent, bg_task_manager=bg_task_manager)
 
         self._app = sgtk.platform.current_bundle()
+        self._engine = sgtk.platform.current_engine()
         self.__manager = self._app.create_breakdown_manager()
+        self.__bg_task_manager = bg_task_manager
+        self.__pending_medm_history_task = None
 
         # Store parent file item data
         self.__parent_sg_data = None
@@ -135,6 +140,11 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         if not self.parent_entity:
             return False
 
+        # For FlowAM items (id is None), compare by revision id
+        parent_revision_id = self.parent_entity.get("sg_flow_revision_id")
+        if parent_revision_id is not None:
+            return parent_revision_id == history_sg_data.get("sg_flow_revision_id")
+
         return self.parent_entity.get("id") == history_sg_data.get("id")
 
     def load_data(self, parent_file):
@@ -153,6 +163,10 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
             if parent_file and parent_file.highest_version_number
             else -1
         )
+
+        if self._app.flowam_available:
+            self._load_medm_history(parent_file)
+            return
 
         fields = self.__manager.get_published_file_fields()
         fields += get_ui_published_file_fields(self._app)
@@ -225,6 +239,124 @@ class FileHistoryModel(ShotgunModel, ViewItemRolesMixin):
         item.setData(badge, self.BADGE_ROLE)
         # Set up the methods to call to retrieve the data for the specified role.
         self.set_data_for_role_methods(item, sg_data)
+
+    def _load_medm_history(self, parent_file: Any) -> None:
+        """
+        Load published file history from the FlowAM integration via hook_scene_operations.
+
+        :param parent_file: The parent file item to load history for.
+        :type parent_file: FileItem
+        """
+
+        self.clear()
+
+        # Cancel any in-flight task
+        if self.__pending_medm_history_task is not None:
+            try:
+                self.__bg_task_manager.stop_task(self.__pending_medm_history_task)
+            except Exception:
+                pass
+            self.__pending_medm_history_task = None
+
+        self.__pending_medm_history_task = self.__manager.get_published_file_history(
+            parent_file,
+            bg_task_manager=self.__bg_task_manager,
+        )
+
+        if self.__bg_task_manager:
+            self.__bg_task_manager.task_completed.connect(
+                self.__on_medm_history_task_completed
+            )
+            self.__bg_task_manager.task_failed.connect(
+                self.__on_medm_history_task_failed
+            )
+
+    def _populate_medm_items(self, version_list: list[dict]) -> None:
+        """
+        Populate the model with history items returned by the FlowAM integration.
+
+        :param version_list: List of published file dictionaries.
+        :type version_list: list[dict]
+        """
+
+        self.clear()
+
+        for sg_data in version_list:
+            item = QtGui.QStandardItem()
+            item.setData(sg_data, self.SG_DATA_ROLE)
+
+            self._populate_item(item, sg_data)
+
+            # Override the thumbnail set by _populate_item (via role_methods) with
+            # the resolved local path provided by the FlowAM integration, since the
+            # hook does not know about sg_flow_thumbnail_path.
+            thumbnail_path = sg_data.get("sg_flow_thumbnail_path")
+            if thumbnail_path:
+                item.setData(
+                    QtGui.QIcon(thumbnail_path),
+                    self.VIEW_ITEM_THUMBNAIL_ROLE,
+                )
+
+            self.appendRow(item)
+
+    def __on_medm_history_task_completed(
+        self, uid: str, group_id: Any, result: Any
+    ) -> None:
+        """
+        Slot called when the FlowAM history background task completes successfully.
+
+        :param uid: The unique id of the task that was completed.
+        :param group_id: The group id of the task.
+        :param result: The result data from the task.
+        """
+
+        if uid != self.__pending_medm_history_task:
+            return
+
+        self.__pending_medm_history_task = None
+
+        try:
+            self.__bg_task_manager.task_completed.disconnect(
+                self.__on_medm_history_task_completed
+            )
+            self.__bg_task_manager.task_failed.disconnect(
+                self.__on_medm_history_task_failed
+            )
+        except Exception:
+            pass
+
+        self._populate_medm_items(result or [])
+
+    def __on_medm_history_task_failed(
+        self, uid: str, group_id: Any, msg: str, stack_trace: str
+    ) -> None:
+        """
+        Slot called when the FlowAM history background task fails.
+
+        :param uid: The unique id of the task that failed.
+        :param group_id: The group id of the task.
+        :param msg: The error message.
+        :param stack_trace: The stack trace of the error.
+        """
+
+        if uid != self.__pending_medm_history_task:
+            return
+
+        self.__pending_medm_history_task = None
+
+        try:
+            self.__bg_task_manager.task_completed.disconnect(
+                self.__on_medm_history_task_completed
+            )
+            self.__bg_task_manager.task_failed.disconnect(
+                self.__on_medm_history_task_failed
+            )
+        except Exception:
+            pass
+
+        self._app.logger.warning(
+            "Failed to load FlowAM history for file item. %s\n%s" % (msg, stack_trace)
+        )
 
     def _set_tooltip(self, item, sg_item):
         """
