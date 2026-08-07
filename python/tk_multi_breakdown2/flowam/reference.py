@@ -482,7 +482,7 @@ def _update_dependency(
         return False
 
     # Fetch source component of new revision
-    new_rev.fetch(component_purpose=globals.SOURCE_PURPOSE)
+    new_rev.fetch(component_purpose=globals.SOURCE_PURPOSE, fetch_dependencies=True)
 
     file_seq_comp = new_rev.find_component(
         type_id=schema.get_schema_id(globals.FILE_SEQ_TYPE)
