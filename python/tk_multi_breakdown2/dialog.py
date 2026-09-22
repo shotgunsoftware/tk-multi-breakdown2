@@ -53,6 +53,9 @@ class AppDialog(QtGui.QWidget):
     DETAILS_PANEL_VISIBILITY_SETTING = "details_panel_visibility"
     SETTINGS_WIDGET_GEOMETRY = "breakdown2_dialog_geometry"
     SPLITTER_STATE = "splitter_state"
+    # Matches the details_panel minimum width set in dialog_ui.py, so the panel is never
+    # shown collapsed down to a sliver that looks like nothing happened.
+    DETAILS_PANEL_MIN_WIDTH = 300
     FILTER_MENU_STATE = "filter_menu_state"
     FILTER_MENU_DOCKED_SETTING = "filter_menu_docked_state"
     GROUP_BY_SETTING = "group_by"
@@ -640,9 +643,10 @@ class AppDialog(QtGui.QWidget):
         if splitter_state:
             self._ui.details_splitter.restoreState(splitter_state)
         else:
-            # Splitter state was not restored, default to set details size to 1 (the min value
-            # to show the details, but will be at a minimal size)
-            self._ui.details_splitter.setSizes([800, 1])
+            # Splitter state was not restored, ensure the details panel defaults to a
+            # width that is actually visible instead of a sliver that looks like
+            # nothing happened.
+            self._ensure_details_panel_min_width()
 
         # Restore the filter menu state
         menu_state = self._settings_manager.retrieve(self.FILTER_MENU_STATE, None)
@@ -888,6 +892,37 @@ class AppDialog(QtGui.QWidget):
         menu.addActions(actions)
         menu.exec_(view.mapToGlobal(pos))
 
+    def _ensure_details_panel_min_width(self):
+        """
+        Ensure the details panel pane of the splitter has at least a usable width.
+
+        The splitter can end up with the details panel collapsed down to a
+        near-zero width (e.g. from an old saved splitter state, since QSplitter
+        allows this programmatically regardless of the widget's minimum size).
+        Take back the missing width from whichever other pane is currently
+        widest, so the details panel is actually visible to the user.
+        """
+
+        splitter = self._ui.details_splitter
+        sizes = splitter.sizes()
+        details_index = splitter.indexOf(self._ui.details_panel)
+        if details_index < 0 or details_index >= len(sizes):
+            return
+
+        if sizes[details_index] >= self.DETAILS_PANEL_MIN_WIDTH:
+            return
+
+        other_indexes = [i for i in range(len(sizes)) if i != details_index]
+        if not other_indexes:
+            return
+
+        deficit = self.DETAILS_PANEL_MIN_WIDTH - sizes[details_index]
+        widest_index = max(other_indexes, key=lambda i: sizes[i])
+
+        sizes[details_index] = self.DETAILS_PANEL_MIN_WIDTH
+        sizes[widest_index] = max(sizes[widest_index] - deficit, 0)
+        splitter.setSizes(sizes)
+
     def _set_details_panel_visibility(self, visible):
         """
         Specifies if the details panel should be visible or not
@@ -900,6 +935,12 @@ class AppDialog(QtGui.QWidget):
         self._ui.details_button.setChecked(visible)
 
         if visible:
+            # The splitter may have collapsed the details panel down to a near-zero
+            # width (e.g. from a previously saved state), in which case just making
+            # the panel visible would not actually show anything to the user. Restore
+            # a usable width in that case.
+            self._ensure_details_panel_min_width()
+
             # Set up the details panel with the current selection.
             selection_model = self._ui.file_view.selectionModel()
             self._setup_details_panel(selection_model.selectedIndexes())
