@@ -642,10 +642,11 @@ class AppDialog(QtGui.QWidget):
 
         if splitter_state:
             self._ui.details_splitter.restoreState(splitter_state)
-        else:
-            # Splitter state was not restored, ensure the details panel defaults to a
-            # width that is actually visible instead of a sliver that looks like
-            # nothing happened.
+
+        if self._details_panel_visible:
+            # This runs after restoring the splitter state (which may have just
+            # restored an old collapsed state) so a visible details panel never
+            # ends up shown as an unusable sliver.
             self._ensure_details_panel_min_width()
 
         # Restore the filter menu state
