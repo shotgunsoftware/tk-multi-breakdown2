@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mari Default hook &mdash; tk-multi-breakdown2 v0.4.5 documentation</title>
+  <title>Mari Default hook &mdash; tk-multi-breakdown2 v0.4.6 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -95,7 +95,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.5.<br>
+    <b>tk-multi-breakdown2</b> v0.4.6.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -144,13 +144,11 @@
 <span class="c1">#</span>
 <span class="c1"># CONFIDENTIAL AND PROPRIETARY</span>
 <span class="c1">#</span>
-<span class="c1"># This work is provided &quot;AS IS&quot; and subject to the Shotgun Pipeline Toolkit</span>
+<span class="c1"># This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit</span>
 <span class="c1"># Source Code License included in this distribution package. See LICENSE.</span>
 <span class="c1"># By accessing, using, copying or modifying this work you indicate your</span>
 <span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
 <span class="c1"># not expressly granted therein are reserved by Autodesk, Inc.</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sgtk</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sgtk</span><span class="w"> </span><span class="kn">import</span> <span class="n">TankError</span>
@@ -161,14 +159,14 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">BreakdownSceneOperations</span><span class="p">(</span><span class="n">HookBaseClass</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Breakdown operations for Mari.</span>
 
 <span class="sd">    This implementation handles detection of mari geometry versions</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The scan scene method is executed once at startup and its purpose is</span>
 <span class="sd">        to analyze the current scene and return a list of references that are</span>
 <span class="sd">        to be potentially operated on.</span>
@@ -176,22 +174,22 @@
 <span class="sd">        The return data structure is a list of dictionaries. Each scene reference</span>
 <span class="sd">        that is returned should be represented by a dictionary with three keys:</span>
 
-<span class="sd">        - &quot;node_name&quot;: The name of the &#39;node&#39; that is to be operated on. Most DCCs have</span>
+<span class="sd">        - "node_name": The name of the 'node' that is to be operated on. Most DCCs have</span>
 <span class="sd">          a concept of a node, path or some other way to address a particular</span>
 <span class="sd">          object in the scene.</span>
-<span class="sd">        - &quot;node_type&quot;: The object type that this is. This is later passed to the</span>
+<span class="sd">        - "node_type": The object type that this is. This is later passed to the</span>
 <span class="sd">          update method so that it knows how to handle the object.</span>
-<span class="sd">        - &quot;path&quot;: Path on disk to the referenced object.</span>
-<span class="sd">        - &quot;extra_data&quot;: Optional key to pass some extra data to the update method</span>
-<span class="sd">          in case we&#39;d like to access them when updating the nodes.</span>
+<span class="sd">        - "path": Path on disk to the referenced object.</span>
+<span class="sd">        - "extra_data": Optional key to pass some extra data to the update method</span>
+<span class="sd">          in case we'd like to access them when updating the nodes.</span>
 
 <span class="sd">        Toolkit will scan the list of items, see if any of the objects matches</span>
 <span class="sd">        a published file and try to determine if there is a more recent version</span>
 <span class="sd">        available. Any such versions are then displayed in the UI as out of date.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">mari</span><span class="o">.</span><span class="n">projects</span><span class="o">.</span><span class="n">current</span><span class="p">():</span>
-            <span class="c1"># can&#39;t do anything if we don&#39;t have an open project!</span>
+            <span class="c1"># can't do anything if we don't have an open project!</span>
             <span class="k">return</span> <span class="p">[]</span>
 
         <span class="c1"># find all geo in the current project using the engine utility method:</span>
@@ -200,7 +198,7 @@
 
         <span class="c1"># now, for all geo, find all versions:</span>
         <span class="n">found_versions</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">geo</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geo&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">all_geo</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">geo</span> <span class="ow">in</span> <span class="p">[</span><span class="n">g</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"geo"</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">all_geo</span><span class="p">]:</span>
 
             <span class="c1"># get all versions for this geo:</span>
             <span class="n">all_geo_versions</span> <span class="o">=</span> <span class="n">mari_engine</span><span class="o">.</span><span class="n">list_geometry_versions</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span>
@@ -208,19 +206,19 @@
             <span class="c1"># now find the publish path for the current version:</span>
             <span class="n">current_version</span> <span class="o">=</span> <span class="n">geo</span><span class="o">.</span><span class="n">currentVersion</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">geo_version</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="p">[</span>
-                <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;geo_version&quot;</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_geo_versions</span>
+                <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">"geo_version"</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_geo_versions</span>
             <span class="p">]:</span>
                 <span class="k">if</span> <span class="n">geo_version</span> <span class="o">==</span> <span class="n">current_version</span><span class="p">:</span>
                     <span class="c1"># found the current version :)</span>
                     <span class="n">found_versions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="p">{</span><span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">geo</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="s2">&quot;geo&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span>
+                        <span class="p">{</span><span class="s2">"node_name"</span><span class="p">:</span> <span class="n">geo</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span> <span class="s2">"node_type"</span><span class="p">:</span> <span class="s2">"geo"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">}</span>
                     <span class="p">)</span>
                     <span class="k">break</span>
 
         <span class="k">return</span> <span class="n">found_versions</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Perform replacements given a number of scene items passed from the app.</span>
 
 <span class="sd">        Once a selection has been performed in the main UI and the user clicks</span>
@@ -228,26 +226,26 @@
 
 <span class="sd">        :param item: Dictionary on the same form as was generated by the scan_scene hook above.</span>
 <span class="sd">                     The path key now holds the path that the node should be updated *to* rather than the current path.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">mari_engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">engine</span>
 
-        <span class="n">node_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">]</span>
-        <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">]</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="n">node_name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"node_name"</span><span class="p">]</span>
+        <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"node_type"</span><span class="p">]</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;geo&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">"geo"</span><span class="p">:</span>
 
             <span class="n">geo</span> <span class="o">=</span> <span class="n">mari</span><span class="o">.</span><span class="n">geo</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">node_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">geo</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">TankError</span><span class="p">(</span>
-                    <span class="s2">&quot;Failed to find geometry &#39;</span><span class="si">%s</span><span class="s2">&#39; in the current project&quot;</span> <span class="o">%</span> <span class="n">node_name</span>
+                    <span class="s2">"Failed to find geometry '</span><span class="si">%s</span><span class="s2">' in the current project"</span> <span class="o">%</span> <span class="n">node_name</span>
                 <span class="p">)</span>
 
             <span class="n">already_loaded</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">all_geo_versions</span> <span class="o">=</span> <span class="n">mari_engine</span><span class="o">.</span><span class="n">list_geometry_versions</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">geo_version</span><span class="p">,</span> <span class="n">geo_path</span> <span class="ow">in</span> <span class="p">[</span>
-                <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;geo_version&quot;</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_geo_versions</span>
+                <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">"geo_version"</span><span class="p">],</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_geo_versions</span>
             <span class="p">]:</span>
                 <span class="k">if</span> <span class="n">geo_path</span> <span class="o">==</span> <span class="n">path</span><span class="p">:</span>
                     <span class="c1"># we already have this version loaded so just set it as current</span>
@@ -257,14 +255,14 @@
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">already_loaded</span><span class="p">:</span>
                 <span class="c1"># add the new version</span>
-                <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="s2">&quot;version_number&quot;</span><span class="p">]</span>
+                <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">,</span> <span class="s2">"version_number"</span><span class="p">]</span>
                 <span class="n">found_publishes</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">sgtk</span><span class="p">,</span> <span class="p">[</span><span class="n">path</span><span class="p">],</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span>
                 <span class="p">)</span>
                 <span class="n">sg_publish_data</span> <span class="o">=</span> <span class="n">found_publishes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_publish_data</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">TankError</span><span class="p">(</span>
-                        <span class="s2">&quot;Failed to find geometry &#39;</span><span class="si">%s</span><span class="s2">&#39; in the current project&quot;</span>
+                        <span class="s2">"Failed to find geometry '</span><span class="si">%s</span><span class="s2">' in the current project"</span>
                         <span class="o">%</span> <span class="n">node_name</span>
                     <span class="p">)</span>
                 <span class="n">new_version</span> <span class="o">=</span> <span class="n">mari_engine</span><span class="o">.</span><span class="n">add_geometry_version</span><span class="p">(</span><span class="n">geo</span><span class="p">,</span> <span class="n">sg_publish_data</span><span class="p">)</span>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Breakdown Hooks &mdash; tk-multi-breakdown2 v0.4.5 documentation</title>
+  <title>Breakdown Hooks &mdash; tk-multi-breakdown2 v0.4.6 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -100,7 +100,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.5.<br>
+    <b>tk-multi-breakdown2</b> v0.4.6.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -351,7 +351,7 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_item_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
     <span class="n">file_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_file_item</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">file_item</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">file_item</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;created_by&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_item</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_by"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">)</span>
 </pre></div>
@@ -364,7 +364,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_title_template_string</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_title_template_string</span><span class="p">,</span> <span class="n">file_item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">file_item</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;created_by&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_item</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"created_by"</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DisplayRole</span><span class="p">)</span>
 </pre></div>

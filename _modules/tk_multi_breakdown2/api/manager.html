@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.4.5 documentation</title>
+  <title>tk_multi_breakdown2.api.manager &mdash; tk-multi-breakdown2 v0.4.6 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -81,7 +81,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.5.<br>
+    <b>tk-multi-breakdown2</b> v0.4.6.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -129,11 +129,13 @@
 <span class="c1">#</span>
 <span class="c1"># CONFIDENTIAL AND PROPRIETARY</span>
 <span class="c1">#</span>
-<span class="c1"># This work is provided &quot;AS IS&quot; and subject to the Shotgun Pipeline Toolkit</span>
+<span class="c1"># This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit</span>
 <span class="c1"># Source Code License included in this distribution package. See LICENSE.</span>
 <span class="c1"># By accessing, using, copying or modifying this work you indicate your</span>
 <span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
 <span class="c1"># not expressly granted therein are reserved by Autodesk, Inc.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sgtk</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tank.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">TankHookMethodDoesNotExistError</span>
@@ -143,16 +145,18 @@
 
 
 <div class="viewcode-block" id="BreakdownManager"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">BreakdownManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class is used for managing and executing file updates.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""This class is used for managing and executing file updates."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bundle</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the manager.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Initialize the manager."""</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span> <span class="o">=</span> <span class="n">bundle</span>
+        <span class="n">_engine</span> <span class="o">=</span> <span class="n">sgtk</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">current_engine</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flow_host</span> <span class="o">=</span> <span class="n">_engine</span><span class="o">.</span><span class="n">flow_host</span> <span class="k">if</span> <span class="n">_engine</span> <span class="k">else</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="BreakdownManager.get_scene_objects"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_scene_objects">[docs]</a>    <span class="nd">@sgtk</span><span class="o">.</span><span class="n">LogManager</span><span class="o">.</span><span class="n">log_timing</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_scene_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">execute_in_main_thread</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get the current scene objects by executing the scan_scene hook method.</span>
 
 <span class="sd">        A list of dictionaries representing the scene references will be returned.</span>
@@ -175,21 +179,21 @@
 
 <span class="sd">        :return: A list of scene references.</span>
 <span class="sd">        :rtype: List[dict]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="n">execute_in_main_thread</span><span class="p">:</span>
             <span class="c1"># Ensure that the scan scene operation is executed in the main UI thread. Many</span>
             <span class="c1"># apps are sensitive to these types of operations happening in other threads.</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">execute_in_main_thread</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">,</span> <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span> <span class="s2">&quot;scan_scene&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">,</span> <span class="s2">"hook_scene_operations"</span><span class="p">,</span> <span class="s2">"scan_scene"</span>
             <span class="p">)</span>
 
         <span class="c1"># Execute in the current thread</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span><span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span> <span class="s2">&quot;scan_scene&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span><span class="s2">"hook_scene_operations"</span><span class="p">,</span> <span class="s2">"scan_scene"</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.scan_scene"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.scan_scene">[docs]</a>    <span class="nd">@sgtk</span><span class="o">.</span><span class="n">LogManager</span><span class="o">.</span><span class="n">log_timing</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">execute_in_main_thread</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Scan the current scene to return a list of scene references.</span>
 
 <span class="sd">        A list of FileItem objects representing the scene references will be returned.</span>
@@ -202,12 +206,12 @@
 
 <span class="sd">        :return: A list of scene references.</span>
 <span class="sd">        :rtype: List[FileItem]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">scene_objects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_scene_objects</span><span class="p">(</span>
             <span class="n">execute_in_main_thread</span><span class="o">=</span><span class="n">execute_in_main_thread</span>
         <span class="p">)</span>
-        <span class="n">file_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">scene_objects</span><span class="p">]</span>
+        <span class="n">file_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">scene_objects</span><span class="p">]</span>
         <span class="n">published_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_published_files_from_file_paths</span><span class="p">(</span>
             <span class="n">file_paths</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="n">extra_fields</span>
         <span class="p">)</span>
@@ -217,7 +221,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_published_files_from_file_paths</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bg_task_manager</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Query the Flow Production Tracking API to get the published files for the given file paths.</span>
 
 <span class="sd">        :param file_paths: A list of file paths to get the published files from.</span>
@@ -232,7 +236,7 @@
 <span class="sd">        :return: The task id for the request is returned if executed async, else the published</span>
 <span class="sd">            files data is returned if executed synchronosly.</span>
 <span class="sd">        :rtype: int | dict</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">file_paths</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">bg_task_manager</span> <span class="k">else</span> <span class="p">{}</span>
@@ -252,9 +256,9 @@
                 <span class="n">sgtk</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_publish</span><span class="p">,</span>
                 <span class="n">task_args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">sgtk</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">],</span>
                 <span class="n">task_kwargs</span><span class="o">=</span><span class="p">{</span>
-                    <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="n">filters</span><span class="p">,</span>
-                    <span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="n">fields</span><span class="p">,</span>
-                    <span class="s2">&quot;only_current_project&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">"filters"</span><span class="p">:</span> <span class="n">filters</span><span class="p">,</span>
+                    <span class="s2">"fields"</span><span class="p">:</span> <span class="n">fields</span><span class="p">,</span>
+                    <span class="s2">"only_current_project"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="p">},</span>
             <span class="p">)</span>
 
@@ -269,7 +273,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_file_items"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_file_items">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_file_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_objects</span><span class="p">,</span> <span class="n">published_files</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get the file item objects for the given scene objects.</span>
 
 <span class="sd">        Scene objects that do not have a corresponding Flow Production Tracking Published File</span>
@@ -297,52 +301,52 @@
 
 <span class="sd">        :return: A list of FileItem objects representing the scene objects.</span>
 <span class="sd">        :rtype: List[FileItem]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">file_items</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">scene_objects</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">published_files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">published_files</span><span class="p">:</span>
                 <span class="n">file_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">FileItem</span><span class="p">(</span>
-                        <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">],</span>
-                        <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">],</span>
-                        <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span>
-                        <span class="n">sg_data</span><span class="o">=</span><span class="n">published_files</span><span class="p">[</span><span class="n">obj</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]],</span>
-                        <span class="n">extra_data</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_data&quot;</span><span class="p">),</span>
-                        <span class="n">locked</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;locked&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-                        <span class="n">loaded</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;loaded&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+                        <span class="n">obj</span><span class="p">[</span><span class="s2">"node_name"</span><span class="p">],</span>
+                        <span class="n">obj</span><span class="p">[</span><span class="s2">"node_type"</span><span class="p">],</span>
+                        <span class="n">obj</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span>
+                        <span class="n">sg_data</span><span class="o">=</span><span class="n">published_files</span><span class="p">[</span><span class="n">obj</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]],</span>
+                        <span class="n">extra_data</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extra_data"</span><span class="p">),</span>
+                        <span class="n">locked</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"locked"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+                        <span class="n">loaded</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"loaded"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">file_items</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_published_file_fields"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_fields">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_published_file_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get the fields to pass to the query to retrieve the published files when scanning the</span>
 <span class="sd">        scene.</span>
 
 <span class="sd">        :return: The published file fields.</span>
 <span class="sd">        :rtype: list&lt;str&gt;</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="n">constants</span><span class="o">.</span><span class="n">PUBLISHED_FILES_FIELDS</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span>
-            <span class="s2">&quot;published_file_fields&quot;</span><span class="p">,</span> <span class="p">[]</span>
+            <span class="s2">"published_file_fields"</span><span class="p">,</span> <span class="p">[]</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_published_file_filters"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_filters">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_published_file_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get additional filters to pass to the query to retrieve the published files when</span>
 <span class="sd">        scanning the scene.</span>
 
 <span class="sd">        :return: The published file filters.</span>
 <span class="sd">        :rtype: List[List[dict]]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;published_file_filters&quot;</span><span class="p">,</span> <span class="p">[])</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">"published_file_filters"</span><span class="p">,</span> <span class="p">[])</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_history_published_file_filters"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_history_published_file_filters">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_history_published_file_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get additional filters to pass to the query to retrieve the history published files</span>
 <span class="sd">        for a given file item.</span>
 
@@ -351,26 +355,47 @@
 
 <span class="sd">        :return: The history published file filters.</span>
 <span class="sd">        :rtype: List[List[dict]]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;history_published_file_filters&quot;</span><span class="p">,</span> <span class="p">[])</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">"history_published_file_filters"</span><span class="p">,</span> <span class="p">[])</span></div>
 
-<div class="viewcode-block" id="BreakdownManager.get_latest_published_file"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">data_retriever</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BreakdownManager.get_latest_published_file"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_latest_published_file">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_latest_published_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item</span><span class="p">:</span> <span class="n">FileItem</span><span class="p">,</span>
+        <span class="n">data_retriever</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">extra_fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bg_task_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get the latest available published file according to the current item context.</span>
 
 <span class="sd">        :param item: :class`FileItem` object we want to get the latest published file</span>
 <span class="sd">        :type item: FileItem</span>
-<span class="sd">        :param data_retreiver: If provided, the api request will be async. The default value</span>
+<span class="sd">        :param data_retriever: If provided, the api request will be async. The default value</span>
 <span class="sd">            will execute the api request synchronously.</span>
 <span class="sd">        :type data_retriever: ShotgunDataRetriever</span>
+<span class="sd">        :param bg_task_manager: Used for async execution.</span>
+<span class="sd">        :type bg_task_manager: BackgroundTaskManager</span>
 
 <span class="sd">        :return: The latest published file as a Flow Production Tracking entity dictionary if the request was</span>
 <span class="sd">            synchronous, else the request background task id if the request was async.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
+
+        <span class="n">is_async</span> <span class="o">=</span> <span class="n">data_retriever</span> <span class="ow">or</span> <span class="n">bg_task_manager</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">data_retriever</span> <span class="k">else</span> <span class="p">{}</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">is_async</span> <span class="k">else</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam_available</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam</span><span class="o">.</span><span class="n">get_latest_revision</span><span class="p">(</span>
+                <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">,</span>
+                <span class="n">bg_task_manager</span><span class="o">=</span><span class="n">bg_task_manager</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_async</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="k">return</span> <span class="n">result</span>
 
         <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_published_file_fields</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">extra_fields</span><span class="p">:</span>
@@ -379,8 +404,8 @@
         <span class="n">filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_history_published_file_filters</span><span class="p">()</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
-            <span class="s2">&quot;hook_get_published_files&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;get_latest_published_file&quot;</span><span class="p">,</span>
+            <span class="s2">"hook_get_published_files"</span><span class="p">,</span>
+            <span class="s2">"get_latest_published_file"</span><span class="p">,</span>
             <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">,</span>
             <span class="n">data_retriever</span><span class="o">=</span><span class="n">data_retriever</span><span class="p">,</span>
             <span class="n">extra_fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span>
@@ -394,24 +419,38 @@
         <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.get_published_files_for_items"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_files_for_items">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_published_files_for_items</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">,</span> <span class="n">data_retriever</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FileItem</span><span class="p">],</span>
+        <span class="n">data_retriever</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">extra_fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bg_task_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get all published files (history) for the given items.</span>
 
 <span class="sd">        :param items: the list of :class`FileItem` we want to get published files for.</span>
 <span class="sd">        :type items: List[FileItem]</span>
-<span class="sd">        :param data_retreiver: If provided, the api request will be async. The default value</span>
+<span class="sd">        :param data_retriever: If provided, the api request will be async. The default value</span>
 <span class="sd">            will execute the api request synchronously.</span>
 <span class="sd">        :type data_retriever: ShotgunDataRetriever</span>
+<span class="sd">        :param bg_task_manager: Used for async execution.</span>
+<span class="sd">        :type bg_task_manager: BackgroundTaskManager</span>
 
 <span class="sd">        :return: If the request is async, then the request task id is returned, else the</span>
 <span class="sd">            published file data result from the api request.</span>
 <span class="sd">        :rtype: str | dict</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
+
+        <span class="n">is_async</span> <span class="o">=</span> <span class="n">data_retriever</span> <span class="ow">or</span> <span class="n">bg_task_manager</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">data_retriever</span> <span class="k">else</span> <span class="p">{}</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">is_async</span> <span class="k">else</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam_available</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam</span><span class="o">.</span><span class="n">get_assets_for_items</span><span class="p">(</span>
+                <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span>
+                <span class="n">bg_task_manager</span><span class="o">=</span><span class="n">bg_task_manager</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_published_file_fields</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">extra_fields</span><span class="p">:</span>
@@ -420,16 +459,22 @@
         <span class="n">filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_history_published_file_filters</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
-            <span class="s2">&quot;hook_get_published_files&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;get_published_files_for_items&quot;</span><span class="p">,</span>
+            <span class="s2">"hook_get_published_files"</span><span class="p">,</span>
+            <span class="s2">"get_published_files_for_items"</span><span class="p">,</span>
             <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span>
             <span class="n">data_retriever</span><span class="o">=</span><span class="n">data_retriever</span><span class="p">,</span>
             <span class="n">extra_fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span>
             <span class="n">published_file_filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="BreakdownManager.get_published_file_history"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_published_file_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_retriever</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BreakdownManager.get_published_file_history"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.get_published_file_history">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_published_file_history</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item</span><span class="p">:</span> <span class="n">FileItem</span><span class="p">,</span>
+        <span class="n">extra_fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">data_retriever</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">bg_task_manager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get the published history for the selected item. It will gather all the published files with the same context</span>
 <span class="sd">        than the current item (project, name, task, ...)</span>
 
@@ -437,27 +482,32 @@
 <span class="sd">        :type item: FileItem</span>
 <span class="sd">        :param extra_fields: A list of Flow Production Tracking fields to append to the Flow Production Tracking query fields.</span>
 <span class="sd">        :type extra_fields: List[str]</span>
-<span class="sd">        :param data_retreiver: If provided, the api request will be async. The default value</span>
+<span class="sd">        :param data_retriever: If provided, the api request will be async. The default value</span>
 <span class="sd">            will execute the api request synchronously.</span>
 <span class="sd">        :type data_retriever: ShotgunDataRetriever</span>
+<span class="sd">        :param bg_task_manager: Used for async execution.</span>
+<span class="sd">        :type bg_task_manager: BackgroundTaskManager</span>
 
 <span class="sd">        :return: If the request is async, then the request task id is returned, else the</span>
 <span class="sd">            published file history.</span>
 <span class="sd">        :rtype: str | dict</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_published_files_for_items</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">item</span><span class="p">],</span> <span class="n">data_retriever</span><span class="o">=</span><span class="n">data_retriever</span><span class="p">,</span> <span class="n">extra_fields</span><span class="o">=</span><span class="n">extra_fields</span>
+            <span class="p">[</span><span class="n">item</span><span class="p">],</span>
+            <span class="n">data_retriever</span><span class="o">=</span><span class="n">data_retriever</span><span class="p">,</span>
+            <span class="n">extra_fields</span><span class="o">=</span><span class="n">extra_fields</span><span class="p">,</span>
+            <span class="n">bg_task_manager</span><span class="o">=</span><span class="n">bg_task_manager</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.update_to_latest_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_to_latest_version">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_to_latest_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the item to its latest version.</span>
 
 <span class="sd">        :param items: The item or items to update.</span>
@@ -465,10 +515,31 @@
 
 <span class="sd">        :return: The list of file item objects that were updated to the latest version.</span>
 <span class="sd">        :rtype: List[FileItem]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">items</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam_available</span><span class="p">:</span>
+            <span class="n">items_to_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam</span><span class="o">.</span><span class="n">update_to_latest</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+            <span class="c1"># The FlowAM method performs the DCC-side update but does not update the</span>
+            <span class="c1"># Python FileItem model data. We do that here so callers always get a</span>
+            <span class="c1"># consistent, up-to-date list of updated FileItem objects regardless of</span>
+            <span class="c1"># which code path ran. A non-list return (including None) means the hook</span>
+            <span class="c1"># chose not to filter, so attempt to update all items.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items_to_update</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">items_to_update</span> <span class="o">=</span> <span class="n">items</span>
+
+            <span class="n">updated_items</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items_to_update</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"local_path"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">data</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"path"</span><span class="p">][</span><span class="s2">"local_path"</span><span class="p">]</span>
+                <span class="n">updated_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">updated_items</span>
 
         <span class="c1"># First try to execute the hook method to update items in batch for performance.</span>
         <span class="k">try</span><span class="p">:</span>
@@ -485,33 +556,33 @@
             <span class="k">return</span> <span class="n">updated_items</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.update_items_to_latest_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_items_to_latest_version">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_items_to_latest_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the list of items to their respective latest version.</span>
 
 <span class="sd">        :param items: The item or items to update.</span>
 <span class="sd">        :type items: FileItem | List[FileItem]</span>
 
-<span class="sd">        :return: The list of file item objectggs that were updated to the latest version.</span>
+<span class="sd">        :return: The list of file item objects that were updated to the latest version.</span>
 <span class="sd">        :rtype: List[FileItem]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">hook_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">)</span>
+        <span class="n">hook_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">"hook_scene_operations"</span><span class="p">)</span>
         <span class="n">scene_operation_hook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">create_hook_instance</span><span class="p">(</span><span class="n">hook_path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">scene_operation_hook</span><span class="p">,</span> <span class="s2">&quot;update_items&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">scene_operation_hook</span><span class="p">,</span> <span class="s2">"update_items"</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">TankHookMethodDoesNotExistError</span>
 
         <span class="c1"># Prepare the items to update</span>
         <span class="n">items_by_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
             <span class="n">sg_data</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;local_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"local_path"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="n">item_dict</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-            <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">][</span><span class="s2">&quot;local_path&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;old_path&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
+            <span class="n">item_dict</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">"path"</span><span class="p">][</span><span class="s2">"local_path"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"old_path"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">][</span><span class="s2">&quot;old_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span>
+                <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">][</span><span class="s2">"old_path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span>
             <span class="n">items_by_dict</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">item_dict</span>
 
         <span class="c1"># No items to update, return empty list to indicate no further action.</span>
@@ -520,8 +591,8 @@
 
         <span class="c1"># Execute the hook to perform the update operation.</span>
         <span class="n">items_to_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
-            <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;update_items&quot;</span><span class="p">,</span>
+            <span class="s2">"hook_scene_operations"</span><span class="p">,</span>
+            <span class="s2">"update_items"</span><span class="p">,</span>
             <span class="n">items</span><span class="o">=</span><span class="n">items_by_dict</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
         <span class="p">)</span>
 
@@ -540,14 +611,14 @@
                 <span class="k">if</span> <span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">items_to_update</span><span class="p">:</span>
                     <span class="k">continue</span>
                 <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">latest_published_file</span>
-                <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
-                <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">]</span>
                 <span class="n">updated_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">updated_items</span></div>
 
 <div class="viewcode-block" id="BreakdownManager.update_to_specific_version"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.BreakdownManager.update_to_specific_version">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_to_specific_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">sg_data</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the item to a specific version.</span>
 
 <span class="sd">        :param item: Item to update</span>
@@ -558,21 +629,35 @@
 <span class="sd">        :return: True if the item requires the data model to update, else False will not</span>
 <span class="sd">            trigger a model update.</span>
 <span class="sd">        :rtype: bool</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;local_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sg_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"local_path"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam_available</span><span class="p">:</span>
+            <span class="n">do_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">flowam</span><span class="o">.</span><span class="n">update_to_revision</span><span class="p">(</span>
+                <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+                <span class="n">item_data</span><span class="o">=</span><span class="n">sg_data</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">do_update</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Default to True if the hook return value was not explictly set</span>
+                <span class="n">do_update</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">do_update</span><span class="p">:</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">sg_data</span>
+                <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">"path"</span><span class="p">][</span><span class="s2">"local_path"</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">do_update</span>
+
         <span class="n">item_dict</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-        <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">][</span><span class="s2">&quot;local_path&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;old_path&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
+        <span class="n">item_dict</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sg_data</span><span class="p">[</span><span class="s2">"path"</span><span class="p">][</span><span class="s2">"local_path"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"old_path"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">][</span><span class="s2">&quot;old_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span>
+            <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">][</span><span class="s2">"old_path"</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span>
 
         <span class="n">do_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle</span><span class="o">.</span><span class="n">execute_hook_method</span><span class="p">(</span>
-            <span class="s2">&quot;hook_scene_operations&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;update&quot;</span><span class="p">,</span>
+            <span class="s2">"hook_scene_operations"</span><span class="p">,</span>
+            <span class="s2">"update"</span><span class="p">,</span>
             <span class="n">item</span><span class="o">=</span><span class="n">item_dict</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">do_update</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -583,8 +668,8 @@
             <span class="c1"># Only update the file item if specified. Updating the item will affect the data</span>
             <span class="c1"># model directly</span>
             <span class="n">item</span><span class="o">.</span><span class="n">sg_data</span> <span class="o">=</span> <span class="n">sg_data</span>
-            <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
-            <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">&quot;extra_data&quot;</span><span class="p">]</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span>
+            <span class="n">item</span><span class="o">.</span><span class="n">extra_data</span> <span class="o">=</span> <span class="n">item_dict</span><span class="p">[</span><span class="s2">"extra_data"</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">do_update</span></div></div>
 </pre></div>

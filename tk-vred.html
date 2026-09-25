@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.4.5 documentation</title>
+  <title>VRED Default hook &mdash; tk-multi-breakdown2 v0.4.6 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
@@ -94,7 +94,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.5.<br>
+    <b>tk-multi-breakdown2</b> v0.4.6.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -143,7 +143,7 @@
 <span class="c1">#</span>
 <span class="c1"># CONFIDENTIAL AND PROPRIETARY</span>
 <span class="c1">#</span>
-<span class="c1"># This work is provided &quot;AS IS&quot; and subject to the Shotgun Pipeline Toolkit</span>
+<span class="c1"># This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit</span>
 <span class="c1"># Source Code License included in this distribution package. See LICENSE.</span>
 <span class="c1"># By accessing, using, copying or modifying this work you indicate your</span>
 <span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
@@ -157,10 +157,10 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">BreakdownSceneOperations</span><span class="p">(</span><span class="n">HookBaseClass</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A hook to perform scene operations in VRED necessary for Breakdown 2 App.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A hook to perform scene operations in VRED necessary for Breakdown 2 App."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class constructor.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Class constructor."""</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -174,7 +174,7 @@
     <span class="c1"># Hook methods</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">scan_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The scan scene method is executed once at startup and its purpose is</span>
 <span class="sd">        to analyze the current scene and return a list of references that are</span>
 <span class="sd">        to be potentially operated on.</span>
@@ -182,19 +182,19 @@
 <span class="sd">        The return data structure is a list of dictionaries. Each scene reference</span>
 <span class="sd">        that is returned should be represented by a dictionary with three keys:</span>
 
-<span class="sd">        - &quot;node_name&quot;: The name of the &#39;node&#39; that is to be operated on. Most DCCs have</span>
+<span class="sd">        - "node_name": The name of the 'node' that is to be operated on. Most DCCs have</span>
 <span class="sd">          a concept of a node, path or some other way to address a particular</span>
 <span class="sd">          object in the scene.</span>
-<span class="sd">        - &quot;node_type&quot;: The object type that this is. This is later passed to the</span>
+<span class="sd">        - "node_type": The object type that this is. This is later passed to the</span>
 <span class="sd">          update method so that it knows how to handle the object.</span>
-<span class="sd">        - &quot;path&quot;: Path on disk to the referenced object.</span>
-<span class="sd">        - &quot;extra_data&quot;: Optional key to pass some extra data to the update method</span>
-<span class="sd">          in case we&#39;d like to access them when updating the nodes.</span>
+<span class="sd">        - "path": Path on disk to the referenced object.</span>
+<span class="sd">        - "extra_data": Optional key to pass some extra data to the update method</span>
+<span class="sd">          in case we'd like to access them when updating the nodes.</span>
 
 <span class="sd">        Toolkit will scan the list of items, see if any of the objects matches</span>
 <span class="sd">        a published file and try to determine if there is a more recent version</span>
 <span class="sd">        available. Any such versions are then displayed in the UI as out of date.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">refs</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -206,32 +206,32 @@
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">hasSmartReference</span><span class="p">():</span>
-                <span class="n">node_type</span> <span class="o">=</span> <span class="s2">&quot;smart_reference&quot;</span>
+                <span class="n">node_type</span> <span class="o">=</span> <span class="s2">"smart_reference"</span>
                 <span class="n">path</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">getSmartPath</span><span class="p">()</span>
             <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">hasSourceReference</span><span class="p">():</span>
-                <span class="n">node_type</span> <span class="o">=</span> <span class="s2">&quot;source_reference&quot;</span>
+                <span class="n">node_type</span> <span class="o">=</span> <span class="s2">"source_reference"</span>
                 <span class="n">path</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">getSourcePath</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">node_type</span> <span class="o">=</span> <span class="s2">&quot;reference&quot;</span>
+                <span class="n">node_type</span> <span class="o">=</span> <span class="s2">"reference"</span>
                 <span class="n">path</span> <span class="o">=</span> <span class="kc">None</span>
 
             <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
                 <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">getName</span><span class="p">(),</span>
-                        <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="n">node_type</span><span class="p">,</span>
-                        <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
-                        <span class="s2">&quot;extra_data&quot;</span><span class="p">:</span> <span class="p">{</span>
-                            <span class="s2">&quot;node_id&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">(),</span>
+                        <span class="s2">"node_name"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">getName</span><span class="p">(),</span>
+                        <span class="s2">"node_type"</span><span class="p">:</span> <span class="n">node_type</span><span class="p">,</span>
+                        <span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+                        <span class="s2">"extra_data"</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">(),</span>
                         <span class="p">},</span>
-                        <span class="s2">&quot;loaded&quot;</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">isLoaded</span><span class="p">(),</span>
+                        <span class="s2">"loaded"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">isLoaded</span><span class="p">(),</span>
                     <span class="p">}</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">refs</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the reference(s) given the item data.</span>
 
 <span class="sd">        A list of items or a single item may be passed to this method.</span>
@@ -241,14 +241,14 @@
 
 <span class="sd">        :return: The items that were updated or True when `item` is a single item.</span>
 <span class="sd">        :rtype: List[dict] | True</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_items</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the references given the item data.</span>
 
 <span class="sd">        :param item: The item data used to perform the reference updates.</span>
@@ -256,7 +256,7 @@
 
 <span class="sd">        :return: The items that were updated.</span>
 <span class="sd">        :rtype: List[dict]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Prepare the items to update</span>
         <span class="n">updated_items</span> <span class="o">=</span> <span class="p">[]</span>
@@ -264,30 +264,30 @@
         <span class="n">smart_refs_to_import</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
             <span class="c1"># Get the current reference from the item data</span>
-            <span class="n">node_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_data&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;node_id&quot;</span><span class="p">)</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extra_data"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_id"</span><span class="p">)</span>
             <span class="n">ref_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_reference_by_id</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">ref_node</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="s2">&quot;Couldn&#39;t get reference node named </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">])</span>
+                    <span class="s2">"Couldn't get reference node named </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"node_name"</span><span class="p">])</span>
                 <span class="p">)</span>
                 <span class="k">continue</span>
             <span class="c1"># Update the current reference based on the item data</span>
-            <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">]</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;source_reference&quot;</span><span class="p">:</span>
+            <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"node_type"</span><span class="p">]</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">"source_reference"</span><span class="p">:</span>
                 <span class="n">new_node_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">ref_node</span><span class="o">.</span><span class="n">setSourcePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
                 <span class="n">ref_node</span><span class="o">.</span><span class="n">setName</span><span class="p">(</span><span class="n">new_node_name</span><span class="p">)</span>
                 <span class="n">refs_to_load</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref_node</span><span class="p">)</span>
                 <span class="n">updated_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;smart_reference&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">"smart_reference"</span><span class="p">:</span>
                 <span class="n">ref_node</span><span class="o">.</span><span class="n">setSmartPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
                 <span class="n">smart_refs_to_import</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref_node</span><span class="p">)</span>
                 <span class="n">updated_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
         <span class="c1"># Update the VRED references based on their reference type being source or smart</span>
         <span class="k">if</span> <span class="n">refs_to_load</span><span class="p">:</span>
-            <span class="n">interactive_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;interactive_update&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">interactive_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">"interactive_update"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__load_source_references</span><span class="p">(</span><span class="n">refs_to_load</span><span class="p">,</span> <span class="n">show_options</span><span class="o">=</span><span class="n">interactive_update</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">smart_refs_to_import</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">reimportSmartReferences</span><span class="p">(</span>
@@ -298,7 +298,7 @@
         <span class="k">return</span> <span class="n">updated_items</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the single reference given item data.</span>
 
 <span class="sd">        :param item: The item data used to perform the reference update.</span>
@@ -306,27 +306,27 @@
 
 <span class="sd">        :return: True if the item was updated, else False.</span>
 <span class="sd">        :rtype: True</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
-        <span class="n">node_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extra_data&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;node_id&quot;</span><span class="p">)</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extra_data"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_id"</span><span class="p">)</span>
         <span class="n">ref_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_reference_by_id</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ref_node</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;Couldn&#39;t get reference node named </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">])</span>
+                <span class="s2">"Couldn't get reference node named </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"node_name"</span><span class="p">])</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">]</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;source_reference&quot;</span><span class="p">:</span>
+        <span class="n">node_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"node_type"</span><span class="p">]</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">"source_reference"</span><span class="p">:</span>
             <span class="n">new_node_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">ref_node</span><span class="o">.</span><span class="n">setSourcePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="n">interactive_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">&quot;interactive_update&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">interactive_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_setting</span><span class="p">(</span><span class="s2">"interactive_update"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__load_source_references</span><span class="p">(</span><span class="n">ref_node</span><span class="p">,</span> <span class="n">show_options</span><span class="o">=</span><span class="n">interactive_update</span><span class="p">)</span>
             <span class="n">ref_node</span><span class="o">.</span><span class="n">setName</span><span class="p">(</span><span class="n">new_node_name</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-        <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">&quot;smart_reference&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node_type</span> <span class="o">==</span> <span class="s2">"smart_reference"</span><span class="p">:</span>
             <span class="n">ref_node</span><span class="o">.</span><span class="n">setSmartPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">reimportSmartReferences</span><span class="p">([</span><span class="n">ref_node</span><span class="p">])</span>
             <span class="k">return</span> <span class="kc">True</span>
@@ -335,7 +335,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">register_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scene_change_callback</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Register the callback such that it is executed on a scene change event.</span>
 
 <span class="sd">        This hook method is useful to reload the breakdown data when the data in the scene has</span>
@@ -346,7 +346,7 @@
 
 <span class="sd">        :param scene_change_callback: The callback to register and execute on scene chagnes.</span>
 <span class="sd">        :type scene_change_callback: function</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># Keep track of the callback so that it can be disconnected later</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span> <span class="o">=</span> <span class="p">(</span>
@@ -357,7 +357,7 @@
         <span class="c1"># based on how the references have cahnged.</span>
         <span class="c1"># NOTE ideally the VRED API would have signals for specific reference change events,</span>
         <span class="c1"># until then, any reference change will trigger a full reload of the app.</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="p">,</span> <span class="s2">&quot;vrScenegraphService&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="p">,</span> <span class="s2">"vrScenegraphService"</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrScenegraphService</span><span class="o">.</span><span class="n">scenegraphChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
             <span class="p">)</span>
@@ -367,10 +367,10 @@
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">unregister_scene_change_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister the scene change callbacks by disconnecting any signals.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Unregister the scene change callbacks by disconnecting any signals."""</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="p">,</span> <span class="s2">&quot;vrScenegraphService&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="p">,</span> <span class="s2">"vrScenegraphService"</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrScenegraphService</span><span class="o">.</span><span class="n">scenegraphChanged</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_on_references_changed_cb</span>
@@ -394,12 +394,12 @@
     <span class="c1"># Private helper methods</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__get_reference_by_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_id</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get a reference node from its name.</span>
 
 <span class="sd">        :param ref_name: Name of the reference we want to get the associated node from</span>
 <span class="sd">        :returns: The reference node associated to the reference name</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">ref_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vredpy</span><span class="o">.</span><span class="n">vrReferenceService</span><span class="o">.</span><span class="n">getSceneReferences</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ref_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">getObjectId</span><span class="p">()</span> <span class="o">==</span> <span class="n">ref_id</span><span class="p">:</span>
@@ -407,7 +407,7 @@
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__load_source_references</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">refs</span><span class="p">,</span> <span class="n">show_options</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the source references in VRED.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Load the source references in VRED."""</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span><span class="n">refs</span><span class="p">]</span>

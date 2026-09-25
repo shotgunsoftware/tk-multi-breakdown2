@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.4.5 documentation</title>
+  <title>tk_multi_breakdown2.api.item &mdash; tk-multi-breakdown2 v0.4.6 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -81,7 +81,7 @@
                              text-decoration: underline; }
     </style>
 
-    <b>tk-multi-breakdown2</b> v0.4.5.<br>
+    <b>tk-multi-breakdown2</b> v0.4.6.<br>
     
         This documentation is part of the Flow Production Tracking.
     
@@ -129,7 +129,7 @@
 <span class="c1">#</span>
 <span class="c1"># CONFIDENTIAL AND PROPRIETARY</span>
 <span class="c1">#</span>
-<span class="c1"># This work is provided &quot;AS IS&quot; and subject to the Shotgun Pipeline Toolkit</span>
+<span class="c1"># This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit</span>
 <span class="c1"># Source Code License included in this distribution package. See LICENSE.</span>
 <span class="c1"># By accessing, using, copying or modifying this work you indicate your</span>
 <span class="c1"># agreement to the Shotgun Pipeline Toolkit Source Code License. All rights</span>
@@ -137,10 +137,10 @@
 
 
 <div class="viewcode-block" id="FileItem"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.FileItem">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">FileItem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Encapsulate details about a single version of a file. Each instance represents a single &quot;version&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Encapsulate details about a single version of a file. Each instance represents a single "version"</span>
 <span class="sd">    but will contain details about the latest available version of the file.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -152,7 +152,7 @@
         <span class="n">locked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">loaded</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Class constructor.</span>
 
 <span class="sd">        :param node_name:  Name of the file node</span>
@@ -162,7 +162,7 @@
 <span class="sd">        :param extra_data: Dictionary containing additional information about this file</span>
 <span class="sd">        :param locked: True if the file item is locked, else False.</span>
 <span class="sd">        :param loaded: True if the file item is loaded, else False.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_node_name</span> <span class="o">=</span> <span class="n">node_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_node_type</span> <span class="o">=</span> <span class="n">node_type</span>
@@ -175,17 +175,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_thumbnail_path</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Override the base method to allow FileItem objects to be hashable.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Override the base method to allow FileItem objects to be hashable."""</span>
 
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">node_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">node_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Override the equality operator to allow comparing FileItem objects.</span>
 
 <span class="sd">        :param other: The other FileItem to compare this one with.</span>
 <span class="sd">        :type other: FileItem</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">FileItem</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -194,7 +194,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">node_name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">node_name</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">node_type</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">path</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">sg_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="c1"># ----------------------------------------------------------------------------------------</span>
@@ -202,14 +202,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">highest_version_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get highest version number available in the Flow Production Tracking database for this file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get highest version number available in the Flow Production Tracking database for this file."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version_number&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version_number"</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">node_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the name of the file node.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get the name of the file node."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_name</span>
 
     <span class="nd">@node_name</span><span class="o">.</span><span class="n">setter</span>
@@ -218,7 +218,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">node_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the type of the file node.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get the type of the file node."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_type</span>
 
     <span class="nd">@node_type</span><span class="o">.</span><span class="n">setter</span>
@@ -227,7 +227,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the path on disk for this file item.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get the path on disk for this file item."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
 
     <span class="nd">@path</span><span class="o">.</span><span class="n">setter</span>
@@ -236,7 +236,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">locked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get whether or not this file item is locked.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get whether or not this file item is locked."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_locked</span>
 
     <span class="nd">@locked</span><span class="o">.</span><span class="n">setter</span>
@@ -245,7 +245,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get whether or not this file item is loaded.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get whether or not this file item is loaded."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded</span>
 
     <span class="nd">@loaded</span><span class="o">.</span><span class="n">setter</span>
@@ -254,7 +254,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">latest_published_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the latest published file for this file item.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get the latest published file for this file item."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_latest_published_file</span>
 
     <span class="nd">@latest_published_file</span><span class="o">.</span><span class="n">setter</span>
@@ -263,7 +263,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">extra_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get or set the extra data associated with this item.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get or set the extra data associated with this item."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_data</span>
 
     <span class="nd">@extra_data</span><span class="o">.</span><span class="n">setter</span>
@@ -272,7 +272,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">sg_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get or set the Flow Production Tracking data associated with this item.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get or set the Flow Production Tracking data associated with this item."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_data</span>
 
     <span class="nd">@sg_data</span><span class="o">.</span><span class="n">setter</span>
@@ -281,7 +281,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">thumbnail_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get or set the thumbnail path for this item.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get or set the thumbnail path for this item."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thumbnail_path</span>
 
     <span class="nd">@thumbnail_path</span><span class="o">.</span><span class="n">setter</span>
@@ -292,19 +292,19 @@
     <span class="c1"># Public methods</span>
 
 <div class="viewcode-block" id="FileItem.to_dict"><a class="viewcode-back" href="../../../api.html#tk_multi_breakdown2.api.FileItem.to_dict">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the FileItem as a dictionary. Only include the properties needed by the</span>
 <span class="sd">        scene operation hook update method.</span>
 
 <span class="sd">        :return: The item properties as a dictionary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_name</span><span class="p">,</span>
-            <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span>
-            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
-            <span class="s2">&quot;extra_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_data</span><span class="p">,</span>
-            <span class="s2">&quot;sg_data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span><span class="p">,</span>
+            <span class="s2">"node_name"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_name</span><span class="p">,</span>
+            <span class="s2">"node_type"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_type</span><span class="p">,</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="s2">"extra_data"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_data</span><span class="p">,</span>
+            <span class="s2">"sg_data"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_data</span><span class="p">,</span>
         <span class="p">}</span></div></div>
 </pre></div>
 
