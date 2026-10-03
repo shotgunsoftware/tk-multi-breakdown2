@@ -80,7 +80,7 @@ def get_scene_objects(
                     "name": asset.name,
                 }
                 revision = objects.FlowRevision.get_revision(dep_info.revision_id)
-                type_comps = revision.find_components(type_id=globals.BASE_TYPE_ID)
+                type_comps = revision.find_components(type_ids=[globals.BASE_TYPE_ID])
                 type_ids = [c.type_id for c in type_comps]
                 published_file_type = None
                 created_at = asset.created_at
